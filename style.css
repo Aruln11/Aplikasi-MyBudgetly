@@ -86,7 +86,7 @@
 [data-color-theme="ocean"] {
   --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
   --primary-accent-color: #4f46e5; /* <-- TAMBAHKAN INI */
-  --primary-accent-color-glow: rgba(79, 70, 229, 0.80); /* <-- TAMBAHKAN INI */
+  --primary-accent-color-glow: rgba(79, 70, 229, 0.15); /* <-- TAMBAHKAN INI */
 }
 
 [data-color-theme="sunset"] {
@@ -2646,4 +2646,5 @@ body {
 .select-items {
   scrollbar-width: thin; /* Opsi: 'auto', 'thin', 'none' */
   scrollbar-color: var(--text-muted) var(--background-secondary); /* Format: warna thumb, warna track */
+
 }
