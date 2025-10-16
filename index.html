@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="id" data-color-theme="ocean">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>MyBudgetly</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="icon" type="image/png" href="/assets/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/assetsfavicon.svg" />
+  <link rel="shortcut icon" href="/assets/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="MyBudgetly" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div id="notification-container" class="notification-container"></div>
+
+  <div class="top-controls">
+    <button class="theme-customize-btn" onclick="openThemeModal()" title="Kustomisasi Tema">🎨</button>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Ganti Mode Terang/Gelap">
+      <div class="theme-icon sun">☀️</div>
+      <div class="theme-icon moon">🌙</div>
+    </button>
+  </div>
+
+  <div id="title-edit-modal" class="title-edit-modal">
+    <div class="title-edit-content">
+      <div class="title-edit-header">
+        <h3 class="title-edit-title">Edit Nama Aplikasi</h3>
+        <p class="title-edit-subtitle">Ubah nama sesuai keinginan Anda</p>
+      </div>
+      <input type="text" id="title-edit-input" class="title-edit-input" placeholder="Masukkan nama aplikasi">
+      <div class="title-edit-actions">
+        <button class="title-edit-btn primary" onclick="saveTitleFromModal()">Simpan</button>
+        <button class="title-edit-btn secondary" onclick="closeTitleEditModal()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div class="floating-shapes">
+      <div class="shape"></div>
+      <div class="shape"></div>
+      <div class="shape"></div>
+    </div>
+
+    <div class="header-content">
+      <div class="profile-title-section">
+        <div class="profile-photo-container" onclick="document.getElementById('profile-photo-input').click()">
+          <img id="profile-photo" class="profile-photo" alt="Profile Photo">
+          <div id="profile-placeholder" class="profile-placeholder">👤</div>
+          <input type="file" id="profile-photo-input" class="profile-photo-input" accept="image/*" onchange="handleProfilePhotoChange(event)">
+        </div>
+
+        <div class="app-title-container">
+            <h1 class="app-title" id="app-title" onclick="editTitle()">MyBudgetly</h1>
+        </div>
+      </div>
+
+      <p class="app-subtitle">Kelola keuangan Anda dengan mudah dan modern</p>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="summary-grid">
+      <div class="summary-card income">
+        <div class="card-header">
+          <div class="card-icon">💰</div>
+          <h3 class="card-title">Total Pemasukan</h3>
+        </div>
+        <div class="card-value" id="pemasukan">Rp0</div>
+      </div>
+
+      <div class="summary-card expense">
+        <div class="card-header">
+          <div class="card-icon">💸</div>
+          <h3 class="card-title">Total Pengeluaran</h3>
+        </div>
+        <div class="card-value" id="pengeluaran">Rp0</div>
+      </div>
+
+      <div class="summary-card balance">
+        <div class="card-header">
+          <div class="card-icon">💳</div>
+          <h3 class="card-title">Saldo Akhir</h3>
+        </div>
+        <div class="card-value" id="saldo">Rp0</div>
+      </div>
+    </div>
+
+    <div class="form-container">
+      <h2 class="form-title" id="form-title">📝 Tambah Transaksi Baru</h2>
+      <form id="form-transaksi" onsubmit="handleFormSubmit(event)">
+        <div class="form-grid">
+          <div class="input-group">
+            <label class="input-label" for="deskripsi">Deskripsi</label>
+            <input type="text" id="deskripsi" class="input-field" placeholder="Contoh: Gaji bulanan, Belanja groceries" required />
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="jumlah">Jumlah (Rp)</label>
+            <input type="number" id="jumlah" class="input-field" placeholder="500000" required />
+            <div class="quick-amounts">
+              <button type="button" class="quick-amount-btn" data-amount="50000">50K</button>
+              <button type="button" class="quick-amount-btn" data-amount="100000">100K</button>
+              <button type="button" class="quick-amount-btn" data-amount="500000">500K</button>
+              <button type="button" class="quick-amount-btn" data-amount="1000000">1JT</button>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="tanggal">Tanggal</label>
+            <input type="date" id="tanggal" class="input-field" required />
+          </div>
+
+         <div class="input-group">
+  <label class="input-label" for="jenis">Jenis Transaksi</label>
+  <div class="custom-select-container" id="custom-jenis">
+    <div class="select-selected"></div>
+    <div class="select-items select-hide">
+      <div data-value="pemasukan">💰 Pemasukan</div>
+      <div data-value="pengeluaran">💸 Pengeluaran</div>
+    </div>
+  </div>
+  <input type="hidden" id="jenis" name="jenis">
+</div> 
+        </div>
+
+        <div class="button-group">
+          <button type="submit" id="submit-btn" class="btn btn-primary">
+            <span id="submit-text">Simpan Transaksi</span>
+          </button>
+          <button type="button" id="cancel-edit-btn" class="btn btn-secondary" style="display: none;">
+            Batal Edit
+          </button>
+          <button type="button" id="scan-receipt-btn" class="btn btn-scan">
+            📸 Scan Struk
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="transactions-section">
+      <div class="section-header">
+        <h3 class="section-title">📊 Riwayat Transaksi</h3>
+        <div class="filter-controls">
+          <div class="custom-select-container" id="custom-filter-bulan">
+  <div class="select-selected">Filter Bulan</div>
+  <div class="select-items select-hide">
+    </div>
+</div>
+
+<select id="filter-bulan" class="filter-select" style="display: none;"></select>
+          <div class="search-container">
+            <input type="text" id="search-input" class="search-input" placeholder="🔍 Cari transaksi..." />
+            <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display: none;">✕</button>
+          </div>
+
+          <div class="data-actions-dropdown" id="data-actions-dropdown">
+            <button class="data-actions-btn" id="data-actions-toggle-btn">
+              <span>⚙️ Kelola Data</span>
+              <i class="arrow"></i>
+            </button>
+            <div class="dropdown-content">
+              <a class="dropdown-item" onclick="openPdfSettingsModal()">📄 Export PDF</a>
+              <a class="dropdown-item" onclick="exportData()">📤 Export Data</a>
+              <a class="dropdown-item" onclick="openImportModal()">📥 Import Data</a>
+              <a class="dropdown-item danger-item" onclick="openDeleteModal()">🗑️ Hapus Data</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="transactions-table" id="tabel-keuangan">
+          <thead>
+            <tr>
+              <th class="text-left" id="tanggal-header">
+                <span class="calendar-icon" id="calendar-filter-icon" title="Filter berdasarkan tanggal">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" />
+                  </svg>
+                </span>
+                Tanggal
+                <input type="date" id="hidden-date-filter" style="display: none;">
+                <span id="active-date-filter-display" style="font-weight: normal; margin-left: 0.5rem; color: var(--text-secondary); font-size: 0.75rem; display: none;"></span>
+                <button id="clear-date-filter-btn" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.75rem; margin-left: 0.2rem; display: none;" title="Hapus filter tanggal">✕</button>
+              </th>
+              <th class="text-left">📝 Deskripsi</th>
+              <th class="text-right">💰 Pemasukan</th>
+              <th class="text-right">💸 Pengeluaran</th>
+              <th class="text-right">💳 Saldo</th>
+              <th class="text-center">⚙️ Opsi</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-tabel">
+          </tbody>
+        </table>
+
+        <div id="empty-state" class="empty-state" style="display: none;">
+          <div class="empty-state-icon">📊</div>
+          <h3>Belum ada transaksi</h3>
+          <p>Mulai tambahkan transaksi pertama Anda!</p>
+        </div>
+
+        <div class="pagination-controls" id="pagination-controls">
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="scan-modal" class="modal">
+    <div class="modal-content">
+      <div class="scanner-header">
+        <h3 class="scanner-title" id="scanner-title">Pindai Struk Belanja</h3>
+        <button class="scanner-help-btn" id="scanner-help-btn" title="Bantuan">?</button>
+      </div>
+
+      <div class="scanner-container">
+        <div id="scanner-view-container" class="scanner-view">
+          <div class="ocr-status" id="ocr-status">
+            <p id="ocr-status-text">Memindai di perangkat Anda...</p>
+            <progress id="ocr-progress" max="100" value="0"></progress>
+          </div>
+          <video id="camera-view" autoplay playsinline></video>
+          <canvas id="image-preview-canvas" style="display:none;"></canvas>
+          <div class="scanner-overlay" id="scanner-overlay">
+            <div class="scanner-vignette"></div>
+            <div class="scanner-guide-text">Posisikan struk di dalam bingkai</div>
+          </div>
+        </div>
+
+        <div id="cropper-container" style="display: none;">
+            <img id="image-to-crop" style="display: block; max-width: 100%;">
+        </div>
+
+        <div id="scanner-results-container" class="scanner-results-container">
+          <div class="scanner-correction-header">
+            <div class="correction-view-toggle">
+              <button class="toggle-btn active" id="toggle-edit-btn">✏️ Edit Item</button>
+              <button class="toggle-btn" id="toggle-image-btn">🖼️ Lihat Struk</button>
+            </div>
+          </div>
+          <div class="results-grid">
+            <div id="item-list-wrapper">
+              <div style="margin-bottom: 1rem;">
+                <h4 style="font-size: 1rem; font-weight: 600; color: var(--text-primary);">Koreksi Hasil Pindaian</h4>
+                <p style="font-size: 0.8rem; color: var(--text-secondary);">Periksa dan perbaiki item & harga.</p>
+              </div>
+              <div id="item-list-container" class="item-list-container">
+              </div>
+              <div style="text-align: right; margin-top: 1rem;">
+                <button id="add-item-btn" class="btn btn-secondary" style="padding: 0.5rem 1rem;">+ Tambah Item</button>
+              </div>
+              <div class="total-display">
+                <span>Total Belanja:</span>
+                <span id="total-scanned-amount">Rp0</span>
+              </div>
+            </div>
+            <div id="receipt-image-wrapper">
+              <h4 style="font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1rem;">Gambar Struk</h4>
+              <img id="receipt-image-display" alt="Gambar Struk" />
+            </div>
+          </div>
+        </div>
+
+        <div class="scanner-controls">
+          <button id="capture-btn" class="btn btn-primary">Ambil Gambar</button>
+          <div id="preview-controls" style="display: none; display:flex; gap:1rem; justify-content:center;">
+            <button id="rescan-btn" class="btn btn-secondary">Ulangi</button>
+            <button id="process-btn" class="btn btn-primary">
+              <span id="process-btn-text">Proses Struk</span>
+            </button>
+          </div>
+          <div id="correction-controls" style="display: none; display:flex; gap:1rem; justify-content:center;">
+            <button id="cancel-scan-btn" class="btn btn-secondary">Batal</button>
+            <button id="save-scanned-btn" class="btn btn-primary">Simpan Transaksi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="themeSettingsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">🎨 Kustomisasi Tampilan</h2>
+        <span class="close-button" onclick="closeThemeModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Pilih preset tema atau tentukan warna Anda sendiri.</p>
+        <div class="theme-picker">
+          <button class="theme-option ocean" data-theme-name="ocean" onclick="applyColorTheme('ocean')">
+            <div class="theme-preview"></div>
+            <div class="theme-name">Ocean</div>
+          </button>
+          <button class="theme-option sunset" data-theme-name="sunset" onclick="applyColorTheme('sunset')">
+            <div class="theme-preview"></div>
+            <div class="theme-name">Sunset</div>
+          </button>
+          <button class="theme-option forest" data-theme-name="forest" onclick="applyColorTheme('forest')">
+            <div class="theme-preview"></div>
+            <div class="theme-name">Forest</div>
+          </button>
+          <button class="theme-option royal" data-theme-name="royal" onclick="applyColorTheme('royal')">
+            <div class="theme-preview"></div>
+            <div class="theme-name">Royal</div>
+          </button>
+        </div>
+
+        <div class="custom-color-palette-container">
+          <label>Atau Pilih Warna Aksen Kustom</label>
+          <div class="color-palette-wrapper">
+            <div class="color-palette" id="color-palette">
+
+            </div>
+            <div class="custom-color-picker-container">
+              <input type="color" id="custom-color-input" class="custom-color-picker" title="Pilih Warna Kustom Anda">
+              <label for="custom-color-input" class="custom-color-picker-label">Pilih Sendiri</label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer" style="text-align: center;">
+        <button class="btn btn-secondary" onclick="resetColorTheme()">Reset ke Tema Default</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pdfSettingsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">📄 Pengaturan Export PDF</h2>
+        <span class="close-button" onclick="closePdfSettingsModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="input-group">
+  <label class="input-label" for="pdf-orientation">Orientasi Halaman</label>
+  <div class="custom-select-container" id="custom-pdf-orientation">
+    <div class="select-selected"></div>
+    <div class="select-items select-hide">
+      <div data-value="portrait">📄 Portrait</div>
+      <div data-value="landscape">📄 Landscape</div>
+    </div>
+  </div>
+  <input type="hidden" id="pdf-orientation" name="pdf-orientation">
+</div>
+        <div class="input-group">
+          <label class="input-label" for="pdf-filename">Nama File (Opsional)</label>
+          <input type="text" id="pdf-filename" class="input-field" placeholder="Laporan Keuangan">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-pdf-modal" id="pdf-modal-btn" onclick="simpanPDF()">
+          <span class="pdf-icon">📄</span>
+          <span>Export PDF</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="deleteModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">🗑️ Hapus Data Transaksi</h2>
+        <span class="close-button" onclick="closeDeleteModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="input-group">
+          <label class="input-label" for="delete-filter">Pilih data yang ingin dihapus</label>
+          <select id="delete-filter" class="select-field">
+            <option value="semua">🗑️ Semua Data</option>
+            <option value="pemasukan">💰 Hanya Pemasukan</option>
+            <option value="pengeluaran">💸 Hanya Pengeluaran</option>
+            <option value="custom-range">🗓️ Rentang Tanggal Kustom</option>
+          </select>
+        </div>
+
+        <div id="date-range-delete-group" style="display: none; margin-top: 1rem;">
+          <div class="input-group">
+            <label class="input-label" for="delete-start-date">Dari Tanggal</label>
+            <input type="date" id="delete-start-date" class="input-field" />
+          </div>
+          <div class="input-group" style="margin-top: 1rem;">
+            <label class="input-label" for="delete-end-date">Sampai Tanggal</label>
+            <input type="date" id="delete-end-date" class="input-field" />
+          </div>
+        </div>
+        <div style="margin-top: 1rem; padding: 1rem; background: var(--background-secondary); border-radius: 8px; border-left: 4px solid var(--danger-color);">
+          <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0;">
+            ⚠️ <strong>Peringatan:</strong> Tindakan ini tidak dapat dibatalkan. Data yang dihapus akan hilang permanen.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-delete-all" onclick="confirmBulkDelete()">
+          <span class="delete-icon">🗑️</span>
+          <span>Hapus Data</span>
+        </button>
+        <button class="btn btn-secondary" onclick="closeDeleteModal()">
+          Batal
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="importModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">📥 Import Data Transaksi</h2>
+        <span class="close-button" onclick="closeImportModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 1rem; color: var(--text-secondary);">Pilih file JSON transaksi Anda yang sebelumnya di-export.</p>
+        <div class="input-group">
+          <label class="input-label" for="import-file">Upload File JSON</label>
+          <input type="file" id="import-file" class="input-field" accept=".json" />
+        </div>
+        <div style="margin-top: 1rem; padding: 1rem; background: var(--background-secondary); border-radius: 8px; border-left: 4px solid var(--warning-color);">
+          <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0;">
+            ⚠️ <strong>Peringatan:</strong> Mengimpor data akan <strong style="color: var(--danger-color);">mengganti</strong> semua data transaksi yang ada saat ini. Pastikan Anda telah mencadangkan data Anda jika diperlukan.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="confirm-import-btn" onclick="confirmImportData()">
+          <span class="import-icon">📥</span>
+          <span>Import</span>
+        </button>
+        <button class="btn btn-secondary" onclick="closeImportModal()">
+          Batal
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmationModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="confirmationModalTitle">Konfirmasi</h2>
+        <span class="close-button" onclick="closeConfirmationModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p id="confirmationModalMessage"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" id="confirmActionBtn">Konfirmasi</button>
+        <button class="btn btn-secondary" onclick="closeConfirmationModal()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
