@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>MyBudgetly</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="icon" type="image/png" href="/assets/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/assetsfavicon.svg" />
+  <link rel="shortcut icon" href="/assets/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="MyBudgetly" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
+<script>
+    (function() {
+      // --- Fungsi Helper Minimal (Diambil dari script.js) ---
+      // Fungsi ini harus ada di sini agar bisa dieksekusi sebelum file js utama dimuat
+      function lightenHexColor(hex, percent) {
+        hex = hex.replace(/^#/, '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        const newR = Math.min(255, r + (255 - r) * (percent / 100));
+        const newG = Math.min(255, g + (255 - g) * (percent / 100));
+        const newB = Math.min(255, b + (255 - b) * (percent / 100));
+        return `#${Math.round(newR).toString(16).padStart(2, '0')}${Math.round(newG).toString(16).padStart(2, '0')}${Math.round(newB).toString(16).padStart(2, '0')}`;
+      }
+      function generateGradient(hexColor) {
+        const lighterColor = lightenHexColor(hexColor, 30);
+        return `linear-gradient(135deg, ${hexColor} 0%, ${lighterColor} 100%)`;
+      }
+      function hexToRgba(hex, alpha = 1) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+      function getTextColorForBackground(hexColor) {
+        try {
+          let hex = hexColor.replace(/^#/, '');
+          if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+          const r = parseInt(hex.substring(0, 2), 16);
+          const g = parseInt(hex.substring(2, 4), 16);
+          const b = parseInt(hex.substring(4, 6), 16);
+          const brightness = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+          return brightness > 149 ? '#1f2937' : '#ffffff';
+        } catch (e) {
+          return '#ffffff'; 
+        }
+      }
+
+      // --- Logika Inti initTheme (Dieksekusi secepat mungkin) ---
+      const doc = document.documentElement;
+
+      // 1. Terapkan Mode Terang/Gelap
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      doc.setAttribute('data-theme', savedTheme);
+
+      // 2. Terapkan Tema Warna
+      const savedColorTheme = localStorage.getItem('colorTheme') || 'ocean';
+      const customAccentColor = localStorage.getItem('customAccentColor');
+
+      if (savedColorTheme === 'custom' && customAccentColor) {
+        // Terapkan variabel CSS untuk warna kustom (kuning Anda)
+        const gradient = generateGradient(customAccentColor);
+        const textColor = getTextColorForBackground(customAccentColor);
+        doc.style.setProperty('--primary-gradient', gradient);
+        doc.style.setProperty('--primary-accent-color', customAccentColor);
+        doc.style.setProperty('--primary-accent-color-glow', hexToRgba(customAccentColor, 0.15));
+        doc.style.setProperty('--primary-btn-text-color', textColor);
+        doc.setAttribute('data-color-theme', 'custom');
+      } else {
+        // Terapkan tema preset (ocean, sunset, dll.)
+        doc.setAttribute('data-color-theme', savedColorTheme);
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div id="notification-container" class="notification-container"></div>
+
+<div class="settings-menu" id="settings-menu">
+  <button class="settings-menu-toggle" id="settings-menu-toggle" title="Pengaturan Tampilan">
+    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+      <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h14"/>
+    </svg>
+  </button>
+
+  <div class="settings-menu-dropdown" id="settings-menu-dropdown">
+  <button class="settings-dropdown-item" id="open-theme-modal-btn">
+    <span>🎨 Kustomisasi Tema</span>
+  </button>
+
+  <div class="settings-dropdown-item">
+    <span>Dark/Light</span>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Ganti Mode Terang/Gelap">
+      <div class="theme-icon sun">
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5V3m0 18v-2M7.05 7.05 5.636 5.636m12.728 12.728L16.95 16.95M5 12H3m18 0h-2M7.05 16.95l-1.414 1.414M18.364 5.636 16.95 7.05M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/>
+        </svg>
+        </div>
+
+      <div class="theme-icon moon">
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a9 9 0 0 1-.5-17.986V3c-.354.966-.5 1.911-.5 3a9 9 0 0 0 9 9c.239 0 .254.018.488 0A9.004 9.004 0 0 1 12 21Z"/>
+        </svg>
+      </div>
+    </button>
+  </div>
+
+  <button class="settings-dropdown-item" id="auth-button">
+      <span style="font-weight: 600;">Login</span>
+  </button>
+</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+  <div id="title-edit-modal" class="title-edit-modal">
+    <div class="title-edit-content">
+      <div class="title-edit-header">
+        <h3 class="title-edit-title">Edit Nama Aplikasi</h3>
+        <p class="title-edit-subtitle">Ubah nama sesuai keinginan Anda</p>
+      </div>
+      <input type="text" id="title-edit-input" class="title-edit-input" placeholder="Masukkan nama aplikasi">
+      <div class="title-edit-actions">
+        <button class="title-edit-btn primary" onclick="saveTitleFromModal()">Simpan</button>
+        <button class="title-edit-btn secondary" onclick="closeTitleEditModal()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div class="floating-shapes">
+      <div class="shape"></div>
+      <div class="shape"></div>
+      <div class="shape"></div>
+    </div>
+
+    <div class="header-content">
+      <div class="profile-title-section">
+        <div class="profile-photo-container" onclick="document.getElementById('profile-photo-input').click()">
+          <img id="profile-photo" class="profile-photo" alt="Profile Photo">
+          <div id="profile-placeholder" class="profile-placeholder">👤</div>
+          <input type="file" id="profile-photo-input" class="profile-photo-input" accept="image/*" onchange="handleProfilePhotoChange(event)">
+        </div>
+
+        <div class="app-title-container">
+            <h1 class="app-title" id="app-title" onclick="editTitle()">MyBudgetly</h1>
+        </div>
+      </div>
+
+      <p class="app-subtitle">Kelola keuangan Anda dengan mudah dan modern</p>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="summary-grid">
+      <div class="summary-card income">
+        <div class="card-header">
+          <div class="card-icon">💰</div>
+          <h3 class="card-title">Total Pemasukan</h3>
+        </div>
+        <div class="card-value" id="pemasukan">Rp0</div>
+      </div>
+
+      <div class="summary-card expense">
+        <div class="card-header">
+          <div class="card-icon">💸</div>
+          <h3 class="card-title">Total Pengeluaran</h3>
+        </div>
+        <div class="card-value" id="pengeluaran">Rp0</div>
+      </div>
+
+      <div class="summary-card balance">
+        <div class="card-header">
+          <div class="card-icon">💳</div>
+          <h3 class="card-title">Saldo Akhir</h3>
+        </div>
+        <div class="card-value" id="saldo">Rp0</div>
+      </div>
+    </div>
+
+    <div class="form-container">
+      <h2 class="form-title" id="form-title">📝 Tambah Transaksi Baru</h2>
+      <form id="form-transaksi" onsubmit="handleFormSubmit(event)">
+        <div class="form-grid">
+          <div class="input-group">
+            <label class="input-label" for="deskripsi">Deskripsi</label>
+            <input type="text" id="deskripsi" class="input-field" placeholder="Contoh: Gaji bulanan, Belanja groceries" required />
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="jumlah">Jumlah (Rp)</label>
+            <input type="number" id="jumlah" class="input-field" placeholder="500000" required />
+            <div class="quick-amounts">
+              <button type="button" class="quick-amount-btn" data-amount="50000">50K</button>
+              <button type="button" class="quick-amount-btn" data-amount="100000">100K</button>
+              <button type="button" class="quick-amount-btn" data-amount="500000">500K</button>
+              <button type="button" class="quick-amount-btn" data-amount="1000000">1JT</button>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="tanggal">Tanggal</label>
+            <input type="date" id="tanggal" class="input-field" required />
+          </div>
+
+         <div class="input-group">
+  <label class="input-label" for="jenis">Jenis Transaksi</label>
+  <div class="custom-select-container" id="custom-jenis">
+    <div class="select-selected"></div>
+    <div class="select-items select-hide">
+      <div data-value="pemasukan">💰 Pemasukan</div>
+      <div data-value="pengeluaran">💸 Pengeluaran</div>
+    </div>
+  </div>
+  <input type="hidden" id="jenis" name="jenis">
+</div> 
+        </div>
+
+        <div class="button-group">
+          <button type="submit" id="submit-btn" class="btn btn-primary">
+            <span id="submit-text">Simpan Transaksi</span>
+          </button>
+          <button type="button" id="cancel-edit-btn" class="btn btn-secondary" style="display: none;">
+            Batal Edit
+          </button>
+          <button type="button" id="scan-receipt-btn" class="btn btn-scan">
+            📸 Scan Struk
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="transactions-section">
+      <div class="section-header">
+        <h3 class="section-title">📊 Riwayat Transaksi</h3>
+        <div class="filter-controls">
+          <div class="custom-select-container" id="custom-filter-bulan">
+  <div class="select-selected">Filter Bulan</div>
+  <div class="select-items select-hide">
+    </div>
+</div>
+
+<select id="filter-bulan" class="filter-select" style="display: none;"></select>
+          <div class="search-container">
+            <input type="text" id="search-input" class="search-input" placeholder="🔍 Cari transaksi..." />
+            <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display: none;">✕</button>
+          </div>
+
+          <div class="data-actions-dropdown" id="data-actions-dropdown">
+            <button class="data-actions-btn" id="data-actions-toggle-btn">
+              <span>⚙️ Kelola Data</span>
+              <i class="arrow"></i>
+            </button>
+            <div class="dropdown-content">
+              <a class="dropdown-item" onclick="openPdfSettingsModal()">📄 Export PDF</a>
+              <a class="dropdown-item" onclick="exportData()">📤 Export Data</a>
+              <a class="dropdown-item" onclick="openImportModal()">📥 Import Data</a>
+              <a class="dropdown-item danger-item" onclick="openDeleteModal()">🗑️ Hapus Data</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="transactions-table" id="tabel-keuangan">
+          <thead>
+            <tr>
+              <th class="text-left" id="tanggal-header">
+                <span class="calendar-icon" id="calendar-filter-icon" title="Filter berdasarkan tanggal">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" />
+                  </svg>
+                </span>
+                Tanggal
+                <input type="date" id="hidden-date-filter" style="display: none;">
+                <span id="active-date-filter-display" style="font-weight: normal; margin-left: 0.5rem; color: var(--text-secondary); font-size: 0.75rem; display: none;"></span>
+                <button id="clear-date-filter-btn" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.75rem; margin-left: 0.2rem; display: none;" title="Hapus filter tanggal">✕</button>
+              </th>
+              <th class="text-left">📝 Deskripsi</th>
+              <th class="text-right">💰 Pemasukan</th>
+              <th class="text-right">💸 Pengeluaran</th>
+              <th class="text-right">💳 Saldo</th>
+              <th class="text-center">⚙️ Opsi</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-tabel">
+          </tbody>
+        </table>
+
+        <div id="empty-state" class="empty-state" style="display: none;">
+          <div class="empty-state-icon">📊</div>
+          <h3>Belum ada transaksi</h3>
+          <p>Mulai tambahkan transaksi pertama Anda!</p>
+        </div>
+
+        <div class="pagination-controls" id="pagination-controls">
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="scan-modal" class="modal">
+    <div class="modal-content">
+      <div class="scanner-header">
+        <h3 class="scanner-title" id="scanner-title">Pindai Struk Belanja</h3>
+        <button class="scanner-help-btn" id="scanner-help-btn" title="Bantuan">?</button>
+      </div>
+
+      <div class="scanner-container">
+        <div id="scanner-view-container" class="scanner-view">
+          <div class="ocr-status" id="ocr-status">
+            <p id="ocr-status-text">Memindai di perangkat Anda...</p>
+            <progress id="ocr-progress" max="100" value="0"></progress>
+          </div>
+          <video id="camera-view" autoplay playsinline></video>
+          <canvas id="image-preview-canvas" style="display:none;"></canvas>
+          <div class="scanner-overlay" id="scanner-overlay">
+            <div class="scanner-vignette"></div>
+            <div class="scanner-guide-text">Posisikan struk di dalam bingkai</div>
+          </div>
+        </div>
+
+        <div id="cropper-container" style="display: none;">
+            <img id="image-to-crop" style="display: block; max-width: 100%;">
+        </div>
+
+        <div id="scanner-results-container" class="scanner-results-container">
+          <div class="scanner-correction-header">
+            <div class="correction-view-toggle">
+              <button class="toggle-btn active" id="toggle-edit-btn">✏️ Edit Item</button>
+              <button class="toggle-btn" id="toggle-image-btn">🖼️ Lihat Struk</button>
+            </div>
+          </div>
+          <div class="results-grid">
+            <div id="item-list-wrapper">
+              <div style="margin-bottom: 1rem;">
+                <h4 style="font-size: 1rem; font-weight: 600; color: var(--text-primary);">Koreksi Hasil Pindaian</h4>
+                <p style="font-size: 0.8rem; color: var(--text-secondary);">Periksa dan perbaiki item & harga.</p>
+              </div>
+              <div id="item-list-container" class="item-list-container">
+              </div>
+              <div style="text-align: right; margin-top: 1rem;">
+                <button id="add-item-btn" class="btn btn-secondary" style="padding: 0.5rem 1rem;">+ Tambah Item</button>
+              </div>
+              <div class="total-display">
+                <span>Total Belanja:</span>
+                <span id="total-scanned-amount">Rp0</span>
+              </div>
+            </div>
+            <div id="receipt-image-wrapper">
+              <h4 style="font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1rem;">Gambar Struk</h4>
+              <img id="receipt-image-display" alt="Gambar Struk" />
+            </div>
+          </div>
+        </div>
+
+        <div class="scanner-controls">
+          <button id="capture-btn" class="btn btn-primary">Ambil Gambar</button>
+          <div id="preview-controls" style="display: none; display:flex; gap:1rem; justify-content:center;">
+            <button id="rescan-btn" class="btn btn-secondary">Ulangi</button>
+            <button id="process-btn" class="btn btn-primary">
+              <span id="process-btn-text">Proses Struk</span>
+            </button>
+          </div>
+          <div id="correction-controls" style="display: none; display:flex; gap:1rem; justify-content:center;">
+            <button id="cancel-scan-btn" class="btn btn-secondary">Batal</button>
+            <button id="save-scanned-btn" class="btn btn-primary">Simpan Transaksi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="themeSettingsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">🎨 Kustomisasi Tampilan</h2>
+        <span class="close-button" onclick="closeThemeModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Pilih preset tema atau tentukan warna Anda sendiri.</p>
+        <div class="theme-picker">
+          <button class="theme-option ocean" data-theme-name="ocean" onclick="applyColorTheme('ocean')">
+            <div class="theme-preview"></div>
+            <div class="theme-name">Ocean</div>
+          </button>
+          <button class="theme-option sunset" data-theme-name="sunset" onclick="applyColorTheme('sunset')">
+            <div class="theme-preview"></div>
+            <div class="theme-name">Sunset</div>
+          </button>
+          <button class="theme-option forest" data-theme-name="forest" onclick="applyColorTheme('forest')">
+            <div class="theme-preview"></div>
+            <div class="theme-name">Forest</div>
+          </button>
+          <button class="theme-option royal" data-theme-name="royal" onclick="applyColorTheme('royal')">
+            <div class="theme-preview"></div>
+            <div class="theme-name">Royal</div>
+          </button>
+        </div>
+
+        <div class="custom-color-palette-container">
+          <label>Atau Pilih Warna Aksen Kustom</label>
+          <div class="color-palette-wrapper">
+            <div class="color-palette" id="color-palette">
+
+            </div>
+            <div class="custom-color-picker-container">
+              <input type="color" id="custom-color-input" class="custom-color-picker" title="Pilih Warna Kustom Anda">
+              <label for="custom-color-input" class="custom-color-picker-label">Pilih Sendiri</label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer" style="text-align: center;">
+        <button class="btn btn-secondary" onclick="resetColorTheme()">Reset ke Tema Default</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pdfSettingsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">📄 Pengaturan Export PDF</h2>
+        <span class="close-button" onclick="closePdfSettingsModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="input-group">
+  <label class="input-label" for="pdf-orientation">Orientasi Halaman</label>
+  <div class="custom-select-container" id="custom-pdf-orientation">
+    <div class="select-selected"></div>
+    <div class="select-items select-hide">
+      <div data-value="portrait">📄 Portrait</div>
+      <div data-value="landscape">📄 Landscape</div>
+    </div>
+  </div>
+  <input type="hidden" id="pdf-orientation" name="pdf-orientation">
+</div>
+        <div class="input-group">
+          <label class="input-label" for="pdf-filename">Nama File (Opsional)</label>
+          <input type="text" id="pdf-filename" class="input-field" placeholder="Laporan Keuangan">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-pdf-modal" id="pdf-modal-btn" onclick="simpanPDF()">
+          <span class="pdf-icon">📄</span>
+          <span>Export PDF</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="deleteModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">🗑️ Hapus Data Transaksi</h2>
+        <span class="close-button" onclick="closeDeleteModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="input-group">
+          <label class="input-label" for="delete-filter">Pilih data yang ingin dihapus</label>
+          <select id="delete-filter" class="select-field">
+            <option value="semua">🗑️ Semua Data</option>
+            <option value="pemasukan">💰 Hanya Pemasukan</option>
+            <option value="pengeluaran">💸 Hanya Pengeluaran</option>
+            <option value="custom-range">🗓️ Rentang Tanggal Kustom</option>
+          </select>
+        </div>
+
+        <div id="date-range-delete-group" style="display: none; margin-top: 1rem;">
+          <div class="input-group">
+            <label class="input-label" for="delete-start-date">Dari Tanggal</label>
+            <input type="date" id="delete-start-date" class="input-field" />
+          </div>
+          <div class="input-group" style="margin-top: 1rem;">
+            <label class="input-label" for="delete-end-date">Sampai Tanggal</label>
+            <input type="date" id="delete-end-date" class="input-field" />
+          </div>
+        </div>
+        <div style="margin-top: 1rem; padding: 1rem; background: var(--background-secondary); border-radius: 8px; border-left: 4px solid var(--danger-color);">
+          <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0;">
+            ⚠️ <strong>Peringatan:</strong> Tindakan ini tidak dapat dibatalkan. Data yang dihapus akan hilang permanen.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-delete-all" onclick="confirmBulkDelete()">
+          <span class="delete-icon">🗑️</span>
+          <span>Hapus Data</span>
+        </button>
+        <button class="btn btn-secondary" onclick="closeDeleteModal()">
+          Batal
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="importModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">📥 Import Data Transaksi</h2>
+        <span class="close-button" onclick="closeImportModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 1rem; color: var(--text-secondary);">Pilih file JSON transaksi Anda yang sebelumnya di-export.</p>
+        <div class="input-group">
+          <label class="input-label" for="import-file">Upload File JSON</label>
+          <input type="file" id="import-file" class="input-field" accept=".json" />
+        </div>
+        <div style="margin-top: 1rem; padding: 1rem; background: var(--background-secondary); border-radius: 8px; border-left: 4px solid var(--warning-color);">
+          <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0;">
+            ⚠️ <strong>Peringatan:</strong> Mengimpor data akan <strong style="color: var(--danger-color);">mengganti</strong> semua data transaksi yang ada saat ini. Pastikan Anda telah mencadangkan data Anda jika diperlukan.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="confirm-import-btn" onclick="confirmImportData()">
+          <span class="import-icon">📥</span>
+          <span>Import</span>
+        </button>
+        <button class="btn btn-secondary" onclick="closeImportModal()">
+          Batal
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmationModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="confirmationModalTitle">Konfirmasi</h2>
+        <span class="close-button" onclick="closeConfirmationModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p id="confirmationModalMessage"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" id="confirmActionBtn">Konfirmasi</button>
+        <button class="btn btn-secondary" onclick="closeConfirmationModal()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="script.js"></script>
+
+  <div id="login-modal" class="modal" style="display: none; z-index: 2001;">
+    <div class="login-modal-content">
+        
+        <div class="modal-header">
+            <h2 class="modal-title">MyBudgetly</h2>
+            <span class="close-button" id="close-login-modal-btn">&times;</span>
+        </div>
+        <div class="login-modal-body">
+            
+            <p style="text-align: center; color: var(--text-secondary); margin-top: -1rem; margin-bottom: 2rem; font-size: 0.9rem;">
+              Silakan masuk untuk melanjutkan
+            </p>
+            
+            <form id="modal-login-form">
+                <div class="input-group">
+                    <label for="modal-kode">Masukan Kode</label>
+                    <input type="text" id="modal-kode" name="modal-kode" required>
+                </div>
+                
+                <p id="modal-error-message">Kode yang Anda masukkan salah.</p>
+                
+                <button type="submit" class="btn btn-primary login-button">Masuk</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>

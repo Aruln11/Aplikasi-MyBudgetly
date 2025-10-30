@@ -1,0 +1,22 @@
+
+[functions.aktivasi-perangkat]
+enabled = true
+verify_jwt = true
+import_map = "./functions/aktivasi-perangkat/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/aktivasi-perangkat/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/aktivasi-perangkat/*.html" ]
+
+[functions.nonaktifkan-perangkat]
+enabled = true
+verify_jwt = true
+import_map = "./functions/nonaktifkan-perangkat/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/nonaktifkan-perangkat/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/nonaktifkan-perangkat/*.html" ]
