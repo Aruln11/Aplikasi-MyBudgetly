@@ -2073,7 +2073,7 @@ async function handleLogin(event) {
 
     // GANTI SELURUH BLOK INI (dari try sampai finally)
 try {
-    const { data, error } = await supabase.functions.invoke('verify-code', {
+    const { data, error } = await supabase.functions.invoke('aktivasi-perangkat', {
         body: {
             code: kodeYangDimasukkan,
             deviceId: deviceId
@@ -2231,7 +2231,7 @@ async function handleLogout() {
       // ==========================================================
       // INI ADALAH PERBAIKANNYA: deviceId sekarang dikirim ke server
       // ==========================================================
-      const { error: invokeError } = await supabase.functions.invoke('release-code', {
+      const { error: invokeError } = await supabase.functions.invoke('nonaktifkan-perangkat', {
           body: { 
             code: codeToRelease,
             deviceId: deviceId  // <-- INI YANG DIPERBAIKI
