@@ -1,0 +1,1040 @@
+:root {
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --secondary: #06b6d4;
+  --bg-sidebar: #ffffff;
+  --bg-main: #f8fafc;
+  --text-dark: #0f172a;
+  --text-gray: #64748b;
+  --border: #e2e8f0;
+  --success: #10b981;
+  --success-light: #d1fae5;
+  --danger: #ef4444;
+  --danger-light: #fee2e2;
+  --warning: #f59e0b;
+  --warning-light: #fef3c7;
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  display: flex;
+  height: 100vh;
+  background-color: var(--bg-main);
+  color: var(--text-dark);
+  overflow: hidden;
+}
+
+/* Redesigned sidebar with modern styling */
+.sidebar {
+  width: 280px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  transition: transform 0.3s ease;
+  transform: translateX(0);
+}
+
+.sidebar-header {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.sidebar-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  letter-spacing: -0.025em;
+}
+
+.close-sidebar-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-gray);
+  padding: 0.25rem;
+  transition: color 0.2s;
+}
+
+.close-sidebar-btn:hover {
+  color: var(--text-dark);
+}
+
+.sidebar-menu {
+  flex: 1;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  color: var(--text-gray);
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.menu-item .icon {
+  flex-shrink: 0;
+}
+
+.menu-item span:not(.badge) {
+  flex: 1;
+}
+
+.menu-item:hover {
+  background: #f1f5f9;
+  color: var(--primary);
+}
+
+.menu-item.active {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.badge {
+  background: var(--danger);
+  color: white;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Style untuk submenu pelanggan */
+.submenu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  padding-left: 1rem;
+}
+
+.submenu.open {
+  max-height: 300px;
+}
+
+.submenu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: var(--text-gray);
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  margin-bottom: 0.25rem;
+}
+
+.submenu-item span:not(.badge) {
+  flex: 1;
+}
+
+.submenu-item:hover {
+  background: #f1f5f9;
+  color: var(--primary);
+}
+
+.submenu-item.active {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* Chevron icon animation untuk menu dengan submenu */
+.menu-item .chevron {
+  margin-left: auto;
+  transition: transform 0.3s ease;
+}
+
+.menu-item.expanded .chevron {
+  transform: rotate(180deg);
+}
+
+.sidebar-footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 0.875rem;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--danger);
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+}
+
+.logout-btn:hover {
+  background: var(--danger-light);
+  border-color: var(--danger);
+}
+
+/* Redesigned main content area */
+.main-content {
+  flex: 1;
+  margin-left: 280px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+/* Desktop sidebar collapse behavior */
+body.sidebar-closed .sidebar {
+  transform: translateX(-280px);
+}
+
+body.sidebar-closed .main-content {
+  margin-left: 0;
+}
+
+.mobile-header {
+  height: 70px;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  gap: 1rem;
+  box-shadow: var(--shadow);
+}
+
+/* Update tombol toggle agar MUNCUL di Desktop */
+.menu-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-dark);
+  padding: 0.5rem;
+  display: block; /* SEBELUMNYA: none (ini masalahnya) */
+  transition: color 0.2s;
+}
+
+.menu-toggle-btn:hover {
+  color: var(--primary);
+}
+
+#page-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.content-wrapper {
+  padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Redesigned cards with modern styling */
+.card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.card-header h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  letter-spacing: -0.025em;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* Redesigned search box */
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.875rem;
+  color: var(--text-gray);
+  pointer-events: none;
+}
+
+.search-box input {
+  padding: 0.625rem 0.875rem 0.625rem 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  width: 280px;
+  transition: all 0.2s;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Redesigned table with modern styling */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--text-gray);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.admin-table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+.admin-table tbody tr {
+  transition: background 0.2s;
+}
+
+.admin-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* Redesigned action buttons */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.btn-mini {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: 36px;
+  white-space: nowrap;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-reset {
+  background: white;
+  border: 1px solid var(--border);
+  color: var(--text-dark);
+}
+
+.btn-reset:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: #eff6ff;
+}
+
+.btn-blokir {
+  background: var(--danger);
+  border: 1px solid var(--danger);
+  color: white;
+}
+
+.btn-blokir:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.btn-terima {
+  background: var(--success);
+  color: white;
+  border: none;
+}
+
+.btn-terima:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.btn-tolak {
+  background: var(--danger);
+  color: white;
+  border: none;
+}
+
+.btn-tolak:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Redesigned status badges */
+.status-badge {
+  padding: 0.375rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+  letter-spacing: 0.025em;
+}
+
+.status-badge.active {
+  background: var(--success-light);
+  color: #065f46;
+}
+
+.status-badge.pending {
+  background: var(--warning-light);
+  color: #92400e;
+}
+
+.status-badge.blocked {
+  background: var(--danger-light);
+  color: #991b1b;
+}
+
+/* Redesigned settings section */
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.setting-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.25rem;
+}
+
+.setting-info p {
+  font-size: 0.875rem;
+  color: var(--text-gray);
+}
+
+/* Redesigned toggle switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: 0.3s;
+  border-radius: 28px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input:checked + .slider {
+  background-color: var(--primary);
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+/* Redesigned login modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-box {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.modal-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  letter-spacing: -0.025em;
+}
+
+/* Added close button styles matching index.html */
+.close-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 2rem;
+  color: var(--text-gray);
+  cursor: pointer;
+  transition: color 0.2s;
+  line-height: 1;
+  background: none;
+  border: none;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button:hover {
+  color: var(--text-dark);
+}
+
+.input-group {
+  margin-bottom: 1.5rem;
+}
+
+/* Updated label styling to match reference design */
+.input-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 400;
+  color: #666;
+  font-size: 0.875rem;
+}
+
+/* Updated input styling with gray underline by default and blue on focus */
+.input-group input {
+  width: 100%;
+  padding: 0.75rem 0;
+  border: none;
+  border-bottom: 2px solid #d1d5db;
+  border-radius: 0;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  background: transparent;
+}
+
+/* Blue underline appears on focus */
+.input-group input:focus {
+  outline: none;
+  border-bottom-color: #667eea;
+}
+
+.login-button {
+  width: 100%;
+  padding: 0.875rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #06b6d4 100%);
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.login-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.login-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.input-group {
+  margin-bottom: 0.5rem !important;
+}
+
+/* Style Pesan Error */
+.error-msg {
+  color: var(--danger); /* Merah */
+  font-size: 0.85rem; /* Ukuran pas */
+  text-align: center;
+  font-weight: 600;
+
+  /* Jarak Atas (ke input) dan Bawah (ke tombol) */
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+
+  /* Pastikan tetap ada tinggi minimal biar layout gak loncat (opsional) */
+  min-height: 1.2em;
+}
+
+/* Pastikan input password ada border bawah abu-abu seperti desain */
+.input-group input {
+  border-bottom: 2px solid #e5e7eb;
+  border-radius: 0;
+}
+.input-group input:focus {
+  border-bottom-color: var(--primary);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 900;
+}
+
+/* Responsive design for mobile and tablet */
+@media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+  }
+
+  .main-content {
+    margin-left: 0;
+  }
+
+  .menu-toggle-btn {
+    display: block;
+  }
+
+  .close-sidebar-btn {
+    display: block;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay.open {
+    display: block;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: 1rem;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box input {
+    width: 100%;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  .btn-mini {
+    width: 100%;
+  }
+
+  #page-title {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-header {
+    padding: 0 1rem;
+  }
+
+  .login-box {
+    padding: 2rem 1.5rem;
+  }
+}
+/* === TOMBOL MONOKROM (HITAM PUTIH) === */
+
+/* Tombol Hitam (Dominan) - Untuk Tambah, Hapus, Blokir */
+.btn-solid-black {
+    background-color: #0f172a; /* Hitam kebiruan sangat gelap (Professional Black) */
+    color: #ffffff;
+    border: 1px solid #0f172a;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    height: 36px;
+}
+
+.btn-solid-black:hover {
+    background-color: #334155;
+    border-color: #334155;
+    transform: translateY(-1px);
+}
+
+/* Tombol Putih (Outline) - Untuk Edit, Export CSV */
+.btn-outline-black {
+    background-color: #ffffff;
+    color: #0f172a;
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    height: 36px;
+}
+
+.btn-outline-black:hover {
+    border-color: #0f172a;
+    background-color: #f8fafc;
+}
+/* Penyesuaian Icon di dalam tombol */
+.btn-solid-black svg, 
+.btn-outline-black svg {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+}
+/* admin.css */
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* Tampilan HP */
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (min-width: 1024px) {
+    .settings-grid {
+        grid-template-columns: 1fr 1fr; /* Tampilan Desktop: Dua Kolom */
+    }
+}
+/* admin.css */
+
+/* Redesigned Terima & Tolak Buttons */
+.btn-terima-modern {
+    background-color: #0f172a; /* Hitam Solid */
+    color: #ffffff;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-terima-modern:hover {
+    background-color: #334155;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-tolak-modern {
+    background-color: transparent;
+    color: #ef4444; /* Merah */
+    border: 1px solid #fee2e2;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-tolak-modern:hover {
+    background-color: #fef2f2;
+    border-color: #ef4444;
+}
+
+/* Penyesuaian khusus untuk tombol Tolak Semua */
+.btn-reject-all {
+    background-color: #ffffff;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+    padding: 8px 16px;
+    border-radius: 20px; /* Bentuk pil */
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-reject-all:hover {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+/* admin.css */
+
+/* --- 1. Tombol Tolak Semua Monokrom --- */
+.btn-reject-mono {
+    display: flex;
+    align-items: center;
+    background-color: transparent;
+    color: #ef4444;
+    border: 1px solid #cbd5e1;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-reject-mono:hover {
+    background-color: #ffefef; /* GANTI: Latar belakang biru muda saat kursor diarahkan */
+    border-color:  #fc2626;     /* GANTI: Garis tepi berubah biru agar serasi */
+    color: #fc2626;
+    transform: translateY(-1px);
+
+}
+
+/* --- 2. Switch Auto-ACC Monokrom --- */
+.toggle-mono-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toggle-mono-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.switch-mono {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+}
+
+.switch-mono input { opacity: 0; width: 0; height: 0; }
+
+.slider-mono {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #cbd5e1;
+    transition: .3s;
+    border-radius: 20px;
+}
+
+.slider-mono:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+input:checked + .slider-mono {
+    background-color: #0f172a; /* Hitam saat Aktif */
+}
+
+input:checked + .slider-mono:before {
+    transform: translateX(16px);
+}
+
+/* admin.css */
+
+/* --- Container Dropdown --- */
+.custom-sort-container {
+    position: relative;
+    min-width: 160px;
+}
+
+/* --- Kotak Utama (Trigger) --- */
+.sort-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #ffffff;
+    color: #0f172a;
+    border: 1px solid #e2e8f0; /* Garis sangat tipis */
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500; /* KUNCI: Ketebalan font sedang/tipis */
+    cursor: pointer;
+    height: 40px;
+    transition: all 0.2s ease;
+}
+
+/* --- List Menu --- */
+.sort-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #f1f5f9; /* Garis menu sangat tipis */
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    z-index: 100;
+    overflow: hidden;
+}
+
+.sort-menu.show { display: block; }
+
+/* --- Item Pilihan (Terbaru & Terlama) --- */
+.sort-item {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    color: #64748b; /* Abu-abu halus */
+    cursor: pointer;
+    font-weight: 500; /* DISAMAKAN: Agar tidak jomplang */
+    border-bottom: 1px solid #f8fafc; /* Line item sangat tipis */
+    transition: all 0.2s ease;
+}
+
+/* --- State Aktif (Hanya Ubah Warna, Font Tetap Tipis) --- */
+.sort-item.active {
+    color: #0f172a; /* Menjadi hitam pekat */
+    background-color: #f8fafc;
+    font-weight: 500; /* TETAP 500: Tidak boleh lebih tebal */
+}
+
+/* Hover: Latar tetap putih bersih sesuai perintah */
+.sort-item:hover {
+    background-color: #ffffff;
+    color: #000000;
+}

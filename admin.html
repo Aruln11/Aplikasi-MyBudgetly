@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - MyBudgetly</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Redesigned sidebar with Bitcoin logo and modern icons -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <img src="assets/logo.png" alt="Logo" class="logo-img">
+                <h2>MyBudgetly</h2>
+            </div>
+            <button class="close-sidebar-btn" onclick="toggleSidebar()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+
+        <nav class="sidebar-menu">
+            <!-- Menu Admin baru dengan icon database -->
+            <a href="#" class="menu-item" onclick="switchTab('admin'); toggleSidebarMobile()">
+                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span>Admin</span>
+            </a>
+            
+            <!-- Menu Pelanggan dengan submenu expandable -->
+            <a href="#" class="menu-item" onclick="toggleSubmenu('pelanggan')">
+                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <span>Pelanggan</span>
+                <svg class="icon chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </a>
+            
+            <!-- Submenu Pelanggan -->
+            <div class="submenu" id="submenu-pelanggan">
+                <a href="#" class="submenu-item" onclick="switchTab('data-pelanggan'); toggleSidebarMobile()">
+                    <span>Data Pelanggan</span>
+                </a>
+                <a href="#" class="submenu-item" onclick="switchTab('device-pelanggan'); toggleSidebarMobile()">
+                    <span>Device Pelanggan</span>
+                </a>
+                <a href="#" class="submenu-item active" onclick="switchTab('pending'); toggleSidebarMobile()">
+                    <span>Menunggu</span>
+                    <span class="badge" id="badge-pending" style="display:none">0</span>
+                </a>
+            </div>
+            
+            <!-- Menu Pengaturan tetap sama -->
+            <a href="#" class="menu-item" onclick="switchTab('settings'); toggleSidebarMobile()">
+                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m5.5-12l-5.2 3m-1.3 6l-5.2 3m11-1l-5.2-3m-1.3-6l-5.2-3"></path></svg>
+                <span>Pengaturan</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="logout-btn" onclick="adminLogout()">
+                <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Redesigned main content with modern header -->
+    <main class="main-content">
+        <div class="mobile-header">
+            <button class="menu-toggle-btn" onclick="toggleSidebar()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <h2 id="page-title">Menunggu Persetujuan</h2>
+        </div>
+
+        <div class="content-wrapper">
+            
+            <!-- Section baru untuk menu Admin dengan CRUD -->
+            <div id="view-admin" class="content-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Data Admin</h3>
+                        <button class="btn-solid-black" onclick="openAdminModal()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    Tambah Admin
+</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Kode Akses</th>
+                                    <th>Dibuat Tanggal</th>
+                                    <th class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-admin">
+                                <tr><td colspan="5" class="text-center">Memuat...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section baru untuk Data Pelanggan -->
+           <div id="view-data-pelanggan" class="content-section" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Data Pelanggan</h3>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-solid-black" onclick="openPelangganModal()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    Tambah Pelanggan
+</button>
+                            <div class="search-box">
+                                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+                                <input type="text" id="search-data-pelanggan" placeholder="Cari pelanggan..." onkeyup="filterTable('data-pelanggan')">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Kode Akses</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Batas Perangkat</th>
+                                    <th>Dibuat Tanggal</th>
+                                    <th class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-data-pelanggan">
+                                <tr><td colspan="6" class="text-center">Memuat...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section baru untuk Device Pelanggan -->
+            <div id="view-device-pelanggan" class="content-section" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Device Pelanggan</h3>
+                        <div class="search-box">
+                            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+                            <input type="text" id="search-device" placeholder="Cari device..." onkeyup="filterTable('device-pelanggan')">
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Kode Akses</th>
+                                    <th>Device Model</th>
+                                    <th>Device ID</th>
+                                    <th>Terhubung Pada</th>
+                                    <th class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-device-pelanggan">
+                                <tr><td colspan="6" class="text-center">Memuat...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="view-pending" class="content-section" style="display: none;">
+    <div class="card">
+        <div class="card-header" style="flex-direction: column; align-items: stretch; gap: 1.2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-weight: 600; color: #0f172a;">Permintaan Akses</h3>
+        
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <button class="btn-reject-mono" onclick="rejectAllPending()">
+                Tolak Semua
+            </button>
+
+            <div class="toggle-mono-wrapper">
+                <span class="toggle-mono-label">Auto-ACC</span>
+                <label class="switch-mono">
+                    <input type="checkbox" id="toggle-auto-acc" onchange="toggleAutoAcc(this)">
+                    <span class="slider-mono"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <div class="search-box" style="flex: 1; height: 38px;">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+            <input type="text" id="search-pending" placeholder="Cari nama, kode, tanggal..." onkeyup="loadPendingUsers()" style="height: 100%;">
+        </div>
+
+        <div class="custom-sort-container" id="customSort">
+    <div class="sort-trigger" onclick="toggleSortMenu()">
+        <span id="current-sort-text">Urutan: Terbaru</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+    </div>
+
+    <div class="sort-menu" id="sortMenu">
+        <div class="sort-item active" onclick="selectSort('desc', 'Urutan: Terbaru')">Urutan: Terbaru</div>
+        <div class="sort-item" onclick="selectSort('asc', 'Urutan: Terlama')">Urutan: Terlama</div>
+    </div>
+
+    <input type="hidden" id="sort-pending" value="desc">
+</div>
+    </div>
+</div>
+
+        <div class="table-responsive">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Tanggal Daftar</th>
+                        <th>Nama</th>
+                        <th>Kode Akses</th>
+                        <th>Status</th>
+                        <th class="text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-pending">
+                    <tr><td colspan="5" class="text-center">Memuat...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+            <div id="view-settings" class="content-section" style="display: none;">
+    <div class="settings-grid">
+        
+        <div class="settings-column">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Manajemen Sistem</h3>
+                </div>
+                <div class="card-body">
+                    <div class="setting-item" style="display: block; border-bottom: 1px solid #eee; margin-bottom: 1rem; padding-bottom: 1rem;">
+                        <h4 style="margin-bottom: 10px;">Ekspor Data (Backup)</h4>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-mini btn-reset" onclick="exportCSV('pelanggan')">CSV Pelanggan</button>
+                            <button class="btn-mini btn-reset" onclick="exportCSV('admin')">CSV Admin</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-item" style="display: block; border-bottom: 1px solid #eee; margin-bottom: 1rem; padding-bottom: 1rem;">
+                        <h4 style="margin-bottom: 10px;">Impor Data (Restore)</h4>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-mini btn-reset" onclick="document.getElementById('import-pelanggan').click()">Upload Pelanggan</button>
+                            <button class="btn-mini btn-reset" onclick="document.getElementById('import-admin').click()">Upload Admin</button>
+                        </div>
+                        <input type="file" id="import-pelanggan" accept=".csv" style="display: none;" onchange="importCSV(this, 'pelanggan')">
+                        <input type="file" id="import-admin" accept=".csv" style="display: none;" onchange="importCSV(this, 'admin')">
+                    </div>
+
+                    <div class="setting-item" style="display: block;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h4>Mode Maintenance</h4>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-maintenance" onchange="toggleMaintenance(this)">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <textarea id="input-maintenance-msg" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border);" rows="2" placeholder="Tulis alasan perbaikan..."></textarea>
+                        <button class="btn-mini btn-reset" style="margin-top: 5px; width: 100%;" onclick="saveMaintenanceMessage()">Simpan Pesan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-column">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Konfigurasi Pendaftaran</h3>
+                </div>
+                <div class="card-body">
+                    <div class="input-group">
+                        <label>Batas Perangkat Default (User Baru)</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="input-default-limit" style="flex: 1; border-bottom: 2px solid var(--border);" min="1" max="100">
+                            <button class="btn-solid-black" onclick="updateDefaultLimit()">Simpan</button>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-gray); margin-top: 0.5rem;">
+                            Tentukan berapa banyak device yang bisa login otomatis untuk setiap pendaftar baru.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div> </div>
+        </div>
+    </main>
+
+    <!-- Updated login modal to match index.html style with clean design and gradient button -->
+    <div id="admin-login-modal" class="modal-overlay">
+        <div class="login-box">
+            <div class="modal-header">
+                <h2 class="modal-title" style="font-family: 'Inter', sans-serif;">MyBudgetly</h2>
+                <span class="close-button" id="close-admin-login-btn">&times;</span>
+            </div>
+            <p style="text-align: center; color: #666; margin-bottom: 2rem; font-size: 0.875rem;">
+                Silakan masuk untuk melanjutkan
+            </p>
+            
+            <div class="input-group">
+                <label for="admin-code-input" style="font-size: 0.875rem; font-weight: 400; margin-bottom: 0.5rem;">Masukan Kode</label>
+                <input type="text" id="admin-code-input" placeholder="" autocomplete="off">
+            </div>
+
+            <p id="login-error" class="error-msg"></p>
+
+            <button class="btn-login login-button" onclick="checkAdminLogin()">Masuk</button>
+        </div>
+    </div>
+
+    <!-- Modal baru untuk CRUD Admin -->
+    <div id="admin-crud-modal" class="modal-overlay">
+        <div class="login-box">
+            <div class="modal-header">
+                <h2 class="modal-title" id="admin-modal-title">Tambah Admin</h2>
+                <span class="close-button" onclick="closeAdminModal()">&times;</span>
+            </div>
+            
+            <div class="input-group">
+                <label for="admin-username-input">Username</label>
+                <input type="text" id="admin-username-input" placeholder="Masukkan username" autocomplete="off">
+            </div>
+
+            <div class="input-group">
+                <label for="admin-kode-input-new">Kode Akses</label>
+                <input type="text" id="admin-kode-input-new" placeholder="Masukkan kode akses" autocomplete="off">
+            </div>
+
+            <p id="admin-crud-error" class="error-msg"></p>
+
+            <button class="btn-login login-button" onclick="saveAdmin()">Simpan</button>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+    <div id="pelanggan-crud-modal" class="modal-overlay">
+        <div class="login-box">
+            <div class="modal-header">
+                <h2 class="modal-title" id="pelanggan-modal-title">Tambah Pelanggan</h2>
+                <span class="close-button" onclick="closePelangganModal()">&times;</span>
+            </div>
+            
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="pelanggan-username" placeholder="Contoh: Aruln11" autocomplete="off">
+            </div>
+
+            <div class="input-group">
+                <label>Kode Akses (Unik)</label>
+                <input type="text" id="pelanggan-kode" placeholder="Contoh: Arul.n11" autocomplete="off">
+            </div>
+
+            <div class="input-group">
+                <label>Batas Perangkat</label>
+                <input type="number" id="pelanggan-batas" value="3" min="1" max="10">
+            </div>
+
+            <p id="pelanggan-error" class="error-msg"></p>
+
+            <button class="btn-login login-button" onclick="savePelanggan()">Simpan</button>
+        </div>
+    </div>
+</body>
+</html>

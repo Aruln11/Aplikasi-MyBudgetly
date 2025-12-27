@@ -3106,5 +3106,65 @@ body {
 [data-color-theme="custom"] .btn-scan {
   color: var(--primary-btn-text-color); /* Hanya terapkan untuk tema kustom */
 }
+.maintenance-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--background);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
 
+.maintenance-content {
+    text-align: center;
+    max-width: 450px;
+}
+
+.maintenance-icon {
+    color: var(--primary-accent-color);
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1.5rem;
+}
+
+.maintenance-content h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    letter-spacing: -0.025em;
+}
+
+.maintenance-content p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.maintenance-loader {
+    width: 40px;
+    height: 4px;
+    background: var(--background-secondary);
+    margin: 0 auto;
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+}
+
+.maintenance-loader::after {
+    content: '';
+    position: absolute;
+    left: -50%;
+    width: 50%;
+    height: 100%;
+    background: var(--primary-gradient);
+    animation: loading-bar 1.5s infinite linear;
+}
+
+@keyframes loading-bar {
+    0% { left: -50%; }
+    100% { left: 100%; }
+}
 

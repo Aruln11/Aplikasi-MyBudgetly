@@ -1,1 +1,2458 @@
-const _0x4ef564=_0xee92;(function(_0x2de279,_0x30556f){const _0xdf800a=_0xee92,_0x5e4704=_0x2de279();while(!![]){try{const _0x5e81af=-parseInt(_0xdf800a(0x332))/0x1+parseInt(_0xdf800a(0x275))/0x2+-parseInt(_0xdf800a(0x1e7))/0x3*(-parseInt(_0xdf800a(0x320))/0x4)+-parseInt(_0xdf800a(0x255))/0x5*(parseInt(_0xdf800a(0x2c5))/0x6)+parseInt(_0xdf800a(0x2ed))/0x7*(-parseInt(_0xdf800a(0x3a0))/0x8)+-parseInt(_0xdf800a(0x2b8))/0x9+parseInt(_0xdf800a(0x348))/0xa*(parseInt(_0xdf800a(0x2d2))/0xb);if(_0x5e81af===_0x30556f)break;else _0x5e4704['push'](_0x5e4704['shift']());}catch(_0x2c83db){_0x5e4704['push'](_0x5e4704['shift']());}}}(_0x2c54,0x95b74));const SUPABASE_URL=_0x4ef564(0x1de),SUPABASE_ANON_KEY=_0x4ef564(0x217),supabase=window['supabase'][_0x4ef564(0x229)](SUPABASE_URL,SUPABASE_ANON_KEY),supabaseRealtimeClient=window['supabase']['createClient'](SUPABASE_URL,SUPABASE_ANON_KEY);let realtimeChannel=null,transaksi=JSON[_0x4ef564(0x24a)](localStorage[_0x4ef564(0x2df)](_0x4ef564(0x201)))||[],editIndex=null,currentFilteredDate=null,currentConfirmCallback=null,itemRowCounter=0x0,currentPage=0x1;const transactionsPerPage=0xa;let cameraStream=null,cropper=null;function initTheme(){const _0xb5503=_0x4ef564,_0x1e51e0=localStorage[_0xb5503(0x2df)](_0xb5503(0x1e0))||_0xb5503(0x1dd),_0x93cef3=localStorage[_0xb5503(0x2df)](_0xb5503(0x240)),_0x5a90d8=document[_0xb5503(0x399)]('custom-color-input');_0x5a90d8&&(_0x1e51e0===_0xb5503(0x342)&&_0x93cef3?_0x5a90d8[_0xb5503(0x340)]=_0x93cef3:_0x5a90d8[_0xb5503(0x340)]=_0xb5503(0x305));}function toggleTheme(){const _0x1c7d28=_0x4ef564,_0x5a6569=document[_0x1c7d28(0x334)]['getAttribute'](_0x1c7d28(0x231)),_0x853f62=_0x5a6569===_0x1c7d28(0x2e3)?'light':_0x1c7d28(0x2e3);document[_0x1c7d28(0x334)][_0x1c7d28(0x287)](_0x1c7d28(0x231),_0x853f62),localStorage[_0x1c7d28(0x29a)](_0x1c7d28(0x2c1),_0x853f62);}function applyColorTheme(_0x5b76ab){const _0x286fa3=_0x4ef564;document[_0x286fa3(0x334)][_0x286fa3(0x1eb)][_0x286fa3(0x265)](_0x286fa3(0x29f)),document['documentElement'][_0x286fa3(0x1eb)][_0x286fa3(0x265)]('--primary-accent-color'),document[_0x286fa3(0x334)][_0x286fa3(0x1eb)][_0x286fa3(0x265)]('--primary-accent-color-glow'),document[_0x286fa3(0x334)]['setAttribute'](_0x286fa3(0x390),_0x5b76ab),localStorage['setItem'](_0x286fa3(0x1e0),_0x5b76ab),localStorage[_0x286fa3(0x208)](_0x286fa3(0x240));const _0x1ee138=_0x5b76ab[_0x286fa3(0x2ad)](0x0)[_0x286fa3(0x244)]()+_0x5b76ab[_0x286fa3(0x394)](0x1);showNotification(_0x286fa3(0x2af)+_0x1ee138+_0x286fa3(0x30d),_0x286fa3(0x36f)),updateActiveThemeButton(_0x5b76ab),updateActiveSwatch();const _0x2eae02=document[_0x286fa3(0x399)](_0x286fa3(0x370));if(_0x2eae02)_0x2eae02[_0x286fa3(0x340)]=_0x286fa3(0x305);}function resetColorTheme(){const _0x20aa2c=_0x4ef564;applyColorTheme(_0x20aa2c(0x1dd)),showNotification(_0x20aa2c(0x31e),_0x20aa2c(0x242));}function lightenHexColor(_0x4243ff,_0x3461b9){const _0x16c281=_0x4ef564;_0x4243ff=_0x4243ff['replace'](/^#/,'');const _0x43422c=parseInt(_0x4243ff['substring'](0x0,0x2),0x10),_0x4860b5=parseInt(_0x4243ff[_0x16c281(0x352)](0x2,0x4),0x10),_0x4a570c=parseInt(_0x4243ff[_0x16c281(0x352)](0x4,0x6),0x10),_0xe965f0=Math[_0x16c281(0x283)](0xff,_0x43422c+(0xff-_0x43422c)*(_0x3461b9/0x64)),_0x50c91b=Math[_0x16c281(0x283)](0xff,_0x4860b5+(0xff-_0x4860b5)*(_0x3461b9/0x64)),_0x30a1cd=Math[_0x16c281(0x283)](0xff,_0x4a570c+(0xff-_0x4a570c)*(_0x3461b9/0x64));return'#'+Math[_0x16c281(0x2de)](_0xe965f0)['toString'](0x10)[_0x16c281(0x310)](0x2,'0')+Math['round'](_0x50c91b)[_0x16c281(0x34c)](0x10)[_0x16c281(0x310)](0x2,'0')+Math[_0x16c281(0x2de)](_0x30a1cd)[_0x16c281(0x34c)](0x10)[_0x16c281(0x310)](0x2,'0');}function generateGradient(_0x4c40b4){const _0x190071=_0x4ef564,_0x252210=lightenHexColor(_0x4c40b4,0x1e);return _0x190071(0x343)+_0x4c40b4+_0x190071(0x232)+_0x252210+_0x190071(0x29e);}function hexToRgba(_0x1d07de,_0xe9f19c=0x1){const _0x1aa1d9=_0x4ef564,_0x53228f=parseInt(_0x1d07de[_0x1aa1d9(0x394)](0x1,0x3),0x10),_0x2d0dbc=parseInt(_0x1d07de[_0x1aa1d9(0x394)](0x3,0x5),0x10),_0x31b0c5=parseInt(_0x1d07de[_0x1aa1d9(0x394)](0x5,0x7),0x10);return _0x1aa1d9(0x38b)+_0x53228f+',\x20'+_0x2d0dbc+',\x20'+_0x31b0c5+',\x20'+_0xe9f19c+')';}function updateActiveThemeButton(_0x29f724){const _0x364183=_0x4ef564;document['querySelectorAll'](_0x364183(0x32a))[_0x364183(0x33c)](_0x3938e6=>{const _0x3d1f63=_0x364183;_0x3938e6[_0x3d1f63(0x23e)][_0x3d1f63(0x37a)](_0x3d1f63(0x266),_0x3938e6[_0x3d1f63(0x233)]['themeName']===_0x29f724);});}function initializeCustomColorPalette(){const _0x208964=_0x4ef564,_0x1a69b2=document[_0x208964(0x399)](_0x208964(0x211));if(!_0x1a69b2)return;const _0x4018f0=[{'name':_0x208964(0x2fc),'value':_0x208964(0x270)},{'name':_0x208964(0x2a2),'value':_0x208964(0x338)},{'name':_0x208964(0x26f),'value':_0x208964(0x243)},{'name':'Amber','value':_0x208964(0x354)},{'name':_0x208964(0x2b2),'value':'#f43f5e'},{'name':_0x208964(0x378),'value':_0x208964(0x305)}];_0x1a69b2[_0x208964(0x307)]='',_0x4018f0[_0x208964(0x33c)](_0x2b8cf8=>{const _0x50c5ac=_0x208964,_0x3ce3b9=document[_0x50c5ac(0x246)]('button');_0x3ce3b9[_0x50c5ac(0x2b6)]=_0x50c5ac(0x2f2),_0x3ce3b9[_0x50c5ac(0x1eb)][_0x50c5ac(0x363)]=_0x2b8cf8[_0x50c5ac(0x340)],_0x3ce3b9['title']=_0x2b8cf8[_0x50c5ac(0x21b)],_0x3ce3b9[_0x50c5ac(0x233)]['color']=_0x2b8cf8[_0x50c5ac(0x340)],_0x3ce3b9[_0x50c5ac(0x20a)](_0x50c5ac(0x358),()=>{const _0x295726=_0x50c5ac,_0x4248ef=_0x3ce3b9['dataset']['color'],_0x352b9d=generateGradient(_0x4248ef);applyCustomColor(_0x4248ef),showNotification('Warna\x20kustom\x20'+_0x2b8cf8[_0x295726(0x21b)]+_0x295726(0x30d),_0x295726(0x36f));}),_0x1a69b2[_0x50c5ac(0x38c)](_0x3ce3b9);});}function _0xee92(_0x1c6446,_0x3d4b10){const _0x2c54fa=_0x2c54();return _0xee92=function(_0xee92a,_0x5bb44d){_0xee92a=_0xee92a-0x1d9;let _0x2f1da1=_0x2c54fa[_0xee92a];return _0x2f1da1;},_0xee92(_0x1c6446,_0x3d4b10);}function updateActiveSwatch(){const _0x347207=_0x4ef564;document['querySelectorAll']('.color-swatch')['forEach'](_0x109be2=>_0x109be2['classList'][_0x347207(0x2ce)]('active'));const _0x59578e=localStorage['getItem']('colorTheme'),_0x1fda26=localStorage[_0x347207(0x2df)](_0x347207(0x240));if(_0x59578e==='custom'&&_0x1fda26){const _0x2e2ac8=document[_0x347207(0x323)]('.color-swatch[data-color=\x22'+_0x1fda26+'\x22]');_0x2e2ac8&&_0x2e2ac8[_0x347207(0x23e)][_0x347207(0x2e8)](_0x347207(0x266)),updateActiveThemeButton(null);}}function handleProfilePhotoChange(_0x356e7e){const _0x55f656=_0x4ef564;if(!checkLoginStatus()){_0x356e7e[_0x55f656(0x386)][_0x55f656(0x340)]=null;return;}const _0x52b316=_0x356e7e[_0x55f656(0x386)]['files'][0x0];if(_0x52b316){const _0x4a8b44=new FileReader();_0x4a8b44[_0x55f656(0x2b1)]=function(_0x227766){const _0x4d1425=_0x55f656,_0x520799=document['getElementById'](_0x4d1425(0x235)),_0x34434a=document[_0x4d1425(0x399)]('profile-placeholder');_0x520799[_0x4d1425(0x22d)]=_0x227766[_0x4d1425(0x386)][_0x4d1425(0x257)],_0x520799['classList']['add'](_0x4d1425(0x369)),_0x34434a[_0x4d1425(0x23e)][_0x4d1425(0x2e8)](_0x4d1425(0x1d9)),localStorage['setItem'](_0x4d1425(0x38f),_0x227766[_0x4d1425(0x386)][_0x4d1425(0x257)]),showNotification(_0x4d1425(0x388),'success');},_0x4a8b44[_0x55f656(0x219)](_0x52b316);}}function loadProfilePhoto(){const _0x31d486=_0x4ef564,_0x2f8e06=localStorage[_0x31d486(0x2df)](_0x31d486(0x38f));if(_0x2f8e06){const _0x3b0193=document[_0x31d486(0x399)](_0x31d486(0x235)),_0x207741=document['getElementById'](_0x31d486(0x357));_0x3b0193[_0x31d486(0x22d)]=_0x2f8e06,_0x3b0193['classList'][_0x31d486(0x2e8)](_0x31d486(0x369)),_0x207741[_0x31d486(0x23e)]['add'](_0x31d486(0x1d9));}}function editTitle(){const _0x29973f=_0x4ef564;if(!checkLoginStatus())return;const _0xe793bd=document[_0x29973f(0x399)](_0x29973f(0x28b)),_0x1d86b2=document['getElementById']('title-edit-modal'),_0x19162c=document[_0x29973f(0x399)](_0x29973f(0x226));_0x19162c[_0x29973f(0x340)]=_0xe793bd[_0x29973f(0x1f7)],_0x1d86b2[_0x29973f(0x23e)][_0x29973f(0x2e8)](_0x29973f(0x369)),setTimeout(()=>{const _0x3c305d=_0x29973f;_0x19162c[_0x3c305d(0x260)](),_0x19162c[_0x3c305d(0x2f5)]();},0x64);}function closeTitleEditModal(){const _0x1bf4a7=_0x4ef564,_0x22ed20=document['getElementById'](_0x1bf4a7(0x21e));_0x22ed20[_0x1bf4a7(0x23e)][_0x1bf4a7(0x2ce)](_0x1bf4a7(0x369));}function saveTitleFromModal(){const _0x40e2c3=_0x4ef564,_0x5960d7=document[_0x40e2c3(0x399)](_0x40e2c3(0x28b)),_0x4f77e3=document[_0x40e2c3(0x399)](_0x40e2c3(0x226)),_0x2822d1=_0x4f77e3[_0x40e2c3(0x340)][_0x40e2c3(0x2b9)]();_0x2822d1&&(_0x5960d7[_0x40e2c3(0x1f7)]=_0x2822d1,localStorage['setItem'](_0x40e2c3(0x220),_0x2822d1),showNotification(_0x40e2c3(0x2c0),_0x40e2c3(0x36f))),closeTitleEditModal();}document[_0x4ef564(0x20a)](_0x4ef564(0x2bf),function(){const _0xf9e65f=_0x4ef564,_0x19534=document[_0xf9e65f(0x399)](_0xf9e65f(0x226));_0x19534['addEventListener'](_0xf9e65f(0x254),function(_0x27714e){const _0xadf6e1=_0xf9e65f;if(_0x27714e[_0xadf6e1(0x256)]===_0xadf6e1(0x361))_0x27714e[_0xadf6e1(0x353)](),saveTitleFromModal();else _0x27714e[_0xadf6e1(0x256)]==='Escape'&&closeTitleEditModal();});const _0x5ea739=document[_0xf9e65f(0x399)](_0xf9e65f(0x21e));_0x5ea739[_0xf9e65f(0x20a)](_0xf9e65f(0x358),function(_0x465c50){const _0x4a11de=_0xf9e65f;_0x465c50[_0x4a11de(0x386)]===_0x5ea739&&closeTitleEditModal();}),document[_0xf9e65f(0x399)](_0xf9e65f(0x374))['addEventListener'](_0xf9e65f(0x358),()=>{currentConfirmCallback&&(currentConfirmCallback(),currentConfirmCallback=null),closeConfirmationModal();}),initializeCustomColorPalette();});function loadAppTitle(){const _0x192994=_0x4ef564,_0x1fe89f=localStorage[_0x192994(0x2df)]('appTitle');_0x1fe89f&&(document[_0x192994(0x399)](_0x192994(0x28b))[_0x192994(0x1f7)]=_0x1fe89f);}const form=document[_0x4ef564(0x399)](_0x4ef564(0x245)),cancelEditBtn=document[_0x4ef564(0x399)](_0x4ef564(0x30c)),submitBtn=document[_0x4ef564(0x399)]('submit-btn'),submitText=document['getElementById'](_0x4ef564(0x296)),formTitle=document[_0x4ef564(0x399)](_0x4ef564(0x375)),emptyState=document['getElementById'](_0x4ef564(0x3a7)),pdfSettingsModal=document[_0x4ef564(0x399)](_0x4ef564(0x28c)),deleteModal=document[_0x4ef564(0x399)](_0x4ef564(0x36a)),pdfOrientationSelect=document[_0x4ef564(0x399)](_0x4ef564(0x2d1)),pdfFilenameInput=document[_0x4ef564(0x399)](_0x4ef564(0x221)),pdfModalBtn=document['getElementById'](_0x4ef564(0x30a)),confirmationModal=document['getElementById'](_0x4ef564(0x3ad)),confirmationModalMessage=document[_0x4ef564(0x399)]('confirmationModalMessage'),importModal=document[_0x4ef564(0x399)](_0x4ef564(0x2c8)),importFileInput=document[_0x4ef564(0x399)](_0x4ef564(0x218)),confirmImportBtn=document[_0x4ef564(0x399)](_0x4ef564(0x327)),dataActionsDropdown=document[_0x4ef564(0x399)](_0x4ef564(0x250)),dataActionsToggleBtn=document[_0x4ef564(0x399)](_0x4ef564(0x37c)),calendarFilterIcon=document[_0x4ef564(0x399)]('calendar-filter-icon'),hiddenDateFilterInput=document[_0x4ef564(0x399)](_0x4ef564(0x30f)),activeDateFilterDisplay=document[_0x4ef564(0x399)](_0x4ef564(0x368)),clearDateFilterBtn=document[_0x4ef564(0x399)]('clear-date-filter-btn'),deleteFilterSelect=document[_0x4ef564(0x399)](_0x4ef564(0x30b)),dateRangeDeleteGroup=document[_0x4ef564(0x399)](_0x4ef564(0x38a)),deleteStartDateInput=document[_0x4ef564(0x399)](_0x4ef564(0x32d)),deleteEndDateInput=document['getElementById'](_0x4ef564(0x1f9)),themeSettingsModal=document[_0x4ef564(0x399)](_0x4ef564(0x360));function setTodayDate(){const _0x52b470=_0x4ef564,_0x2eb4f5=new Date(),_0xf157a5=_0x2eb4f5['toISOString']()['split']('T')[0x0];document['getElementById'](_0x52b470(0x35e))[_0x52b470(0x340)]=_0xf157a5;}function setupMidnightDateUpdate(){const _0x8ae918=_0x4ef564,_0x264359=new Date(),_0x3ec871=new Date(_0x264359);_0x3ec871['setDate'](_0x3ec871[_0x8ae918(0x300)]()+0x1),_0x3ec871[_0x8ae918(0x228)](0x0,0x0,0x0,0x0);const _0x1bbd7f=_0x3ec871[_0x8ae918(0x2c7)]()-_0x264359[_0x8ae918(0x2c7)]();setTimeout(()=>{setTodayDate(),setInterval(()=>{setTodayDate();},0x18*0x3c*0x3c*0x3e8);},_0x1bbd7f);}function _0x2c54(){const _0x16e50e=['ceil','Masuk','ocr-status','toString','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x200.7rem;\x20border-bottom:\x201px\x20solid\x20#eee;\x20text-align:\x20right;\x20font-weight:\x20600;\x20color:\x20#333;\x22>','ocr-status-text','start','pemasukan','stop','substring','preventDefault','#f59e0b','block','onclick','profile-placeholder','click','0.6','Pindai\x20Struk\x20Belanja','jenis','functions','from','tanggal','NotAllowedError','themeSettingsModal','Enter','querySelectorAll','backgroundColor','correction-controls','filter-bulan','select-active','href','active-date-filter-display','show','deleteModal','jpeg','table','auth-button','files','success','custom-color-input','capture-btn','splice','-data-transaksi-','confirmActionBtn','form-title','\x20-\x20Laporan\x20Keuangan</h1>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:\x2012px;\x20color:\x20#6b7280;\x20margin-bottom:\x200.5rem;\x22>Periode:\x20','Error\x20accessing\x20camera:\x20','Indigo','test','toggle','\x20(Pencarian:\x20\x22','data-actions-toggle-btn','Cropper\x20tidak\x20siap.','\x22\x20placeholder=\x22Contoh:\x20Indomie\x20Goreng\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22item-input-group\x20item-price-group\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20for=\x22item-price-','Akses\x20kamera\x20ditolak.\x20Silakan\x20izinkan\x20akses\x20kamera\x20di\x20pengaturan\x20browser\x20Anda\x20untuk\x20menggunakan\x20fitur\x20ini.','stringify','.table-container\x20table','modal-kode','id-ID','error','1px\x20solid\x20#e2e8f0','target','Mulai\x20mendengarkan\x20perubahan\x20pada\x20kode:\x20','Foto\x20profil\x20berhasil\x20diperbarui','submit','date-range-delete-group','rgba(','appendChild','pointerEvents','border','profilePhoto','data-color-theme','indexOf','createObjectURL','Koreksi\x20Hasil\x20Pindaian','slice','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20class=\x22amount-negative\x20text-right\x22>','toISOString','login-modal','randomUUID','getElementById','type','✏️\x20Edit\x20Transaksi','item-list-container','absolute','\x22>Nama\x20Barang</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22item-name-','image-preview-canvas','83064pLVZXi','\x20item.\x20Mohon\x20periksa\x20kembali.','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x27text-align:\x20left;\x27>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<b\x20style=\x27display:\x20block;\x20margin-bottom:\x208px;\x20font-size:\x201.1em;\x27>💡\x20Tips\x20untuk\x20Hasil\x20Pindai\x20Terbaik</b>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<ul\x20style=\x27margin:\x200;\x20padding-left:\x2020px;\x27>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x27margin-bottom:\x205px;\x27><b>Cahaya\x20Terang:</b>\x20Pastikan\x20struk\x20berada\x20di\x20area\x20dengan\x20pencahayaan\x20yang\x20baik\x20dan\x20merata.</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x27margin-bottom:\x205px;\x27><b>Permukaan\x20Datar:</b>\x20Letakkan\x20struk\x20di\x20atas\x20permukaan\x20yang\x20rata\x20dan\x20tidak\x20terlipat.</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x27margin-bottom:\x205px;\x27><b>Hindari\x20Bayangan:</b>\x20Posisikan\x20kamera\x20agar\x20tidak\x20ada\x20bayangan\x20dari\x20tangan\x20atau\x20ponsel\x20Anda\x20yang\x20menutupi\x20struk.</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x27margin-bottom:\x205px;\x27><b>Fokus\x20&\x20Jelas:</b>\x20Pastikan\x20kamera\x20fokus\x20dan\x20seluruh\x20teks\x20pada\x20struk\x20terlihat\x20tajam\x20dan\x20tidak\x20buram\x20sebelum\x20mengambil\x20gambar.</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x27margin-bottom:\x200;\x27><b>Isi\x20Bingkai:</b>\x20Posisikan\x20struk\x20agar\x20memenuhi\x20area\x20di\x20dalam\x20bingkai\x20pemindai.</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</ul>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','access-code-','map','toDataURL','PDF\x20berhasil\x20dibuat!','empty-state','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x200.7rem;\x20border-bottom:\x201px\x20solid\x20#eee;\x22>','search-clear','2000-01-01','notification\x20','none','confirmationModal','application/json','ind','Gagal\x20mengakses\x20kamera.','Tidak\x20ada\x20data\x20transaksi\x20untuk\x20diexport.','offsetHeight','2-digit','\x22\x20class=\x22input-field\x20item-name-input\x22\x20value=\x22','stopPropagation','catch','hide','\x22\x20placeholder=\x2215000\x22\x20inputmode=\x22numeric\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22delete-item-btn\x22\x20onclick=\x22this.parentElement.remove();\x20updateScannedTotal();\x22\x20title=\x22Hapus\x20item\x20ini\x22>✕</button>\x0a\x20\x20\x20\x20\x20\x20','Koneksi\x20Realtime\x20gagal:','T00:00:00','ocean','https://kycmnkibuxtzrbzrhezo.supabase.co','color','colorTheme','unsubscribe','drawImage','DateTimeFormat','item-list-wrapper','myDeviceId','.page-info','69izBUnr','originalIndex','image','modal-error-message','style','includes','background','display','invoke','progress','marginBottom','<mark\x20style=\x22background:\x20rgba(79,\x2070,\x20229,\x200.2);\x20padding:\x200.1rem\x200.2rem;\x20border-radius:\x203px;\x22>$1</mark>','isLoggedIn','srcObject','Kode\x20akses\x20telah\x20DIHAPUS\x20dari\x20server!','Data\x20tidak\x20lengkap','textContent','Sesi\x20Anda\x20telah\x20berakhir\x20(kode\x20dihapus).','delete-end-date','Pilih\x20tanggal\x20mulai\x20dan\x20tanggal\x20akhir\x20untuk\x20rentang\x20kustom.','.item-name-input','flex','pengeluaran','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','custom-range','getAttribute','transaksi','Error\x20parsing\x20JSON:','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22notification-close\x22\x20onclick=\x22closeNotification(','split','Format\x20file\x20JSON\x20tidak\x20valid.\x20Pastikan\x20berisi\x20array\x20transaksi\x20dengan\x20properti\x20yang\x20benar.','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22padding:\x201rem;\x20background:\x20#ffffff;\x20border-radius:\x206px;\x20border:\x201px\x20solid\x20#e5e7eb;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x200.8rem;\x20color:\x20#6b7280;\x20margin-bottom:\x200.5rem;\x20font-weight:\x20500;\x22>Saldo\x20Akhir</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x201.1rem;\x20font-weight:\x20700;\x20color:\x20#333;\x22>','deskripsi','removeItem','jumlah','addEventListener','download','&lt;','settings-menu-toggle','recognize','.quick-amount-btn','environment','color-palette','pagination-input','destroy','Logout','✂️\x20Crop\x20&\x20Proses','Yakin\x20ingin\x20menghapus\x20transaksi\x20\x22','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5Y21ua2lidXh0enJienJoZXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0ODI3NDAsImV4cCI6MjA3NzA1ODc0MH0.WtZhCS8qRUQNX5cSJAKdyA4G7Df7izGeWcjbWZTSbE4','import-file','readAsDataURL','left','name','reverse','\x27\x20menjadi\x20\x27','title-edit-modal','body','appTitle','pdf-filename','dispatchEvent','warning','data\x20dari\x20','true','title-edit-input','center','setHours','createClient','warn','1.5rem','\x20(Pencarian\x20Tanggal:\x20\x22','src','Sesi\x20Anda\x20telah\x20berakhir\x20(kode\x20diubah).','span:last-child','Berhasil\x20terhubung\x20ke\x20Realtime\x20untuk\x20session\x20listener.','data-theme','\x200%,\x20','dataset','title','profile-photo','image/jpeg','eventType','status','disabled','removeChannel','getUserMedia','Hapus\x20Data','div','classList','edit','customAccentColor','startsWith','info','#10b981','toUpperCase','form-transaksi','createElement','Menganalisis\x20teks...\x20(','toLocaleString','--primary-btn-text-color','parse','getFullYear','pagination-btn','8px','Jumlah\x20tidak\x20valid','smooth','data-actions-dropdown','Tanggal\x20mulai\x20tidak\x20boleh\x20setelah\x20tanggal\x20akhir.',')\x22\x20data-tooltip=\x22Edit\x20transaksi\x22\x20tabindex=\x220\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22action-icon\x20edit-icon\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22action-btn\x20delete-btn\x22\x20onclick=\x22hapusTransaksi(','.select-items','keydown','243365HyufbH','key','result','myBudgetlyDeviceId','tbody-tabel','.select-selected','semua-periode','marginTop','Kode\x20tidak\x20valid\x20atau\x20sudah\x20digunakan.','pagination-controls','Tidak\x20ada\x20data','focus','.custom-select-container','borderCollapse','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<hr\x20style=\x22border:\x20none;\x20border-top:\x201px\x20solid\x20#e5e7eb;\x20margin:\x201rem\x200;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','Memverifikasi...','removeProperty','active','Export\x20PDF','numeric','#f8f8f8','Edit\x20dibatalkan','readAsText','data\x20','terminate','number','Emerald','#475569','\x22\x20class=\x22input-field\x20item-price-input\x22\x20value=\x22','metaKey','modal-login-form','apply','2299030SxJZtt','Login','toggle-edit-btn','getTracks','fontFamily','Tidak\x20ada\x20data\x20untuk\x20periode\x20ini','Data\x20transaksi\x20berhasil\x20diexport!','Gagal\x20membuat\x20PDF','#deleteModal\x20.btn-delete-all','--primary-accent-color-glow','-9999px','var(--background-secondary)','data-value','nonaktifkan-perangkat','min','#333','.pagination-btn:first-child','ocr-progress','setAttribute','fade-in-up','\x20Tanggal\x20','length','app-title','pdfSettingsModal','.item-row','\x20transaksi\x20(','auto','data\x20pemasukan','laporan-keuangan-','revokeObjectURL','parentNode','Force\x20logout\x20dipicu:\x20','\x22>Harga</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22number\x22\x20id=\x22item-price-','submit-text','.pagination-btn:last-child','Halaman\x20Berikutnya','process-btn','setItem','every','scanner-help-btn','Tidak\x20ada\x20item\x20valid\x20untuk\x20disimpan.','\x20100%)','--primary-gradient','Terjadi\x20kesalahan\x20saat\x20pemindaian\x20OCR.','#process-btn-text','Sky','toLowerCase','kode=eq.','push','videoWidth','scrollIntoView','2rem','nearest','kode','fontSize','saldo','charAt','removeChild','Tema\x20','new','onload','Rose','scanner-results-container','channel','match','className','cropper-container','3504978tvdIsx','trim','custom-pdf-orientation','save','then','<td\x20colspan=\x226\x22\x20style=\x22text-align:\x20center;\x20padding:\x202rem;\x20color:\x20var(--text-secondary);\x22>Tidak\x20ada\x20hasil\x20untuk\x20filter\x20yang\x20diterapkan.\x20<a\x20href=\x22#\x22\x20onclick=\x22event.preventDefault();\x20clearAllFilters();\x22>Hapus\x20filter</a></td>','IDR','DOMContentLoaded','Nama\x20aplikasi\x20berhasil\x20diubah','theme','short','Gagal\x20terhubung\x20ke\x20server.\x20Coba\x20lagi\x20nanti.','replace','30IEYeId','format','getTime','importModal','input','mediaDevices','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x200.7rem;\x20border-bottom:\x201px\x20solid\x20#eee;\x20text-align:\x20right;\x20color:\x20#ef4444;\x20font-weight:\x20500;\x22>','notification-','width','remove','getContext','padding','pdf-orientation','29678APdlvu','Masukkan\x20halaman\x20antara\x201\x20dan\x20','setProperty','Yakin\x20ingin\x20menghapus\x20','filter','sort','\x20sampai\x20','change','toggle-image-btn','long','receipt-image-display','UPDATE','round','getItem','page-info\x20clickable','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Anda\x20telah\x20logout.','dark','height','tbody','button','settings-menu','add','log','Escape','\x0a\x20\x20\x20\x20<div\x20class=\x22empty-state-icon\x22>📊</div>\x0a\x20\x20\x20\x20<h3>Belum\x20ada\x20transaksi</h3>\x0a\x20\x20\x20\x20<p>Mulai\x20tambahkan\x20transaksi\x20pertama\x20Anda!</p>\x0a\x20\x20','message','392vPFHVe','Simpan\x20Transaksi','semua','rescan-btn','Transaksi\x20berhasil\x20dihapus','color-swatch','var(--border)','Terdeteksi\x20','select','Gagal\x20mendapatkan\x20gambar\x20hasil\x20crop.','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20class=\x22text-center\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22transaction-actions\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22action-btn\x20edit-btn\x22\x20onclick=\x22editTransaksi(','semua\x20data','aktivasi-perangkat','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h1\x20style=\x22font-size:\x2020px;\x20color:\x20#1f2937;\x20margin-bottom:\x200.75rem;\x22>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22item-details-wrapper\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22item-input-group\x20item-name-group\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20for=\x22item-name-','Slate','opacity','preview-controls','.login-button','getDate','letter','12px','string','Gagal\x20membaca\x20file\x20JSON.\x20Pastikan\x20format\x20file\x20benar\x20dan\x20tidak\x20rusak.','#4f46e5','Menghapus...','innerHTML','runningBalance','\x20transaksi\x20berhasil\x20dihapus!','pdf-modal-btn','delete-filter','cancel-edit-btn','\x20diterapkan','.item-price-input','hidden-date-filter','padStart','myAccessCode','scan-modal','showPicker','#fff','📝\x20Tambah\x20Transaksi\x20Baru','open-theme-modal-btn','Data\x20kode\x20diupdate,\x20tapi\x20kodenya\x20tidak\x20berubah.\x20Sesi\x20lanjut.','collapse','onerror','scanner-view-container','\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22notification-icon\x22>','reset','.json','Tema\x20dikembalikan\x20ke\x20default','inline-flex','163160UUWhGp','option','loading','querySelector','Gagal\x20menghitung\x20warna\x20teks:','scanner-title','createWorker','confirm-import-btn','search-input','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22padding:\x201rem;\x20background:\x20#ffffff;\x20border-radius:\x206px;\x20border:\x201px\x20solid\x20#e5e7eb;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x200.8rem;\x20color:\x20#6b7280;\x20margin-bottom:\x200.5rem;\x20font-weight:\x20500;\x22>Total\x20Pengeluaran</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x201.1rem;\x20font-weight:\x20700;\x20color:\x20#ef4444;\x22>','.theme-option','select-hide','OCR\x20Error:','delete-start-date','Gagal\x20membaca\x20file.','Kode\x20akses\x20telah\x20DIUBAH\x20dari\x20\x27','receipt-image-wrapper','Tidak\x20ada\x20item\x20untuk\x20disimpan.','397792HjUajp','toLocaleDateString','documentElement','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22font-size:\x201.1rem;\x20font-weight:\x20600;\x20color:\x20#333;\x20margin-bottom:\x201rem;\x20text-align:\x20center;\x22>Ringkasan\x20Keuangan</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:\x20grid;\x20grid-template-columns:\x20repeat(3,\x201fr);\x20gap:\x201rem;\x20text-align:\x20center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22padding:\x201rem;\x20background:\x20#ffffff;\x20border-radius:\x206px;\x20border:\x201px\x20solid\x20#e5e7eb;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x200.8rem;\x20color:\x20#6b7280;\x20margin-bottom:\x200.5rem;\x20font-weight:\x20500;\x22>Total\x20Pemasukan</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x201.1rem;\x20font-weight:\x20700;\x20color:\x20#10b981;\x22>','Update\x20Transaksi','Inter,\x20sans-serif','#0ea5e9','offsetWidth','value-updated','Login\x20berhasil!\x20Selamat\x20datang.','forEach','open','span','100%','value','image-to-crop','custom','linear-gradient(135deg,\x20','#ffffff','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22notification-message\x22>','$1$2','contains','510OUGNYh'];_0x2c54=function(){return _0x16e50e;};return _0x2c54();}document['addEventListener'](_0x4ef564(0x2bf),function(){const _0xa162e5=_0x4ef564;initTheme(),loadProfilePhoto(),loadAppTitle(),setTodayDate(),setupMidnightDateUpdate(),setupEventListeners(),initializeCustomSelect(),initializeMonthFilter(),initializePdfOrientationSelect(),document['getElementById'](_0xa162e5(0x273))[_0xa162e5(0x20a)](_0xa162e5(0x389),handleLogin),document[_0xa162e5(0x399)]('close-login-modal-btn')[_0xa162e5(0x20a)](_0xa162e5(0x358),closeLoginModal),localStorage['getItem'](_0xa162e5(0x1f3))==='true'&&startRealtimeSessionListener(),updateAuthUI(),updateUI();});function setupEventListeners(){const _0x2c8a6f=_0x4ef564;cancelEditBtn[_0x2c8a6f(0x20a)]('click',cancelEdit);const _0x54e98d=document[_0x2c8a6f(0x399)](_0x2c8a6f(0x2e7)),_0x47a0d3=document['getElementById'](_0x2c8a6f(0x20d)),_0x51ee3b=document[_0x2c8a6f(0x399)](_0x2c8a6f(0x316));_0x54e98d&&_0x47a0d3&&_0x51ee3b&&(_0x47a0d3[_0x2c8a6f(0x20a)](_0x2c8a6f(0x358),_0x433e04=>{const _0x2ff055=_0x2c8a6f;_0x433e04[_0x2ff055(0x3b5)](),_0x54e98d[_0x2ff055(0x23e)][_0x2ff055(0x37a)](_0x2ff055(0x33d));}),_0x51ee3b[_0x2c8a6f(0x20a)](_0x2c8a6f(0x358),()=>{const _0x44a348=_0x2c8a6f;openThemeModal(),_0x54e98d[_0x44a348(0x23e)]['remove']('open');}),window[_0x2c8a6f(0x20a)](_0x2c8a6f(0x358),_0x559d14=>{const _0x5d7c8a=_0x2c8a6f;!_0x54e98d[_0x5d7c8a(0x347)](_0x559d14[_0x5d7c8a(0x386)])&&_0x54e98d[_0x5d7c8a(0x23e)][_0x5d7c8a(0x2ce)](_0x5d7c8a(0x33d));}));document[_0x2c8a6f(0x362)](_0x2c8a6f(0x20f))[_0x2c8a6f(0x33c)](_0x16fc0f=>{const _0x213fdb=_0x2c8a6f;_0x16fc0f[_0x213fdb(0x20a)](_0x213fdb(0x358),function(){const _0x10ea7a=_0x213fdb;document[_0x10ea7a(0x399)]('jumlah')[_0x10ea7a(0x340)]=this['dataset']['amount'],this['style'][_0x10ea7a(0x1ed)]=_0x10ea7a(0x2f3),setTimeout(()=>{const _0xbba023=_0x10ea7a;this['style']['background']=_0xbba023(0x280);},0xc8);});}),dataActionsToggleBtn[_0x2c8a6f(0x20a)](_0x2c8a6f(0x358),()=>{const _0x1b5eed=_0x2c8a6f;dataActionsDropdown[_0x1b5eed(0x23e)][_0x1b5eed(0x37a)](_0x1b5eed(0x33d));}),window[_0x2c8a6f(0x20a)](_0x2c8a6f(0x358),function(_0x2180c9){const _0x5c0282=_0x2c8a6f;!dataActionsDropdown[_0x5c0282(0x347)](_0x2180c9['target'])&&dataActionsDropdown[_0x5c0282(0x23e)][_0x5c0282(0x2ce)](_0x5c0282(0x33d));}),document[_0x2c8a6f(0x399)](_0x2c8a6f(0x365))[_0x2c8a6f(0x20a)]('change',()=>{currentPage=0x1,updateUI();});const _0xab2508=document[_0x2c8a6f(0x399)](_0x2c8a6f(0x328)),_0x3b8795=document[_0x2c8a6f(0x399)](_0x2c8a6f(0x3a9)),_0x554529=debounce(()=>{currentPage=0x1,updateUI();},0x12c);_0xab2508[_0x2c8a6f(0x20a)](_0x2c8a6f(0x2c9),function(){const _0x531010=_0x2c8a6f,_0x287867=this[_0x531010(0x340)][_0x531010(0x2b9)]();_0x287867?_0x3b8795['style'][_0x531010(0x1ee)]='flex':_0x3b8795[_0x531010(0x1eb)][_0x531010(0x1ee)]=_0x531010(0x3ac),_0x554529();}),document[_0x2c8a6f(0x399)](_0x2c8a6f(0x207))['addEventListener'](_0x2c8a6f(0x254),function(_0x8218a0){const _0xd219be=_0x2c8a6f;_0x8218a0[_0xd219be(0x256)]===_0xd219be(0x361)&&(_0x8218a0['preventDefault'](),document[_0xd219be(0x399)]('jumlah')['focus']());}),document['getElementById']('jumlah')[_0x2c8a6f(0x20a)](_0x2c8a6f(0x254),function(_0x43e8af){const _0x48ba07=_0x2c8a6f;_0x43e8af[_0x48ba07(0x256)]==='Enter'&&(_0x43e8af[_0x48ba07(0x353)](),document[_0x48ba07(0x399)](_0x48ba07(0x35e))[_0x48ba07(0x260)]());}),window['addEventListener']('click',function(_0x5eda01){const _0x53b945=_0x2c8a6f;if(_0x5eda01['target']==themeSettingsModal)closeThemeModal();if(_0x5eda01['target']==pdfSettingsModal)closePdfSettingsModal();if(_0x5eda01[_0x53b945(0x386)]==deleteModal)closeDeleteModal();if(_0x5eda01[_0x53b945(0x386)]==importModal)closeImportModal();if(_0x5eda01[_0x53b945(0x386)]==confirmationModal)closeConfirmationModal();if(_0x5eda01[_0x53b945(0x386)]==document[_0x53b945(0x399)](_0x53b945(0x397)))closeLoginModal();}),calendarFilterIcon[_0x2c8a6f(0x20a)](_0x2c8a6f(0x358),()=>{const _0x554313=_0x2c8a6f;hiddenDateFilterInput[_0x554313(0x313)]();}),hiddenDateFilterInput['addEventListener'](_0x2c8a6f(0x2d9),function(){const _0x2d776a=_0x2c8a6f;currentPage=0x1,currentFilteredDate=this[_0x2d776a(0x340)],updateUI(),updateDateFilterDisplay();}),clearDateFilterBtn[_0x2c8a6f(0x20a)](_0x2c8a6f(0x358),clearDateFilter),importFileInput['addEventListener'](_0x2c8a6f(0x2d9),function(){const _0x4f37bc=_0x2c8a6f;confirmImportBtn[_0x4f37bc(0x239)]=this[_0x4f37bc(0x36e)][_0x4f37bc(0x28a)]===0x0;}),confirmImportBtn[_0x2c8a6f(0x239)]=!![],deleteFilterSelect['addEventListener'](_0x2c8a6f(0x2d9),function(){const _0x54217e=_0x2c8a6f;if(this[_0x54217e(0x340)]===_0x54217e(0x1ff)){dateRangeDeleteGroup['style'][_0x54217e(0x1ee)]=_0x54217e(0x355);!deleteStartDateInput['value']&&(deleteStartDateInput[_0x54217e(0x340)]=_0x54217e(0x3aa));if(!deleteEndDateInput['value']){const _0x5af8bd=new Date();deleteEndDateInput['value']=_0x5af8bd[_0x54217e(0x396)]()[_0x54217e(0x204)]('T')[0x0];}}else dateRangeDeleteGroup[_0x54217e(0x1eb)][_0x54217e(0x1ee)]=_0x54217e(0x3ac);}),setupScanEventListeners();const _0x381a34=document[_0x2c8a6f(0x399)](_0x2c8a6f(0x370));_0x381a34&&_0x381a34[_0x2c8a6f(0x20a)]('input',_0xb3d650=>{const _0x4584f8=_0x2c8a6f,_0x33f4d9=_0xb3d650[_0x4584f8(0x386)][_0x4584f8(0x340)];applyCustomColor(_0x33f4d9);});}function setupScanEventListeners(){const _0x4c972c=_0x4ef564,_0x3077af=document[_0x4c972c(0x399)]('scan-modal'),_0x44dab4=document['getElementById'](_0x4c972c(0x29c)),_0x1cfdcf=document['getElementById'](_0x4c972c(0x277)),_0x5043e8=document['getElementById'](_0x4c972c(0x2da));document['getElementById']('scan-receipt-btn')[_0x4c972c(0x20a)](_0x4c972c(0x358),openScanner),document[_0x4c972c(0x399)]('capture-btn')['addEventListener']('click',captureImage),document[_0x4c972c(0x399)](_0x4c972c(0x2f0))[_0x4c972c(0x20a)](_0x4c972c(0x358),resetScanner),document[_0x4c972c(0x399)]('cancel-scan-btn')[_0x4c972c(0x20a)]('click',closeScanner),document[_0x4c972c(0x399)]('save-scanned-btn')[_0x4c972c(0x20a)](_0x4c972c(0x358),saveScannedTransaction),document[_0x4c972c(0x399)]('add-item-btn')[_0x4c972c(0x20a)](_0x4c972c(0x358),()=>addScannedItemRow()),_0x44dab4[_0x4c972c(0x20a)](_0x4c972c(0x358),()=>{const _0x4ed5de=_0x4c972c,_0x3329d4=_0x4ed5de(0x3a2);showNotification(_0x3329d4,'info',null);}),_0x1cfdcf[_0x4c972c(0x20a)](_0x4c972c(0x358),()=>setCorrectionView(_0x4c972c(0x23f))),_0x5043e8[_0x4c972c(0x20a)](_0x4c972c(0x358),()=>setCorrectionView(_0x4c972c(0x1e9))),_0x3077af[_0x4c972c(0x20a)]('click',_0x3a63df=>{const _0x41ad87=_0x4c972c;_0x3a63df[_0x41ad87(0x386)]===_0x3077af&&closeScanner();});}async function openScanner(){const _0x31baad=_0x4ef564;if(!checkLoginStatus())return;const _0x3bb4e6=document[_0x31baad(0x399)](_0x31baad(0x312));_0x3bb4e6[_0x31baad(0x1eb)][_0x31baad(0x1ee)]=_0x31baad(0x1fc),resetScannerState();try{const _0x4b3a4a={'video':{'facingMode':_0x31baad(0x210)}};cameraStream=await navigator[_0x31baad(0x2ca)][_0x31baad(0x23b)](_0x4b3a4a);const _0x2b0cab=document[_0x31baad(0x399)]('camera-view');_0x2b0cab[_0x31baad(0x1f4)]=cameraStream;}catch(_0x429c5f){console[_0x31baad(0x384)](_0x31baad(0x377),_0x429c5f);let _0x2cc745=_0x31baad(0x3b0);_0x429c5f[_0x31baad(0x21b)]===_0x31baad(0x35f)&&(_0x2cc745=_0x31baad(0x37f)),showNotification(_0x2cc745,_0x31baad(0x384),0x1770),closeScanner();}}function closeScanner(){const _0x1c34f7=_0x4ef564;cameraStream&&(cameraStream[_0x1c34f7(0x278)]()[_0x1c34f7(0x33c)](_0x5d470e=>_0x5d470e[_0x1c34f7(0x351)]()),cameraStream=null),cropper&&(cropper[_0x1c34f7(0x213)](),cropper=null),document['getElementById'](_0x1c34f7(0x312))['style'][_0x1c34f7(0x1ee)]=_0x1c34f7(0x3ac);}function resetScannerState(){const _0x52bb3b=_0x4ef564;document[_0x52bb3b(0x399)](_0x52bb3b(0x325))[_0x52bb3b(0x1f7)]=_0x52bb3b(0x35a),document['getElementById'](_0x52bb3b(0x31a))['style'][_0x52bb3b(0x1ee)]=_0x52bb3b(0x355),document[_0x52bb3b(0x399)](_0x52bb3b(0x2b7))[_0x52bb3b(0x1eb)][_0x52bb3b(0x1ee)]='none',document[_0x52bb3b(0x399)](_0x52bb3b(0x2b3))[_0x52bb3b(0x1eb)][_0x52bb3b(0x1ee)]=_0x52bb3b(0x3ac),document[_0x52bb3b(0x399)](_0x52bb3b(0x371))['style']['display']=_0x52bb3b(0x31f),document[_0x52bb3b(0x399)](_0x52bb3b(0x2fe))[_0x52bb3b(0x1eb)]['display']='none',document[_0x52bb3b(0x399)](_0x52bb3b(0x364))[_0x52bb3b(0x1eb)][_0x52bb3b(0x1ee)]='none',document[_0x52bb3b(0x399)](_0x52bb3b(0x34b))['style']['display']=_0x52bb3b(0x3ac),document[_0x52bb3b(0x399)](_0x52bb3b(0x39c))[_0x52bb3b(0x307)]='';}function captureImage(){const _0x4c0384=_0x4ef564,_0xaabfe=document['getElementById']('camera-view'),_0x58a4f9=document[_0x4c0384(0x399)](_0x4c0384(0x39f)),_0x2205e0=document['getElementById'](_0x4c0384(0x341));_0x58a4f9[_0x4c0384(0x2cd)]=_0xaabfe[_0x4c0384(0x2a6)],_0x58a4f9[_0x4c0384(0x2e4)]=_0xaabfe['videoHeight'];const _0x3d37ee=_0x58a4f9[_0x4c0384(0x2cf)]('2d');_0x3d37ee[_0x4c0384(0x1e2)](_0xaabfe,0x0,0x0,_0x58a4f9[_0x4c0384(0x2cd)],_0x58a4f9[_0x4c0384(0x2e4)]),_0x2205e0[_0x4c0384(0x22d)]=_0x58a4f9[_0x4c0384(0x3a5)](_0x4c0384(0x236)),document[_0x4c0384(0x399)](_0x4c0384(0x31a))[_0x4c0384(0x1eb)][_0x4c0384(0x1ee)]=_0x4c0384(0x3ac),document['getElementById'](_0x4c0384(0x2b7))[_0x4c0384(0x1eb)]['display']=_0x4c0384(0x355);cropper&&cropper['destroy']();cropper=new Cropper(_0x2205e0,{'viewMode':0x1,'background':![],'responsive':!![],'autoCropArea':0.9}),document[_0x4c0384(0x399)]('capture-btn')[_0x4c0384(0x1eb)][_0x4c0384(0x1ee)]=_0x4c0384(0x3ac);const _0x4c16bf=document[_0x4c0384(0x399)](_0x4c0384(0x299));_0x4c16bf['querySelector'](_0x4c0384(0x2a1))['innerHTML']=_0x4c0384(0x215),_0x4c16bf[_0x4c0384(0x356)]=processCroppedImage,document['getElementById'](_0x4c0384(0x2fe))['style'][_0x4c0384(0x1ee)]=_0x4c0384(0x1fc);}function resetScanner(){cropper&&(cropper['destroy'](),cropper=null),resetScannerState();}async function processCroppedImage(){const _0xdff749=_0x4ef564;if(!cropper){showNotification(_0xdff749(0x37d),_0xdff749(0x384));return;}const _0x174353=document[_0xdff749(0x399)]('ocr-status'),_0x5179b1=document[_0xdff749(0x399)](_0xdff749(0x34e)),_0x417bf9=document[_0xdff749(0x399)](_0xdff749(0x286)),_0x37dc23=document[_0xdff749(0x399)](_0xdff749(0x299)),_0x24efe1=cropper['getCroppedCanvas']({'fillColor':_0xdff749(0x314)});if(!_0x24efe1){showNotification(_0xdff749(0x2f6),_0xdff749(0x384));return;}document[_0xdff749(0x399)](_0xdff749(0x2b7))['style'][_0xdff749(0x1ee)]=_0xdff749(0x3ac),document[_0xdff749(0x399)](_0xdff749(0x2fe))[_0xdff749(0x1eb)][_0xdff749(0x1ee)]=_0xdff749(0x3ac),_0x174353['style'][_0xdff749(0x1ee)]=_0xdff749(0x355),_0x5179b1[_0xdff749(0x1f7)]='Mempersiapkan\x20pemindaian...',_0x417bf9['value']=0x0,_0x37dc23[_0xdff749(0x239)]=!![],_0x37dc23[_0xdff749(0x323)](_0xdff749(0x2a1))[_0xdff749(0x307)]='<span\x20class=\x22loading\x22></span>\x20Memproses...';try{const _0x4dd9c9=await Tesseract[_0xdff749(0x326)](_0xdff749(0x3af),0x1,{'logger':_0x4590d6=>{const _0x5fccdf=_0xdff749;_0x417bf9['value']=(_0x4590d6[_0x5fccdf(0x1f0)]||0x0)*0x64,_0x4590d6[_0x5fccdf(0x238)]==='recognizing\x20text'&&(_0x5179b1[_0x5fccdf(0x1f7)]=_0x5fccdf(0x247)+Math[_0x5fccdf(0x2de)](_0x4590d6['progress']*0x64)+'%)');}}),{data:{text:_0x5db01d}}=await _0x4dd9c9[_0xdff749(0x20e)](_0x24efe1);await _0x4dd9c9[_0xdff749(0x26d)](),parseOCRText(_0x5db01d),document[_0xdff749(0x399)](_0xdff749(0x325))[_0xdff749(0x1f7)]=_0xdff749(0x393),document['getElementById'](_0xdff749(0x2b3))[_0xdff749(0x1eb)][_0xdff749(0x1ee)]=_0xdff749(0x1fc),document[_0xdff749(0x399)](_0xdff749(0x364))['style']['display']=_0xdff749(0x1fc),document['getElementById'](_0xdff749(0x2dc))[_0xdff749(0x22d)]=_0x24efe1[_0xdff749(0x3a5)](),setCorrectionView(_0xdff749(0x23f));}catch(_0x2b0241){console[_0xdff749(0x384)](_0xdff749(0x32c),_0x2b0241),showNotification(_0xdff749(0x2a0),'error'),resetScanner();}finally{_0x174353[_0xdff749(0x1eb)][_0xdff749(0x1ee)]=_0xdff749(0x3ac),_0x37dc23[_0xdff749(0x239)]=![],_0x37dc23[_0xdff749(0x323)](_0xdff749(0x2a1))[_0xdff749(0x307)]='✂️\x20Crop\x20&\x20Proses';}}function parseOCRText(_0x1d03e5){const _0x3d9ecb=_0x4ef564;let _0x59b2cf=_0x1d03e5['replace'](/(\d)[.,](\d{3})/g,_0x3d9ecb(0x346))[_0x3d9ecb(0x2c4)](/,00/g,'')[_0x3d9ecb(0x2c4)](/Rp\s?/gi,'')[_0x3d9ecb(0x2c4)](/[^\w\s.,-]/g,'');const _0x68e12b=_0x59b2cf[_0x3d9ecb(0x204)]('\x0a'),_0x6ba04a=[],_0x52d0a1=/^(.+?)\s+(?:x\s?)?\d{1,2}\s+(\d{4,})$/,_0x3c5fa1=/^(.*?)\s+(\d{4,})$/,_0x1cbded=/(Total|Subtotal|Tunai|Kembali|PPN|Diskon|Kasir|Indomaret|Alfamart|Alfamidi|Member|Poin|Tgl|Wkt|Struk|Telp)/i;_0x68e12b['forEach'](_0x31ab4c=>{const _0x385b9f=_0x3d9ecb;_0x31ab4c=_0x31ab4c[_0x385b9f(0x2b9)]();if(_0x31ab4c[_0x385b9f(0x28a)]<0x5||_0x1cbded[_0x385b9f(0x379)](_0x31ab4c))return;let _0x280e58=_0x31ab4c[_0x385b9f(0x2b5)](_0x52d0a1)||_0x31ab4c[_0x385b9f(0x2b5)](_0x3c5fa1);if(_0x280e58){let _0x29e7d5=_0x280e58[0x1][_0x385b9f(0x2c4)](/\d+$/,'')[_0x385b9f(0x2b9)](),_0x11b983=parseInt(_0x280e58[_0x280e58[_0x385b9f(0x28a)]-0x1],0xa);_0x29e7d5[_0x385b9f(0x28a)]>0x2&&/[a-zA-Z]{2,}/[_0x385b9f(0x379)](_0x29e7d5)&&!isNaN(_0x11b983)&&_0x11b983>0x0&&_0x6ba04a[_0x385b9f(0x2a5)]({'name':_0x29e7d5,'price':_0x11b983});}}),displayScannedItems(_0x6ba04a);}function displayScannedItems(_0x13f3b6){const _0x1383a9=_0x4ef564,_0x1963c2=document[_0x1383a9(0x399)](_0x1383a9(0x39c));_0x1963c2[_0x1383a9(0x307)]='',_0x13f3b6[_0x1383a9(0x28a)]===0x0?(showNotification('Tidak\x20ada\x20item\x20yang\x20terdeteksi.\x20Silakan\x20tambah\x20manual.',_0x1383a9(0x223)),addScannedItemRow()):(showNotification(_0x1383a9(0x2f4)+_0x13f3b6[_0x1383a9(0x28a)]+_0x1383a9(0x3a1),_0x1383a9(0x36f)),_0x13f3b6[_0x1383a9(0x33c)](_0x16d4d5=>addScannedItemRow(_0x16d4d5[_0x1383a9(0x21b)],_0x16d4d5['price']))),updateScannedTotal();}function addScannedItemRow(_0x3cc018='',_0x5c4657=''){const _0x425738=_0x4ef564,_0x23c02b=document[_0x425738(0x399)](_0x425738(0x39c)),_0x21b3d7=document[_0x425738(0x246)](_0x425738(0x23d));_0x21b3d7[_0x425738(0x2b6)]='item-row';const _0x4278e9=++itemRowCounter;_0x21b3d7[_0x425738(0x307)]=_0x425738(0x2fb)+_0x4278e9+_0x425738(0x39e)+_0x4278e9+_0x425738(0x3b4)+_0x3cc018+_0x425738(0x37e)+_0x4278e9+_0x425738(0x295)+_0x4278e9+_0x425738(0x271)+_0x5c4657+_0x425738(0x1da),_0x23c02b[_0x425738(0x38c)](_0x21b3d7);const _0x2e3fbe=_0x21b3d7[_0x425738(0x323)]('.item-price-input');_0x2e3fbe[_0x425738(0x20a)](_0x425738(0x2c9),updateScannedTotal);const _0x514627=_0x21b3d7[_0x425738(0x323)](_0x425738(0x1fb)),_0x362c9f=_0x12cbf6=>{setTimeout(()=>{const _0x1ad4f7=_0xee92;_0x12cbf6[_0x1ad4f7(0x386)][_0x1ad4f7(0x2a7)]({'behavior':'smooth','block':_0x1ad4f7(0x227),'inline':_0x1ad4f7(0x2a9)});},0x12c);};_0x514627[_0x425738(0x20a)]('focus',_0x362c9f),_0x2e3fbe[_0x425738(0x20a)]('focus',_0x362c9f);}function updateScannedTotal(){const _0x180899=_0x4ef564,_0x20f8bc=document[_0x180899(0x362)](_0x180899(0x30e));let _0x45a1f2=0x0;_0x20f8bc['forEach'](_0x3c751b=>{const _0x5166b7=_0x180899;_0x45a1f2+=parseInt(_0x3c751b[_0x5166b7(0x340)])||0x0;}),document[_0x180899(0x399)]('total-scanned-amount')[_0x180899(0x1f7)]=formatCurrency(_0x45a1f2);}function setCorrectionView(_0x458341){const _0x4cdd12=_0x4ef564,_0x4e45e4=document['getElementById'](_0x4cdd12(0x1e4)),_0x4c0950=document[_0x4cdd12(0x399)](_0x4cdd12(0x330)),_0x1202b3=document['getElementById']('toggle-edit-btn'),_0x3c846a=document[_0x4cdd12(0x399)](_0x4cdd12(0x2da));_0x458341===_0x4cdd12(0x23f)?(_0x4e45e4[_0x4cdd12(0x1eb)]['display']='block',_0x4c0950[_0x4cdd12(0x1eb)][_0x4cdd12(0x1ee)]=_0x4cdd12(0x3ac),_0x1202b3['classList']['add'](_0x4cdd12(0x266)),_0x3c846a[_0x4cdd12(0x23e)][_0x4cdd12(0x2ce)]('active')):(_0x4e45e4[_0x4cdd12(0x1eb)]['display']=_0x4cdd12(0x3ac),_0x4c0950['style'][_0x4cdd12(0x1ee)]=_0x4cdd12(0x355),_0x1202b3['classList'][_0x4cdd12(0x2ce)](_0x4cdd12(0x266)),_0x3c846a[_0x4cdd12(0x23e)][_0x4cdd12(0x2e8)](_0x4cdd12(0x266)));}function saveScannedTransaction(){const _0x77dbc6=_0x4ef564,_0x22ef1c=document['querySelectorAll'](_0x77dbc6(0x28d));if(_0x22ef1c[_0x77dbc6(0x28a)]===0x0){showNotification(_0x77dbc6(0x331),_0x77dbc6(0x384));return;}let _0x273fa2=0x0;const _0x24f41c=new Date()[_0x77dbc6(0x396)]()[_0x77dbc6(0x204)]('T')[0x0];_0x22ef1c[_0x77dbc6(0x33c)](_0x17881b=>{const _0x283145=_0x77dbc6,_0x24a83d=_0x17881b[_0x283145(0x323)]('.item-name-input')[_0x283145(0x340)][_0x283145(0x2b9)](),_0x1b9abd=parseInt(_0x17881b[_0x283145(0x323)](_0x283145(0x30e))[_0x283145(0x340)])||0x0;if(_0x24a83d&&_0x1b9abd>0x0){const _0x4d3f3b={'deskripsi':_0x24a83d,'jumlah':_0x1b9abd,'tanggal':_0x24f41c,'jenis':_0x283145(0x1fd)};transaksi[_0x283145(0x2a5)](_0x4d3f3b),_0x273fa2++;}}),_0x273fa2>0x0?(localStorage[_0x77dbc6(0x29a)](_0x77dbc6(0x201),JSON[_0x77dbc6(0x380)](transaksi)),updateUI(),closeScanner(),showNotification(_0x273fa2+'\x20transaksi\x20dari\x20struk\x20berhasil\x20disimpan!',_0x77dbc6(0x36f))):showNotification(_0x77dbc6(0x29d),_0x77dbc6(0x384));}function clearSearch(){const _0x284f23=_0x4ef564,_0x560961=document[_0x284f23(0x399)](_0x284f23(0x328)),_0x35886b=document[_0x284f23(0x399)](_0x284f23(0x3a9));_0x560961[_0x284f23(0x340)]='',_0x35886b[_0x284f23(0x1eb)]['display']='none',currentPage=0x1,updateUI(),_0x560961['focus']();}function clearDateFilter(){const _0x408141=_0x4ef564;currentFilteredDate=null,hiddenDateFilterInput[_0x408141(0x340)]='',updateDateFilterDisplay(),currentPage=0x1,updateUI(),showNotification('Filter\x20tanggal\x20dihapus',_0x408141(0x242));}function updateDateFilterDisplay(){const _0x440c9e=_0x4ef564;currentFilteredDate?(activeDateFilterDisplay[_0x440c9e(0x1f7)]='('+formatDate(currentFilteredDate)+')',activeDateFilterDisplay[_0x440c9e(0x1eb)][_0x440c9e(0x1ee)]='inline',clearDateFilterBtn[_0x440c9e(0x1eb)][_0x440c9e(0x1ee)]='inline'):(activeDateFilterDisplay['textContent']='',activeDateFilterDisplay[_0x440c9e(0x1eb)][_0x440c9e(0x1ee)]='none',clearDateFilterBtn[_0x440c9e(0x1eb)][_0x440c9e(0x1ee)]=_0x440c9e(0x3ac));}function handleFormSubmit(_0x16d148){const _0x341b4a=_0x4ef564;_0x16d148[_0x341b4a(0x353)]();if(!checkLoginStatus())return;const _0x4ed283=document[_0x341b4a(0x399)](_0x341b4a(0x207))[_0x341b4a(0x340)][_0x341b4a(0x2b9)](),_0x29930c=parseFloat(document['getElementById'](_0x341b4a(0x209))[_0x341b4a(0x340)]),_0xc19077=document[_0x341b4a(0x399)](_0x341b4a(0x35e))['value'],_0x5806cb=document[_0x341b4a(0x399)](_0x341b4a(0x35b))[_0x341b4a(0x340)];if(!_0x4ed283||!_0x29930c||!_0xc19077){showNotification(_0x341b4a(0x1f6),_0x341b4a(0x384));return;}if(_0x29930c<=0x0){showNotification(_0x341b4a(0x24e),_0x341b4a(0x384));return;}submitText['innerHTML']='<span\x20class=\x22loading\x22></span>\x20Menyimpan...',submitBtn[_0x341b4a(0x239)]=!![],setTimeout(()=>{const _0x3e8293=_0x341b4a;editIndex!==null?(transaksi[editIndex]={'deskripsi':_0x4ed283,'jumlah':_0x29930c,'tanggal':_0xc19077,'jenis':_0x5806cb},showNotification('Transaksi\x20berhasil\x20diupdate',_0x3e8293(0x36f)),cancelEdit()):(transaksi['push']({'deskripsi':_0x4ed283,'jumlah':_0x29930c,'tanggal':_0xc19077,'jenis':_0x5806cb}),showNotification('Transaksi\x20berhasil\x20ditambahkan','success')),localStorage['setItem'](_0x3e8293(0x201),JSON[_0x3e8293(0x380)](transaksi)),form['reset'](),setTodayDate(),updateUI(),submitText[_0x3e8293(0x1f7)]='Simpan\x20Transaksi',submitBtn[_0x3e8293(0x239)]=![],document[_0x3e8293(0x399)](_0x3e8293(0x207))['focus']();},0x1f4);}function cancelEdit(){const _0x1bb757=_0x4ef564;editIndex=null,form[_0x1bb757(0x31c)](),setTodayDate(),formTitle['textContent']=_0x1bb757(0x315),submitText['textContent']=_0x1bb757(0x2ee),cancelEditBtn[_0x1bb757(0x1eb)][_0x1bb757(0x1ee)]='none',document[_0x1bb757(0x399)](_0x1bb757(0x207))[_0x1bb757(0x260)](),showNotification(_0x1bb757(0x26a),'info');}function updateUI(){const _0x45bd3a=_0x4ef564;if(localStorage['getItem'](_0x45bd3a(0x1f3))!==_0x45bd3a(0x225)){loadGuestUI();return;}const _0x53bd0d=document['getElementById'](_0x45bd3a(0x3a7));_0x53bd0d['innerHTML']=_0x45bd3a(0x2eb),updateSummaryCards(),updateTransactionsTable(),updateMonthFilter(),updateDateFilterDisplay();const _0x4ef074=document[_0x45bd3a(0x399)](_0x45bd3a(0x259)),_0x5e535f=getFilteredTransactions();_0x5e535f['length']===0x0&&document[_0x45bd3a(0x399)](_0x45bd3a(0x328))['value'][_0x45bd3a(0x2b9)]()===''&&!currentFilteredDate?(_0x53bd0d['style']['display']=_0x45bd3a(0x355),document['querySelector'](_0x45bd3a(0x381))[_0x45bd3a(0x1eb)][_0x45bd3a(0x1ee)]='none'):(_0x53bd0d[_0x45bd3a(0x1eb)][_0x45bd3a(0x1ee)]=_0x45bd3a(0x3ac),document[_0x45bd3a(0x323)](_0x45bd3a(0x381))[_0x45bd3a(0x1eb)]['display']=_0x45bd3a(0x36c));}function updateSummaryCards(){const _0x390496=_0x4ef564;let _0xe67a59=0x0,_0x540108=0x0;const _0x32dc00=getFilteredTransactions();_0x32dc00[_0x390496(0x33c)](_0x152c50=>{const _0x5790c7=_0x390496;if(_0x152c50[_0x5790c7(0x35b)]===_0x5790c7(0x350))_0xe67a59+=_0x152c50['jumlah'];if(_0x152c50[_0x5790c7(0x35b)]===_0x5790c7(0x1fd))_0x540108+=_0x152c50[_0x5790c7(0x209)];});const _0x298cbd=_0xe67a59-_0x540108,_0x58da4e=document[_0x390496(0x399)](_0x390496(0x350)),_0x4a47a1=document[_0x390496(0x399)]('pengeluaran'),_0x408f34=document[_0x390496(0x399)]('saldo');_0x58da4e[_0x390496(0x23e)][_0x390496(0x2e8)](_0x390496(0x33a)),_0x4a47a1[_0x390496(0x23e)][_0x390496(0x2e8)](_0x390496(0x33a)),_0x408f34[_0x390496(0x23e)]['add'](_0x390496(0x33a)),setTimeout(()=>{const _0x1bdbe8=_0x390496;_0x58da4e[_0x1bdbe8(0x23e)][_0x1bdbe8(0x2ce)](_0x1bdbe8(0x33a)),_0x4a47a1[_0x1bdbe8(0x23e)][_0x1bdbe8(0x2ce)](_0x1bdbe8(0x33a)),_0x408f34['classList']['remove'](_0x1bdbe8(0x33a));},0x190),_0x58da4e[_0x390496(0x1f7)]=formatCurrency(_0xe67a59),_0x4a47a1[_0x390496(0x1f7)]=formatCurrency(_0x540108),_0x408f34['textContent']=formatCurrency(_0x298cbd);}function getFilteredTransactions(){const _0x333640=_0x4ef564,_0x3651f5=document[_0x333640(0x399)](_0x333640(0x365))['value'],_0x4fd059=document[_0x333640(0x399)](_0x333640(0x328))['value']['toLowerCase']()[_0x333640(0x2b9)]();return transaksi[_0x333640(0x2d6)](_0x20c7a1=>{const _0x138977=_0x333640,_0x3bab88=_0x3651f5===_0x138977(0x2ef)||_0x20c7a1[_0x138977(0x35e)][_0x138977(0x241)](_0x3651f5),_0x1abb08=new Date(_0x20c7a1[_0x138977(0x35e)]),_0x1bb14b=_0x1abb08[_0x138977(0x24b)]()[_0x138977(0x34c)](),_0x353f84=_0x1abb08[_0x138977(0x248)](_0x138977(0x383),{'month':_0x138977(0x2db)})[_0x138977(0x2a3)](),_0x2c532c=!isNaN(_0x4fd059)&&_0x4fd059!=='',_0x47f4db=!_0x4fd059||_0x20c7a1[_0x138977(0x207)]['toLowerCase']()['includes'](_0x4fd059)||_0x20c7a1['jenis'][_0x138977(0x2a3)]()[_0x138977(0x1ec)](_0x4fd059)||_0x2c532c&&(_0x1bb14b[_0x138977(0x1ec)](_0x4fd059)||_0x20c7a1[_0x138977(0x209)]['toString']()[_0x138977(0x1ec)](_0x4fd059))||_0x353f84[_0x138977(0x1ec)](_0x4fd059),_0x6d1203=!currentFilteredDate||_0x20c7a1['tanggal']===currentFilteredDate;return _0x3bab88&&_0x47f4db&&_0x6d1203;});}function updateTransactionsTable(){const _0x97b03=_0x4ef564,_0x3e379b=document[_0x97b03(0x399)](_0x97b03(0x259));_0x3e379b[_0x97b03(0x307)]='';const _0x2b99f1=getFilteredTransactions(),_0x2b4bf3=[..._0x2b99f1][_0x97b03(0x3a4)]((_0x1a1813,_0x71a732)=>({..._0x1a1813,'originalIndex':transaksi[_0x97b03(0x391)](_0x1a1813)}))[_0x97b03(0x2d7)]((_0x3bdabd,_0xbf0220)=>{const _0x2879a5=_0x97b03,_0x1c4e3f=new Date(_0x3bdabd[_0x2879a5(0x35e)])-new Date(_0xbf0220[_0x2879a5(0x35e)]);if(_0x1c4e3f===0x0)return _0x3bdabd[_0x2879a5(0x1e8)]-_0xbf0220[_0x2879a5(0x1e8)];return _0x1c4e3f;});let _0x303e86=0x0;const _0x4835e6=_0x2b4bf3[_0x97b03(0x3a4)](_0xcde72=>{const _0x2f6211=_0x97b03;return _0x303e86+=_0xcde72[_0x2f6211(0x35b)]===_0x2f6211(0x350)?_0xcde72[_0x2f6211(0x209)]:-_0xcde72['jumlah'],{..._0xcde72,'runningBalance':_0x303e86};}),_0x3542c6=[..._0x4835e6][_0x97b03(0x21c)](),_0x5a7325=(currentPage-0x1)*transactionsPerPage,_0x5ab90c=_0x5a7325+transactionsPerPage,_0x8fc7f4=_0x3542c6[_0x97b03(0x394)](_0x5a7325,_0x5ab90c);_0x8fc7f4[_0x97b03(0x33c)](_0x2e63bd=>{const _0x581cbc=_0x97b03;let _0x31e053=_0x2e63bd[_0x581cbc(0x207)];const _0x311d8a=document[_0x581cbc(0x399)](_0x581cbc(0x328))[_0x581cbc(0x340)][_0x581cbc(0x2a3)]()['trim']();if(_0x311d8a){const _0x5c156f=new RegExp('('+_0x311d8a+')','gi');_0x31e053=_0x2e63bd[_0x581cbc(0x207)][_0x581cbc(0x2c4)](_0x5c156f,_0x581cbc(0x1f2));}const _0x34a6d8=document[_0x581cbc(0x246)]('tr');_0x34a6d8[_0x581cbc(0x2b6)]=_0x581cbc(0x288),_0x34a6d8[_0x581cbc(0x307)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20class=\x22text-left\x22>'+formatDate(_0x2e63bd[_0x581cbc(0x35e)])+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20class=\x22text-left\x22\x20style=\x22font-weight:\x20500;\x22>'+_0x31e053+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20class=\x22amount-positive\x20text-right\x22>'+(_0x2e63bd[_0x581cbc(0x35b)]===_0x581cbc(0x350)?formatCurrency(_0x2e63bd[_0x581cbc(0x209)]):'-')+_0x581cbc(0x395)+(_0x2e63bd[_0x581cbc(0x35b)]==='pengeluaran'?formatCurrency(_0x2e63bd[_0x581cbc(0x209)]):'-')+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20class=\x22balance-amount\x20text-right\x22>'+formatCurrency(_0x2e63bd[_0x581cbc(0x308)])+_0x581cbc(0x2f7)+_0x2e63bd[_0x581cbc(0x1e8)]+_0x581cbc(0x252)+_0x2e63bd[_0x581cbc(0x1e8)]+')\x22\x20data-tooltip=\x22Hapus\x20transaksi\x22\x20tabindex=\x220\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22action-icon\x20delete-icon\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',_0x3e379b[_0x581cbc(0x38c)](_0x34a6d8);}),updatePaginationControls(_0x2b99f1[_0x97b03(0x28a)]);if(_0x8fc7f4['length']===0x0&&(document['getElementById'](_0x97b03(0x328))['value'][_0x97b03(0x2b9)]()||currentFilteredDate||document[_0x97b03(0x399)](_0x97b03(0x365))[_0x97b03(0x340)]!==_0x97b03(0x2ef))){const _0x307780=document['createElement']('tr');_0x307780[_0x97b03(0x307)]=_0x97b03(0x2bd),_0x3e379b[_0x97b03(0x38c)](_0x307780);}}function updatePaginationControls(_0x3e0fc6){const _0x36a110=_0x4ef564,_0x53ee3a=document[_0x36a110(0x399)](_0x36a110(0x25e));_0x53ee3a[_0x36a110(0x307)]='';const _0x314a5a=Math[_0x36a110(0x349)](_0x3e0fc6/transactionsPerPage);if(_0x314a5a<=0x1)return;const _0x113641=document[_0x36a110(0x246)](_0x36a110(0x2e6));_0x113641[_0x36a110(0x307)]=_0x36a110(0x20c),_0x113641[_0x36a110(0x2b6)]=_0x36a110(0x24c),_0x113641[_0x36a110(0x239)]=currentPage===0x1,_0x113641[_0x36a110(0x234)]='Halaman\x20Sebelumnya',_0x113641['onclick']=()=>{currentPage>0x1&&(currentPage--,updateUI());},_0x53ee3a[_0x36a110(0x38c)](_0x113641);const _0x499f4a=document['createElement'](_0x36a110(0x33e));_0x499f4a[_0x36a110(0x2b6)]=_0x36a110(0x2e0),_0x499f4a[_0x36a110(0x1f7)]=currentPage+'/'+_0x314a5a,_0x499f4a[_0x36a110(0x234)]='Klik\x20untuk\x20lompat\x20ke\x20halaman',_0x499f4a[_0x36a110(0x356)]=()=>showPageInput(_0x314a5a),_0x53ee3a[_0x36a110(0x38c)](_0x499f4a);const _0x24e7dd=document['createElement'](_0x36a110(0x2e6));_0x24e7dd['innerHTML']='&gt;',_0x24e7dd[_0x36a110(0x2b6)]=_0x36a110(0x24c),_0x24e7dd[_0x36a110(0x239)]=currentPage===_0x314a5a,_0x24e7dd[_0x36a110(0x234)]=_0x36a110(0x298),_0x24e7dd['onclick']=()=>{currentPage<_0x314a5a&&(currentPage++,updateUI());},_0x53ee3a[_0x36a110(0x38c)](_0x24e7dd);}function showPageInput(_0x25fd6a){const _0x2fd80f=_0x4ef564,_0xc19faf=document[_0x2fd80f(0x323)](_0x2fd80f(0x1e6));if(!_0xc19faf)return;const _0xd7ef81=document[_0x2fd80f(0x323)](_0x2fd80f(0x285)),_0x190e6b=document[_0x2fd80f(0x323)](_0x2fd80f(0x297)),_0x3db93f=document[_0x2fd80f(0x399)](_0x2fd80f(0x25e));_0x3db93f[_0x2fd80f(0x307)]='';const _0x49f67d=document[_0x2fd80f(0x246)](_0x2fd80f(0x2c9));_0x49f67d[_0x2fd80f(0x39a)]=_0x2fd80f(0x26e),_0x49f67d[_0x2fd80f(0x2b6)]=_0x2fd80f(0x212),_0x49f67d['value']=currentPage,_0x49f67d[_0x2fd80f(0x283)]=0x1,_0x49f67d['max']=_0x25fd6a;const _0x1ed061=()=>{const _0x19bc22=_0x2fd80f;let _0x3a43df=parseInt(_0x49f67d[_0x19bc22(0x340)]);_0x3a43df>=0x1&&_0x3a43df<=_0x25fd6a?(currentPage=_0x3a43df,updateUI()):(showNotification(_0x19bc22(0x2d3)+_0x25fd6a,'error',0x7d0),updateUI());};_0x49f67d['onkeydown']=_0x418bdf=>{const _0x26d46e=_0x2fd80f;if(_0x418bdf[_0x26d46e(0x256)]==='Enter')_0x1ed061();else _0x418bdf[_0x26d46e(0x256)]===_0x26d46e(0x2ea)&&updateUI();},_0x49f67d['onblur']=()=>{setTimeout(()=>updateUI(),0x64);};if(_0xd7ef81)_0x3db93f[_0x2fd80f(0x38c)](_0xd7ef81);_0x3db93f['appendChild'](_0x49f67d);if(_0x190e6b)_0x3db93f['appendChild'](_0x190e6b);_0x49f67d['focus'](),_0x49f67d[_0x2fd80f(0x2f5)]();}function clearAllFilters(){const _0x5ea353=_0x4ef564;document[_0x5ea353(0x399)](_0x5ea353(0x365))[_0x5ea353(0x340)]='semua',clearSearch(),clearDateFilter(),showNotification('Semua\x20filter\x20dihapus',_0x5ea353(0x242));}function updateMonthFilter(){const _0x2fbb76=_0x4ef564,_0x160e55=new Set();transaksi[_0x2fbb76(0x33c)](_0x7d727f=>_0x160e55[_0x2fbb76(0x2e8)](_0x7d727f[_0x2fbb76(0x35e)][_0x2fbb76(0x394)](0x0,0x7)));const _0x360934=document[_0x2fbb76(0x399)](_0x2fbb76(0x365)),_0x439da3=_0x360934[_0x2fbb76(0x340)],_0x34f93a=document[_0x2fbb76(0x399)]('custom-filter-bulan'),_0x155a3b=_0x34f93a[_0x2fbb76(0x323)]('.select-selected'),_0x22375f=_0x34f93a[_0x2fbb76(0x323)](_0x2fbb76(0x253));_0x360934[_0x2fbb76(0x307)]='',_0x22375f['innerHTML']='';const _0x1f9e68=(_0x2a1637,_0x448299)=>{const _0x11ec2c=_0x2fbb76,_0x3a12b7=document[_0x11ec2c(0x246)](_0x11ec2c(0x321));_0x3a12b7[_0x11ec2c(0x340)]=_0x448299,_0x3a12b7[_0x11ec2c(0x307)]=_0x2a1637,_0x360934['appendChild'](_0x3a12b7);const _0x13aa09=document[_0x11ec2c(0x246)](_0x11ec2c(0x23d));_0x13aa09['innerHTML']=_0x2a1637,_0x13aa09[_0x11ec2c(0x287)](_0x11ec2c(0x281),_0x448299),_0x22375f[_0x11ec2c(0x38c)](_0x13aa09),_0x13aa09[_0x11ec2c(0x20a)](_0x11ec2c(0x358),function(){const _0x509edc=_0x11ec2c;_0x360934[_0x509edc(0x340)]=this['getAttribute'](_0x509edc(0x281)),_0x155a3b[_0x509edc(0x307)]=this[_0x509edc(0x307)],_0x360934[_0x509edc(0x222)](new Event(_0x509edc(0x2d9)));});};_0x1f9e68('Semua\x20Bulan','semua'),[..._0x160e55][_0x2fbb76(0x2d7)]()[_0x2fbb76(0x21c)]()['forEach'](_0x280d9b=>{_0x1f9e68('Data\x20'+formatMonth(_0x280d9b),_0x280d9b);}),_0x360934[_0x2fbb76(0x340)]=_0x439da3;const _0x3619b0=_0x22375f['querySelector']('[data-value=\x22'+_0x360934[_0x2fbb76(0x340)]+'\x22]');_0x3619b0&&(_0x155a3b[_0x2fbb76(0x307)]=_0x3619b0[_0x2fbb76(0x307)]);}function editTransaksi(_0x5801c0){const _0x1815ef=_0x4ef564;if(!checkLoginStatus())return;const _0x45b75a=transaksi[_0x5801c0];document[_0x1815ef(0x399)](_0x1815ef(0x207))[_0x1815ef(0x340)]=_0x45b75a[_0x1815ef(0x207)],document[_0x1815ef(0x399)](_0x1815ef(0x209))['value']=_0x45b75a[_0x1815ef(0x209)],document['getElementById'](_0x1815ef(0x35e))[_0x1815ef(0x340)]=_0x45b75a['tanggal'],document['getElementById'](_0x1815ef(0x35b))[_0x1815ef(0x340)]=_0x45b75a['jenis'],editIndex=_0x5801c0,formTitle[_0x1815ef(0x1f7)]=_0x1815ef(0x39b),submitText['textContent']=_0x1815ef(0x336),cancelEditBtn['style'][_0x1815ef(0x1ee)]=_0x1815ef(0x31f),document[_0x1815ef(0x323)]('.form-container')[_0x1815ef(0x2a7)]({'behavior':_0x1815ef(0x24f),'block':'start'}),document[_0x1815ef(0x399)](_0x1815ef(0x207))[_0x1815ef(0x260)](),showNotification('Mode\x20edit\x20aktif',_0x1815ef(0x242));}function hapusTransaksi(_0x1969e1){const _0x28c2f4=_0x4ef564;if(!checkLoginStatus())return;const _0xc53fa3=transaksi[_0x1969e1];openConfirmationModal(_0x28c2f4(0x216)+_0xc53fa3[_0x28c2f4(0x207)]+'\x22?',()=>{const _0xd21097=_0x28c2f4;transaksi[_0xd21097(0x372)](_0x1969e1,0x1),localStorage[_0xd21097(0x29a)](_0xd21097(0x201),JSON[_0xd21097(0x380)](transaksi)),editIndex===_0x1969e1&&cancelEdit(),updateUI(),showNotification(_0xd21097(0x2f1),_0xd21097(0x36f));});}function openThemeModal(){const _0x538888=_0x4ef564;themeSettingsModal['style'][_0x538888(0x1ee)]=_0x538888(0x1fc);const _0x1e7ff3=localStorage[_0x538888(0x2df)](_0x538888(0x1e0))||'ocean';updateActiveThemeButton(_0x1e7ff3),updateActiveSwatch();}function closeThemeModal(){const _0x419a04=_0x4ef564;themeSettingsModal[_0x419a04(0x1eb)]['display']=_0x419a04(0x3ac);}function openDeleteModal(){const _0xfd923e=_0x4ef564;if(!checkLoginStatus())return;if(transaksi['length']===0x0){showNotification('Tidak\x20ada\x20data\x20untuk\x20dihapus!',_0xfd923e(0x242));return;}deleteModal[_0xfd923e(0x1eb)][_0xfd923e(0x1ee)]='flex',deleteFilterSelect[_0xfd923e(0x340)]===_0xfd923e(0x1ff)?dateRangeDeleteGroup[_0xfd923e(0x1eb)][_0xfd923e(0x1ee)]='block':dateRangeDeleteGroup[_0xfd923e(0x1eb)]['display']=_0xfd923e(0x3ac);}function closeDeleteModal(){const _0x5a73b5=_0x4ef564;deleteModal['style'][_0x5a73b5(0x1ee)]=_0x5a73b5(0x3ac);}function confirmBulkDelete(){const _0xc84c92=_0x4ef564,_0x99b4ce=document[_0xc84c92(0x399)](_0xc84c92(0x30b))[_0xc84c92(0x340)];let _0x1e247f=[],_0x564ba4='';if(_0x99b4ce===_0xc84c92(0x2ef))_0x1e247f=[...transaksi],_0x564ba4=_0xc84c92(0x2f8);else{if(_0x99b4ce===_0xc84c92(0x350))_0x1e247f=transaksi['filter'](_0x23798b=>_0x23798b[_0xc84c92(0x35b)]===_0xc84c92(0x350)),_0x564ba4=_0xc84c92(0x290);else{if(_0x99b4ce==='pengeluaran')_0x1e247f=transaksi[_0xc84c92(0x2d6)](_0x49274a=>_0x49274a[_0xc84c92(0x35b)]===_0xc84c92(0x1fd)),_0x564ba4='data\x20pengeluaran';else{if(_0x99b4ce==='custom-range'){const _0x374e5a=deleteStartDateInput['value'],_0x14a13a=deleteEndDateInput[_0xc84c92(0x340)];if(!_0x374e5a||!_0x14a13a){showNotification(_0xc84c92(0x1fa),_0xc84c92(0x384));return;}if(new Date(_0x374e5a)>new Date(_0x14a13a)){showNotification(_0xc84c92(0x251),_0xc84c92(0x384));return;}_0x1e247f=transaksi['filter'](_0x48d398=>{const _0x1662c7=_0xc84c92,_0x17fe7e=new Date(_0x48d398[_0x1662c7(0x35e)]);return _0x17fe7e>=new Date(_0x374e5a)&&_0x17fe7e<=new Date(_0x14a13a);}),_0x564ba4=_0xc84c92(0x224)+formatDate(_0x374e5a)+_0xc84c92(0x2d8)+formatDate(_0x14a13a);}else _0x1e247f=transaksi['filter'](_0x13a0ab=>_0x13a0ab['tanggal'][_0xc84c92(0x241)](_0x99b4ce)),_0x564ba4=_0xc84c92(0x26c)+formatMonth(_0x99b4ce);}}}if(_0x1e247f[_0xc84c92(0x28a)]===0x0){showNotification('Tidak\x20ada\x20data\x20untuk\x20dihapus','info');return;}const _0x546413=document[_0xc84c92(0x323)](_0xc84c92(0x27d));openConfirmationModal(_0xc84c92(0x2d5)+_0x1e247f['length']+_0xc84c92(0x28e)+_0x564ba4+')?',()=>{const _0x544ec6=_0xc84c92;_0x546413['style']['opacity']=_0x544ec6(0x359),_0x546413[_0x544ec6(0x1eb)][_0x544ec6(0x38d)]=_0x544ec6(0x3ac),_0x546413[_0x544ec6(0x323)](_0x544ec6(0x22f))[_0x544ec6(0x1f7)]=_0x544ec6(0x306),setTimeout(()=>{const _0x52b8b7=_0x544ec6;if(_0x99b4ce===_0x52b8b7(0x2ef))transaksi=[];else{if(_0x99b4ce===_0x52b8b7(0x350))transaksi=transaksi[_0x52b8b7(0x2d6)](_0x33b100=>_0x33b100[_0x52b8b7(0x35b)]!==_0x52b8b7(0x350));else{if(_0x99b4ce===_0x52b8b7(0x1fd))transaksi=transaksi['filter'](_0x4cd8b8=>_0x4cd8b8['jenis']!=='pengeluaran');else{if(_0x99b4ce===_0x52b8b7(0x1ff)){const _0xd108af=deleteStartDateInput[_0x52b8b7(0x340)],_0x3af617=deleteEndDateInput[_0x52b8b7(0x340)];transaksi=transaksi[_0x52b8b7(0x2d6)](_0x988e01=>{const _0x4755ba=_0x52b8b7,_0x2b6d37=new Date(_0x988e01[_0x4755ba(0x35e)]);return!(_0x2b6d37>=new Date(_0xd108af)&&_0x2b6d37<=new Date(_0x3af617));});}else transaksi=transaksi[_0x52b8b7(0x2d6)](_0x6e7ed4=>!_0x6e7ed4[_0x52b8b7(0x35e)][_0x52b8b7(0x241)](_0x99b4ce));}}}localStorage[_0x52b8b7(0x29a)](_0x52b8b7(0x201),JSON['stringify'](transaksi)),closeDeleteModal(),editIndex=null,form['reset'](),setTodayDate(),formTitle[_0x52b8b7(0x1f7)]=_0x52b8b7(0x315),submitText[_0x52b8b7(0x1f7)]=_0x52b8b7(0x2ee),cancelEditBtn['style'][_0x52b8b7(0x1ee)]=_0x52b8b7(0x3ac),updateUI(),showNotification(_0x1e247f[_0x52b8b7(0x28a)]+_0x52b8b7(0x309),_0x52b8b7(0x36f)),_0x546413[_0x52b8b7(0x1eb)][_0x52b8b7(0x2fd)]='1',_0x546413[_0x52b8b7(0x1eb)]['pointerEvents']=_0x52b8b7(0x28f),_0x546413[_0x52b8b7(0x323)]('span:last-child')[_0x52b8b7(0x1f7)]=_0x52b8b7(0x23c);},0x320);});}function openPdfSettingsModal(){const _0x2d7fb1=_0x4ef564;pdfSettingsModal[_0x2d7fb1(0x1eb)][_0x2d7fb1(0x1ee)]='flex';const _0x366f2d=document[_0x2d7fb1(0x399)](_0x2d7fb1(0x365))['value'],_0xf07de0=document[_0x2d7fb1(0x399)](_0x2d7fb1(0x328))[_0x2d7fb1(0x340)][_0x2d7fb1(0x2b9)]();let _0x31066f='Laporan\x20Keuangan';_0x366f2d!==_0x2d7fb1(0x2ef)&&(_0x31066f+='\x20'+formatMonth(_0x366f2d)),currentFilteredDate&&(_0x31066f+=_0x2d7fb1(0x289)+formatDate(currentFilteredDate)),_0xf07de0&&(_0x31066f+='\x20Pencarian\x20'+_0xf07de0),pdfFilenameInput[_0x2d7fb1(0x340)]=_0x31066f;}function closePdfSettingsModal(){const _0xaa9a38=_0x4ef564;pdfSettingsModal[_0xaa9a38(0x1eb)][_0xaa9a38(0x1ee)]='none',pdfModalBtn[_0xaa9a38(0x23e)][_0xaa9a38(0x2ce)]('loading'),pdfModalBtn[_0xaa9a38(0x323)](_0xaa9a38(0x22f))[_0xaa9a38(0x1f7)]=_0xaa9a38(0x267);}function simpanPDF(){const _0x98b498=_0x4ef564;if(transaksi[_0x98b498(0x28a)]===0x0){showNotification(_0x98b498(0x25f),_0x98b498(0x242)),closePdfSettingsModal();return;}pdfModalBtn['classList'][_0x98b498(0x2e8)](_0x98b498(0x322)),pdfModalBtn[_0x98b498(0x323)](_0x98b498(0x22f))[_0x98b498(0x1f7)]='Generating...',showNotification('Membangun\x20PDF...',_0x98b498(0x242));const _0x139045=getFilteredTransactions();if(_0x139045['length']===0x0){showNotification(_0x98b498(0x27a),_0x98b498(0x242)),closePdfSettingsModal();return;}const _0x1c3485=[..._0x139045]['map']((_0x25b81b,_0x4a474d)=>({..._0x25b81b,'originalIndex':transaksi[_0x98b498(0x391)](_0x25b81b)}))[_0x98b498(0x2d7)]((_0x158643,_0x14f18a)=>{const _0xfac70b=_0x98b498,_0x360de2=new Date(_0x158643[_0xfac70b(0x35e)])-new Date(_0x14f18a[_0xfac70b(0x35e)]);if(_0x360de2===0x0)return _0x158643[_0xfac70b(0x1e8)]-_0x14f18a['originalIndex'];return _0x360de2;});let _0x146658=0x0;const _0x1f09e7=_0x1c3485[_0x98b498(0x3a4)](_0x3efe1b=>{const _0x6caf15=_0x98b498;return _0x146658+=_0x3efe1b[_0x6caf15(0x35b)]==='pemasukan'?_0x3efe1b[_0x6caf15(0x209)]:-_0x3efe1b[_0x6caf15(0x209)],{..._0x3efe1b,'runningBalance':_0x146658};});let _0x2f899c=0x0,_0x2e0392=0x0;_0x1f09e7['forEach'](_0x3d3121=>{const _0x6587b7=_0x98b498;if(_0x3d3121[_0x6587b7(0x35b)]===_0x6587b7(0x350))_0x2f899c+=_0x3d3121['jumlah'];if(_0x3d3121['jenis']===_0x6587b7(0x1fd))_0x2e0392+=_0x3d3121['jumlah'];});const _0x5a75e5=_0x2f899c-_0x2e0392,_0x4a14ff=document['createElement'](_0x98b498(0x36c));_0x4a14ff[_0x98b498(0x1eb)][_0x98b498(0x2cd)]=_0x98b498(0x33f),_0x4a14ff[_0x98b498(0x1eb)][_0x98b498(0x262)]=_0x98b498(0x318),_0x4a14ff[_0x98b498(0x1eb)][_0x98b498(0x279)]=_0x98b498(0x337),_0x4a14ff[_0x98b498(0x1eb)][_0x98b498(0x2ab)]=_0x98b498(0x302),_0x4a14ff[_0x98b498(0x1eb)][_0x98b498(0x1df)]=_0x98b498(0x284),_0x4a14ff['innerHTML']='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<thead>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20style=\x22background-color:\x20#f0f8ff;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th\x20style=\x22padding:\x200.8rem;\x20text-align:\x20left;\x20font-weight:\x20600;\x20font-size:\x200.9rem;\x20border-bottom:\x202px\x20solid\x20#a0dfff;\x20color:\x20#333;\x22>Tanggal</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th\x20style=\x22padding:\x200.8rem;\x20text-align:\x20left;\x20font-weight:\x20600;\x20font-size:\x200.9rem;\x20border-bottom:\x202px\x20solid\x20#a0dfff;\x20color:\x20#333;\x22>Deskripsi</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th\x20style=\x22padding:\x200.8rem;\x20text-align:\x20right;\x20font-weight:\x20600;\x20font-size:\x200.9rem;\x20border-bottom:\x202px\x20solid\x20#a0dfff;\x20color:\x20#333;\x22>Pemasukan</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th\x20style=\x22padding:\x200.8rem;\x20text-align:\x20right;\x20font-weight:\x20600;\x20font-size:\x200.9rem;\x20border-bottom:\x202px\x20solid\x20#a0dfff;\x20color:\x20#333;\x22>Pengeluaran</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th\x20style=\x22padding:\x200.8rem;\x20text-align:\x20right;\x20font-weight:\x20600;\x20font-size:\x200.9rem;\x20border-bottom:\x202px\x20solid\x20#a0dfff;\x20color:\x20#333;\x22>Saldo</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</thead>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tbody></tbody>\x0a\x20\x20\x20\x20\x20\x20\x20\x20';const _0x495e9c=_0x4a14ff['querySelector'](_0x98b498(0x2e5));_0x1f09e7['forEach']((_0x10acc3,_0x5e4c9a)=>{const _0x2b3555=_0x98b498,_0x3f90bd=document[_0x2b3555(0x246)]('tr');_0x3f90bd[_0x2b3555(0x1eb)][_0x2b3555(0x363)]=_0x5e4c9a%0x2===0x0?_0x2b3555(0x344):_0x2b3555(0x269),_0x3f90bd['innerHTML']=_0x2b3555(0x3a8)+formatDate(_0x10acc3['tanggal'])+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x200.7rem;\x20border-bottom:\x201px\x20solid\x20#eee;\x20text-align:\x20left;\x22>'+_0x10acc3['deskripsi']+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x200.7rem;\x20border-bottom:\x201px\x20solid\x20#eee;\x20text-align:\x20right;\x20color:\x20#10b981;\x20font-weight:\x20500;\x22>'+(_0x10acc3[_0x2b3555(0x35b)]===_0x2b3555(0x350)?formatCurrency(_0x10acc3[_0x2b3555(0x209)]):'-')+_0x2b3555(0x2cb)+(_0x10acc3[_0x2b3555(0x35b)]===_0x2b3555(0x1fd)?formatCurrency(_0x10acc3['jumlah']):'-')+_0x2b3555(0x34d)+formatCurrency(_0x10acc3[_0x2b3555(0x308)])+_0x2b3555(0x2e1),_0x495e9c['appendChild'](_0x3f90bd);});const _0x363979=document['createElement'](_0x98b498(0x23d));_0x363979[_0x98b498(0x1eb)][_0x98b498(0x25c)]=_0x98b498(0x2a8),_0x363979['style'][_0x98b498(0x2d0)]=_0x98b498(0x22b),_0x363979['style'][_0x98b498(0x363)]='#f8fafc',_0x363979['style']['borderRadius']=_0x98b498(0x24d),_0x363979[_0x98b498(0x1eb)][_0x98b498(0x38e)]=_0x98b498(0x385),_0x363979[_0x98b498(0x307)]=_0x98b498(0x335)+formatCurrency(_0x2f899c)+_0x98b498(0x329)+formatCurrency(_0x2e0392)+_0x98b498(0x206)+formatCurrency(_0x5a75e5)+_0x98b498(0x1fe);const _0x38ba0c=document[_0x98b498(0x399)](_0x98b498(0x28b))[_0x98b498(0x1f7)],_0x4ee3a4=document[_0x98b498(0x399)](_0x98b498(0x365))['value'],_0x2b220b=document[_0x98b498(0x399)](_0x98b498(0x328))[_0x98b498(0x340)][_0x98b498(0x2a3)]()[_0x98b498(0x2b9)]();let _0x59b00b='Semua\x20Periode';_0x4ee3a4!==_0x98b498(0x2ef)&&(_0x59b00b=formatMonth(_0x4ee3a4));_0x2b220b&&(_0x59b00b+=_0x98b498(0x37b)+_0x2b220b+'\x22)');currentFilteredDate&&(_0x59b00b+=_0x98b498(0x22c)+formatDate(currentFilteredDate)+'\x22)');const _0x3d31a7=document['createElement'](_0x98b498(0x23d));_0x3d31a7[_0x98b498(0x1eb)]['textAlign']=_0x98b498(0x227),_0x3d31a7[_0x98b498(0x1eb)][_0x98b498(0x1f1)]=_0x98b498(0x22b),_0x3d31a7['style']['fontFamily']='Inter,\x20sans-serif',_0x3d31a7[_0x98b498(0x307)]=_0x98b498(0x2fa)+_0x38ba0c+_0x98b498(0x376)+_0x59b00b+'\x20•\x20Dibuat:\x20'+new Date()[_0x98b498(0x333)](_0x98b498(0x383),{'day':_0x98b498(0x268),'month':_0x98b498(0x2c2),'year':'numeric'})+_0x98b498(0x263);const _0xa8d651=document['createElement'](_0x98b498(0x23d));_0xa8d651[_0x98b498(0x38c)](_0x3d31a7),_0xa8d651['appendChild'](_0x4a14ff),_0xa8d651['appendChild'](_0x363979);const _0x507df4=document[_0x98b498(0x246)](_0x98b498(0x23d));_0x507df4[_0x98b498(0x1eb)]['position']=_0x98b498(0x39d),_0x507df4[_0x98b498(0x1eb)][_0x98b498(0x21a)]=_0x98b498(0x27f),document[_0x98b498(0x21f)]['appendChild'](_0x507df4),_0x507df4[_0x98b498(0x38c)](_0xa8d651);const _0x73dc30=pdfOrientationSelect[_0x98b498(0x340)];let _0x3fb93e=pdfFilenameInput['value'][_0x98b498(0x2b9)]();!_0x3fb93e&&(_0x3fb93e=_0x98b498(0x291)+(_0x4ee3a4===_0x98b498(0x2ef)?_0x98b498(0x25b):_0x4ee3a4));_0x3fb93e+='.pdf';const _0x1c001c={'margin':0.5,'filename':_0x3fb93e,'image':{'type':_0x98b498(0x36b),'quality':0.98},'html2canvas':{'scale':0x2,'useCORS':!![],'scrollY':0x0,'windowWidth':document[_0x98b498(0x334)][_0x98b498(0x339)],'windowHeight':document[_0x98b498(0x334)][_0x98b498(0x3b2)]},'jsPDF':{'unit':'in','format':_0x98b498(0x301),'orientation':_0x73dc30}};html2pdf()['set'](_0x1c001c)[_0x98b498(0x35d)](_0xa8d651)[_0x98b498(0x2bb)]()[_0x98b498(0x2bc)](()=>{const _0x375365=_0x98b498;showNotification(_0x375365(0x3a6),_0x375365(0x36f)),document['body'][_0x375365(0x2ae)](_0x507df4),closePdfSettingsModal();})[_0x98b498(0x3b6)](_0x26a60e=>{const _0x39c35c=_0x98b498;console[_0x39c35c(0x384)]('Error\x20generating\x20PDF:',_0x26a60e),showNotification(_0x39c35c(0x27c),_0x39c35c(0x384)),document['body'][_0x39c35c(0x2ae)](_0x507df4),closePdfSettingsModal();});}let notificationId=0x0;function showNotification(_0x11cf8,_0x3a04ba='success',_0x3a8c4b=0xbb8){const _0x4c7e68=_0x4ef564,_0x2ee440=document[_0x4c7e68(0x399)]('notification-container'),_0x4397bb=++notificationId;let _0x4ae370;switch(_0x3a04ba){case _0x4c7e68(0x36f):_0x4ae370='✓';break;case'error':_0x4ae370='✕';break;case _0x4c7e68(0x242):_0x4ae370='i';break;case'warning':_0x4ae370='!';break;default:_0x4ae370='•';}const _0x256634=document[_0x4c7e68(0x246)](_0x4c7e68(0x23d));return _0x256634[_0x4c7e68(0x2b6)]=_0x4c7e68(0x3ab)+_0x3a04ba,_0x256634['id']='notification-'+_0x4397bb,_0x256634[_0x4c7e68(0x307)]=_0x4c7e68(0x31b)+_0x4ae370+_0x4c7e68(0x345)+_0x11cf8+_0x4c7e68(0x203)+_0x4397bb+')\x22>&times;</button>\x0a\x20\x20\x20\x20\x20\x20',_0x2ee440[_0x4c7e68(0x38c)](_0x256634),setTimeout(()=>{const _0x3fc3e7=_0x4c7e68;_0x256634[_0x3fc3e7(0x23e)][_0x3fc3e7(0x2e8)](_0x3fc3e7(0x369));},0x32),_0x3a8c4b!==null&&setTimeout(()=>{closeNotification(_0x4397bb);},_0x3a8c4b),_0x4397bb;}function closeNotification(_0xc6560d){const _0x5da570=_0x4ef564,_0x25b8bc=document[_0x5da570(0x399)](_0x5da570(0x2cc)+_0xc6560d);_0x25b8bc&&(_0x25b8bc['classList'][_0x5da570(0x2ce)]('show'),setTimeout(()=>{const _0x326090=_0x5da570;_0x25b8bc[_0x326090(0x293)]&&_0x25b8bc['parentNode'][_0x326090(0x2ae)](_0x25b8bc);},0xfa));}function debounce(_0xca114a,_0x22f1c6=0x12c){let _0x3087e0;return(..._0x1bb433)=>{clearTimeout(_0x3087e0),_0x3087e0=setTimeout(()=>{const _0x33cc15=_0xee92;_0xca114a[_0x33cc15(0x274)](this,_0x1bb433);},_0x22f1c6);};}function formatCurrency(_0xe7eca2){const _0x459328=_0x4ef564;return new Intl['NumberFormat'](_0x459328(0x383),{'style':'currency','currency':_0x459328(0x2be),'minimumFractionDigits':0x0,'maximumFractionDigits':0x0})[_0x459328(0x2c6)](_0xe7eca2);}function formatDate(_0x143471){const _0x3d48c6=_0x4ef564,_0x2c0df6=new Date(_0x143471+_0x3d48c6(0x1dc));return new Intl[(_0x3d48c6(0x1e3))](_0x3d48c6(0x383),{'day':_0x3d48c6(0x3b3),'month':_0x3d48c6(0x2db),'year':'numeric'})['format'](_0x2c0df6);}function formatMonth(_0x286665){const _0x3cab54=_0x4ef564,[_0x13cd5a,_0x34a031]=_0x286665['split']('-'),_0x14e142=new Date(_0x13cd5a,_0x34a031-0x1,0x1);return new Intl['DateTimeFormat'](_0x3cab54(0x383),{'month':_0x3cab54(0x2db),'year':'numeric'})[_0x3cab54(0x2c6)](_0x14e142);}function openConfirmationModal(_0x2b92d9,_0x4ad443){const _0x145b48=_0x4ef564;confirmationModalMessage[_0x145b48(0x1f7)]=_0x2b92d9,currentConfirmCallback=_0x4ad443,confirmationModal[_0x145b48(0x1eb)][_0x145b48(0x1ee)]='flex';}function closeConfirmationModal(){const _0x51d660=_0x4ef564;confirmationModal[_0x51d660(0x1eb)]['display']='none',currentConfirmCallback=null;}function exportData(){const _0x877ae8=_0x4ef564;if(transaksi['length']===0x0){showNotification(_0x877ae8(0x3b1),'info');return;}const _0x7d1b62=JSON['stringify'](transaksi,null,0x2),_0x14b1a0=new Blob([_0x7d1b62],{'type':_0x877ae8(0x3ae)}),_0x59b787=URL[_0x877ae8(0x392)](_0x14b1a0),_0x28f267=document[_0x877ae8(0x246)]('a'),_0x2dca45=document[_0x877ae8(0x399)]('app-title')[_0x877ae8(0x1f7)][_0x877ae8(0x2c4)](/\s/g,'-');_0x28f267[_0x877ae8(0x367)]=_0x59b787,_0x28f267[_0x877ae8(0x20b)]=_0x2dca45+_0x877ae8(0x373)+new Date()[_0x877ae8(0x396)]()[_0x877ae8(0x394)](0x0,0xa)+_0x877ae8(0x31d),document[_0x877ae8(0x21f)][_0x877ae8(0x38c)](_0x28f267),_0x28f267[_0x877ae8(0x358)](),document[_0x877ae8(0x21f)][_0x877ae8(0x2ae)](_0x28f267),URL[_0x877ae8(0x292)](_0x59b787),showNotification(_0x877ae8(0x27b),_0x877ae8(0x36f));}function openImportModal(){const _0x3e8497=_0x4ef564;if(!checkLoginStatus())return;importModal[_0x3e8497(0x1eb)][_0x3e8497(0x1ee)]='flex',importFileInput['value']='',confirmImportBtn[_0x3e8497(0x239)]=!![];}function closeImportModal(){const _0x4661a8=_0x4ef564;importModal[_0x4661a8(0x1eb)]['display']='none',importFileInput[_0x4661a8(0x340)]='',confirmImportBtn[_0x4661a8(0x239)]=!![];}function confirmImportData(){const _0x55f7a5=_0x4ef564,_0x8b981=importFileInput[_0x55f7a5(0x36e)][0x0];if(!_0x8b981){showNotification('Pilih\x20file\x20JSON\x20untuk\x20diimport.',_0x55f7a5(0x384));return;}const _0x22562e=new FileReader();_0x22562e[_0x55f7a5(0x2b1)]=function(_0x579a26){const _0x11f63f=_0x55f7a5;try{const _0x2b0ec3=JSON[_0x11f63f(0x24a)](_0x579a26[_0x11f63f(0x386)][_0x11f63f(0x257)]);Array['isArray'](_0x2b0ec3)&&_0x2b0ec3[_0x11f63f(0x29b)](_0x35f94a=>typeof _0x35f94a[_0x11f63f(0x207)]===_0x11f63f(0x303)&&typeof _0x35f94a['jumlah']==='number'&&typeof _0x35f94a[_0x11f63f(0x35e)]===_0x11f63f(0x303)&&typeof _0x35f94a[_0x11f63f(0x35b)]==='string')?openConfirmationModal('Semua\x20data\x20transaksi\x20yang\x20ada\x20saat\x20ini\x20akan\x20diganti.\x20Lanjutkan?',()=>{const _0x4216d2=_0x11f63f;transaksi=_0x2b0ec3,localStorage[_0x4216d2(0x29a)](_0x4216d2(0x201),JSON[_0x4216d2(0x380)](transaksi)),updateUI(),closeImportModal(),showNotification('Data\x20transaksi\x20berhasil\x20diimport!',_0x4216d2(0x36f)),editIndex=null,form[_0x4216d2(0x31c)](),setTodayDate(),formTitle[_0x4216d2(0x1f7)]='📝\x20Tambah\x20Transaksi\x20Baru',submitText[_0x4216d2(0x1f7)]=_0x4216d2(0x2ee),cancelEditBtn[_0x4216d2(0x1eb)][_0x4216d2(0x1ee)]='none';}):showNotification(_0x11f63f(0x205),'error');}catch(_0x1032df){showNotification(_0x11f63f(0x304),_0x11f63f(0x384)),console['error'](_0x11f63f(0x202),_0x1032df);}},_0x22562e[_0x55f7a5(0x319)]=function(){const _0x463413=_0x55f7a5;showNotification(_0x463413(0x32e),_0x463413(0x384));},_0x22562e[_0x55f7a5(0x26b)](_0x8b981);}document[_0x4ef564(0x20a)](_0x4ef564(0x254),function(_0x539f45){const _0x4ec62a=_0x4ef564;(_0x539f45['ctrlKey']||_0x539f45[_0x4ec62a(0x272)])&&_0x539f45[_0x4ec62a(0x256)]==='n'&&(_0x539f45['preventDefault'](),scrollToForm(),document['getElementById']('deskripsi')[_0x4ec62a(0x260)]());_0x539f45['key']===_0x4ec62a(0x2ea)&&editIndex!==null&&cancelEdit();if(_0x539f45[_0x4ec62a(0x256)]===_0x4ec62a(0x2ea)){if(themeSettingsModal['style']['display']==='flex')closeThemeModal();if(pdfSettingsModal[_0x4ec62a(0x1eb)][_0x4ec62a(0x1ee)]==='flex')closePdfSettingsModal();if(deleteModal['style'][_0x4ec62a(0x1ee)]==='flex')closeDeleteModal();if(importModal[_0x4ec62a(0x1eb)]['display']==='flex')closeImportModal();if(document['getElementById'](_0x4ec62a(0x21e))[_0x4ec62a(0x23e)][_0x4ec62a(0x347)]('show'))closeTitleEditModal();if(confirmationModal[_0x4ec62a(0x1eb)][_0x4ec62a(0x1ee)]===_0x4ec62a(0x1fc))closeConfirmationModal();if(dataActionsDropdown[_0x4ec62a(0x23e)][_0x4ec62a(0x347)](_0x4ec62a(0x33d)))dataActionsDropdown[_0x4ec62a(0x23e)][_0x4ec62a(0x2ce)]('open');if(document[_0x4ec62a(0x399)](_0x4ec62a(0x312))[_0x4ec62a(0x1eb)]['display']==='flex')closeScanner();}});function scrollToForm(){const _0x973072=_0x4ef564;document['querySelector']('.form-container')[_0x973072(0x2a7)]({'behavior':'smooth','block':_0x973072(0x34f)});}function initializeCustomSelect(){const _0x200965=_0x4ef564,_0x10941a=document[_0x200965(0x399)]('custom-jenis');if(!_0x10941a)return;const _0x13aaf5=_0x10941a[_0x200965(0x323)](_0x200965(0x25a)),_0x4f0f00=document[_0x200965(0x399)](_0x200965(0x35b)),_0x56e904=_0x10941a[_0x200965(0x323)]('.select-items'),_0x5836b7=_0x56e904[_0x200965(0x362)](_0x200965(0x23d)),_0x5d3737=()=>{const _0x251320=_0x200965;_0x10941a[_0x251320(0x23e)]['remove']('select-active'),_0x56e904[_0x251320(0x23e)][_0x251320(0x2e8)](_0x251320(0x32b));},_0x56f413=_0x5836b7[0x1];_0x13aaf5[_0x200965(0x307)]=_0x56f413[_0x200965(0x307)],_0x4f0f00[_0x200965(0x340)]=_0x56f413[_0x200965(0x200)](_0x200965(0x281)),_0x13aaf5[_0x200965(0x20a)]('click',function(_0x41a7e2){const _0x4bd4d1=_0x200965;_0x41a7e2['stopPropagation']();const _0x83d87a=_0x10941a['classList'][_0x4bd4d1(0x347)](_0x4bd4d1(0x366));_0x5d3737(),!_0x83d87a&&(_0x10941a['classList'][_0x4bd4d1(0x2e8)]('select-active'),_0x56e904['classList'][_0x4bd4d1(0x2ce)]('select-hide'));}),_0x5836b7[_0x200965(0x33c)](_0x1b6f04=>{const _0x219944=_0x200965;_0x1b6f04['addEventListener'](_0x219944(0x358),function(){const _0x52b1d6=_0x219944;_0x13aaf5[_0x52b1d6(0x307)]=this['innerHTML'],_0x4f0f00[_0x52b1d6(0x340)]=this[_0x52b1d6(0x200)](_0x52b1d6(0x281)),_0x5d3737();});}),document[_0x200965(0x20a)](_0x200965(0x358),_0x5d3737);}function initializeMonthFilter(){const _0x34028b=_0x4ef564,_0x2736f5=document[_0x34028b(0x399)]('custom-filter-bulan');if(!_0x2736f5)return;const _0x2be1e6=_0x2736f5[_0x34028b(0x323)](_0x34028b(0x25a)),_0x2ca7d8=_0x2736f5[_0x34028b(0x323)]('.select-items'),_0x54237b=()=>{const _0x38dc07=_0x34028b;_0x2736f5[_0x38dc07(0x23e)]['remove'](_0x38dc07(0x366)),_0x2ca7d8['classList']['add']('select-hide');};_0x2be1e6['addEventListener']('click',function(_0x5b9ebc){const _0x505798=_0x34028b;_0x5b9ebc['stopPropagation']();const _0x5661ed=_0x2736f5[_0x505798(0x23e)][_0x505798(0x347)]('select-active');document[_0x505798(0x362)](_0x505798(0x261))[_0x505798(0x33c)](_0x21f951=>{const _0x2a00cb=_0x505798;_0x21f951!==_0x2736f5&&(_0x21f951[_0x2a00cb(0x23e)][_0x2a00cb(0x2ce)]('select-active'),_0x21f951['querySelector'](_0x2a00cb(0x253))[_0x2a00cb(0x23e)]['add'](_0x2a00cb(0x32b)));}),!_0x5661ed?(_0x2736f5[_0x505798(0x23e)]['add']('select-active'),_0x2ca7d8['classList']['remove'](_0x505798(0x32b))):_0x54237b();}),document[_0x34028b(0x20a)](_0x34028b(0x358),_0x54237b);}function initializePdfOrientationSelect(){const _0x91c429=_0x4ef564,_0xe73db6=document[_0x91c429(0x399)](_0x91c429(0x2ba));if(!_0xe73db6)return;const _0x1d1867=_0xe73db6[_0x91c429(0x323)](_0x91c429(0x25a)),_0x2484e1=document[_0x91c429(0x399)](_0x91c429(0x2d1)),_0x2f97c4=_0xe73db6[_0x91c429(0x323)]('.select-items'),_0x14affa=_0x2f97c4['querySelectorAll']('div'),_0x5f40b0=()=>{const _0xff7e3a=_0x91c429;_0xe73db6['classList'][_0xff7e3a(0x2ce)](_0xff7e3a(0x366)),_0x2f97c4[_0xff7e3a(0x23e)][_0xff7e3a(0x2e8)](_0xff7e3a(0x32b));},_0x35a46a=_0x14affa[0x0];_0x1d1867[_0x91c429(0x307)]=_0x35a46a[_0x91c429(0x307)],_0x2484e1['value']=_0x35a46a[_0x91c429(0x200)](_0x91c429(0x281)),_0x1d1867[_0x91c429(0x20a)]('click',function(_0x2b9e3d){const _0x3c8dc3=_0x91c429;_0x2b9e3d[_0x3c8dc3(0x3b5)]();const _0x341050=_0xe73db6[_0x3c8dc3(0x23e)]['contains'](_0x3c8dc3(0x366));document['querySelectorAll']('.custom-select-container')[_0x3c8dc3(0x33c)](_0x1c632c=>{const _0x51bf36=_0x3c8dc3;_0x1c632c!==_0xe73db6&&(_0x1c632c[_0x51bf36(0x23e)]['remove'](_0x51bf36(0x366)),_0x1c632c['querySelector'](_0x51bf36(0x253))[_0x51bf36(0x23e)][_0x51bf36(0x2e8)]('select-hide'));}),!_0x341050?(_0xe73db6[_0x3c8dc3(0x23e)]['add'](_0x3c8dc3(0x366)),_0x2f97c4[_0x3c8dc3(0x23e)][_0x3c8dc3(0x2ce)](_0x3c8dc3(0x32b))):_0x5f40b0();}),_0x14affa[_0x91c429(0x33c)](_0xa1e6e9=>{const _0x42a32b=_0x91c429;_0xa1e6e9[_0x42a32b(0x20a)](_0x42a32b(0x358),function(){const _0x49005d=_0x42a32b;_0x1d1867[_0x49005d(0x307)]=this[_0x49005d(0x307)],_0x2484e1[_0x49005d(0x340)]=this[_0x49005d(0x200)](_0x49005d(0x281)),_0x5f40b0();});}),document['addEventListener'](_0x91c429(0x358),_0x5f40b0);}function showLoginModal(){const _0x2b22e1=_0x4ef564,_0x5fbe77=document[_0x2b22e1(0x399)]('login-modal');_0x5fbe77[_0x2b22e1(0x1eb)][_0x2b22e1(0x1ee)]=_0x2b22e1(0x1fc),document[_0x2b22e1(0x399)](_0x2b22e1(0x382))[_0x2b22e1(0x260)]();}function closeLoginModal(){const _0x355a7e=_0x4ef564,_0x3f1f0c=document[_0x355a7e(0x399)](_0x355a7e(0x397));_0x3f1f0c['style'][_0x355a7e(0x1ee)]=_0x355a7e(0x3ac),document[_0x355a7e(0x399)](_0x355a7e(0x1ea))['style'][_0x355a7e(0x1ee)]=_0x355a7e(0x3ac),document[_0x355a7e(0x399)](_0x355a7e(0x382))[_0x355a7e(0x340)]='';}function getDeviceId(){const _0x38f714=_0x4ef564;let _0x4abdfd=localStorage[_0x38f714(0x2df)](_0x38f714(0x258));return!_0x4abdfd&&(_0x4abdfd=crypto[_0x38f714(0x398)](),localStorage['setItem'](_0x38f714(0x258),_0x4abdfd)),_0x4abdfd;}async function handleLogin(_0x5ddd03){const _0x46395b=_0x4ef564;_0x5ddd03[_0x46395b(0x353)]();const _0x253776=document[_0x46395b(0x399)](_0x46395b(0x382)),_0x14a686=document[_0x46395b(0x399)](_0x46395b(0x1ea)),_0x2cfda4=_0x253776[_0x46395b(0x340)][_0x46395b(0x2b9)](),_0x4e26ad=getDeviceId(),_0x31f015=document['querySelector'](_0x46395b(0x2ff));_0x31f015[_0x46395b(0x239)]=!![],_0x31f015[_0x46395b(0x1f7)]=_0x46395b(0x264);try{const {data:_0x8f9f20,error:_0x547c2b}=await supabase[_0x46395b(0x35c)][_0x46395b(0x1ef)](_0x46395b(0x2f9),{'body':{'code':_0x2cfda4,'deviceId':_0x4e26ad}});if(_0x547c2b)throw _0x547c2b;_0x8f9f20&&_0x8f9f20[_0x46395b(0x36f)]?(localStorage[_0x46395b(0x29a)](_0x46395b(0x1f3),_0x46395b(0x225)),localStorage[_0x46395b(0x29a)](_0x46395b(0x311),_0x2cfda4),localStorage['setItem'](_0x46395b(0x1e5),_0x4e26ad),closeLoginModal(),updateAuthUI(),updateUI(),showNotification(_0x46395b(0x33b),'success'),startRealtimeSessionListener()):(_0x14a686[_0x46395b(0x1f7)]=_0x8f9f20&&_0x8f9f20[_0x46395b(0x2ec)]||_0x46395b(0x25d),_0x14a686[_0x46395b(0x1eb)][_0x46395b(0x1ee)]='block',_0x253776[_0x46395b(0x340)]='',_0x253776[_0x46395b(0x260)]());}catch(_0x329717){console[_0x46395b(0x384)]('Login\x20API\x20error:',_0x329717),_0x14a686['textContent']=_0x46395b(0x2c3),_0x14a686[_0x46395b(0x1eb)]['display']=_0x46395b(0x355);}finally{_0x31f015['disabled']=![],_0x31f015[_0x46395b(0x1f7)]=_0x46395b(0x34a);}}async function startRealtimeSessionListener(){const _0x197834=_0x4ef564,_0x2916a2=localStorage[_0x197834(0x2df)](_0x197834(0x311));if(!_0x2916a2)return;realtimeChannel&&(await realtimeChannel[_0x197834(0x1e1)](),realtimeChannel=null),console[_0x197834(0x2e9)](_0x197834(0x387)+_0x2916a2),realtimeChannel=supabase[_0x197834(0x2b4)](_0x197834(0x3a3)+_0x2916a2)['on']('postgres_changes',{'event':'*','schema':'public','table':'kode_akses','filter':_0x197834(0x2a4)+_0x2916a2},_0x2870ce=>{const _0x4127f4=_0x197834;console[_0x4127f4(0x2e9)]('Perubahan\x20database\x20terdeteksi:',_0x2870ce);if(_0x2870ce[_0x4127f4(0x237)]==='DELETE')console['log'](_0x4127f4(0x1f5)),showNotification(_0x4127f4(0x1f8),_0x4127f4(0x384)),handleLogout();else _0x2870ce[_0x4127f4(0x237)]===_0x4127f4(0x2dd)&&(_0x2870ce['old']['kode']!==_0x2870ce[_0x4127f4(0x2b0)][_0x4127f4(0x2aa)]?(console[_0x4127f4(0x2e9)](_0x4127f4(0x32f)+_0x2870ce['old']['kode']+_0x4127f4(0x21d)+_0x2870ce[_0x4127f4(0x2b0)]['kode']+'\x27!'),showNotification(_0x4127f4(0x22e),_0x4127f4(0x384)),handleLogout()):console['log'](_0x4127f4(0x317)));})['subscribe']((_0x47a414,_0x927fd0)=>{const _0x5c03ea=_0x197834;_0x47a414==='SUBSCRIBED'&&console[_0x5c03ea(0x2e9)](_0x5c03ea(0x230)),(_0x47a414==='CHANNEL_ERROR'||_0x927fd0)&&console[_0x5c03ea(0x384)](_0x5c03ea(0x1db),_0x927fd0);});}async function forceLogout(_0x2588d0){const _0x3c67ca=_0x4ef564;console[_0x3c67ca(0x22a)](_0x3c67ca(0x294)+_0x2588d0),realtimeChannel&&(await supabaseRealtimeClient[_0x3c67ca(0x23a)](realtimeChannel),realtimeChannel=null),localStorage['removeItem'](_0x3c67ca(0x1f3)),localStorage[_0x3c67ca(0x208)](_0x3c67ca(0x311)),localStorage[_0x3c67ca(0x208)](_0x3c67ca(0x1e5)),updateAuthUI(),updateUI(),showNotification(_0x2588d0,_0x3c67ca(0x384),0x1770);}async function handleLogout(){const _0x56f939=_0x4ef564,_0x2dcc89=localStorage[_0x56f939(0x2df)]('myAccessCode'),_0x515693=document['getElementById'](_0x56f939(0x36d));if(_0x515693)_0x515693['disabled']=!![];realtimeChannel&&(await supabaseRealtimeClient['removeChannel'](realtimeChannel),realtimeChannel=null);try{if(_0x2dcc89){const _0x7c2fc3=getDeviceId(),{error:_0x10eeb5}=await supabase[_0x56f939(0x35c)][_0x56f939(0x1ef)](_0x56f939(0x282),{'body':{'code':_0x2dcc89,'deviceId':_0x7c2fc3}});if(_0x10eeb5)throw _0x10eeb5;}}catch(_0x524d93){console['error']('Gagal\x20menghubungi\x20server\x20untuk\x20rilis\x20kode:',_0x524d93);}finally{localStorage[_0x56f939(0x208)](_0x56f939(0x1f3)),localStorage[_0x56f939(0x208)]('myAccessCode'),localStorage[_0x56f939(0x208)]('myDeviceId');if(_0x515693)_0x515693[_0x56f939(0x239)]=![];updateAuthUI(),updateUI(),showNotification(_0x56f939(0x2e2),_0x56f939(0x242)),document['getElementById']('settings-menu')[_0x56f939(0x23e)]['remove'](_0x56f939(0x33d));}}function updateAuthUI(){const _0x2d9cec=_0x4ef564,_0x46fb36=document[_0x2d9cec(0x399)](_0x2d9cec(0x36d)),_0x20c748=_0x46fb36[_0x2d9cec(0x323)](_0x2d9cec(0x33e));localStorage[_0x2d9cec(0x2df)](_0x2d9cec(0x1f3))==='true'?(_0x20c748['textContent']=_0x2d9cec(0x214),_0x46fb36[_0x2d9cec(0x356)]=handleLogout):(_0x20c748['textContent']=_0x2d9cec(0x276),_0x46fb36[_0x2d9cec(0x356)]=showLoginModal);}function checkLoginStatus(){const _0xf503cc=_0x4ef564;return localStorage[_0xf503cc(0x2df)](_0xf503cc(0x1f3))===_0xf503cc(0x225)?!![]:(showLoginModal(),![]);}function loadGuestUI(){const _0x428bb4=_0x4ef564;document[_0x428bb4(0x399)]('pemasukan')[_0x428bb4(0x1f7)]=formatCurrency(0x0),document['getElementById'](_0x428bb4(0x1fd))[_0x428bb4(0x1f7)]=formatCurrency(0x0),document[_0x428bb4(0x399)](_0x428bb4(0x2ac))[_0x428bb4(0x1f7)]=formatCurrency(0x0);const _0x35d65d=document[_0x428bb4(0x399)]('tbody-tabel');_0x35d65d[_0x428bb4(0x307)]='';const _0xad0475=document['getElementById']('empty-state');_0xad0475['style']['display']=_0x428bb4(0x355),_0xad0475[_0x428bb4(0x307)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22empty-state-icon\x22>👋</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<h2>Selamat\x20Datang\x20di\x20MyBudgetly</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:\x201.05rem;\x20max-width:\x20550px;\x20margin:\x200\x20auto;\x20line-height:\x201.6;\x20color:\x20var(--text-secondary);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Ini\x20adalah\x20mode\x20demo,\x20miliki\x20aplikasi\x20<b>MyBudgetly</b>\x20versi\x20lengkap\x20di\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<a\x20href=\x22https://lynk.id/arul.n11\x22\x20target=\x22_blank\x22\x20rel=\x22noopener\x20noreferrer\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20style=\x22color:\x20var(--primary-accent-color);\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-weight:\x20600;\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-decoration:\x20underline;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-decoration-thickness:\x202px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20lynk.id/arul.n11\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</a>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</p>\x0a\x20\x20\x20\x20',document['querySelector']('.table-container\x20table')[_0x428bb4(0x1eb)][_0x428bb4(0x1ee)]=_0x428bb4(0x3ac),document['getElementById'](_0x428bb4(0x25e))[_0x428bb4(0x307)]='';}function getTextColorForBackground(_0x4168c4){const _0x172505=_0x4ef564;try{let _0x18abac=_0x4168c4['replace'](/^#/,'');_0x18abac[_0x172505(0x28a)]===0x3&&(_0x18abac=_0x18abac[0x0]+_0x18abac[0x0]+_0x18abac[0x1]+_0x18abac[0x1]+_0x18abac[0x2]+_0x18abac[0x2]);const _0x1c5ab7=parseInt(_0x18abac['substring'](0x0,0x2),0x10),_0x3c2f9d=parseInt(_0x18abac['substring'](0x2,0x4),0x10),_0x16f190=parseInt(_0x18abac[_0x172505(0x352)](0x4,0x6),0x10),_0x332997=(_0x1c5ab7*0x12b+_0x3c2f9d*0x24b+_0x16f190*0x72)/0x3e8;return _0x332997>0x95?'#1f2937':'#ffffff';}catch(_0x255bb1){return console[_0x172505(0x384)](_0x172505(0x324),_0x255bb1),'#ffffff';}}function applyCustomColor(_0x16504a){const _0x2405cb=_0x4ef564,_0x457215=generateGradient(_0x16504a),_0x4caac0=hexToRgba(_0x16504a,0.15),_0x4513fc=getTextColorForBackground(_0x16504a),_0x2ac3ef=document[_0x2405cb(0x334)][_0x2405cb(0x1eb)];_0x2ac3ef[_0x2405cb(0x2d4)](_0x2405cb(0x29f),_0x457215),_0x2ac3ef[_0x2405cb(0x2d4)]('--primary-accent-color',_0x16504a),_0x2ac3ef[_0x2405cb(0x2d4)](_0x2405cb(0x27e),_0x4caac0),_0x2ac3ef[_0x2405cb(0x2d4)](_0x2405cb(0x249),_0x4513fc),document[_0x2405cb(0x334)][_0x2405cb(0x287)](_0x2405cb(0x390),'custom'),localStorage['setItem'](_0x2405cb(0x1e0),'custom'),localStorage[_0x2405cb(0x29a)](_0x2405cb(0x240),_0x16504a),updateActiveThemeButton(null),updateActiveSwatch();}
+const SUPABASE_URL = 'https://kycmnkibuxtzrbzrhezo.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5Y21ua2lidXh0enJienJoZXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0ODI3NDAsImV4cCI6MjA3NzA1ODc0MH0.WtZhCS8qRUQNX5cSJAKdyA4G7Df7izGeWcjbWZTSbE4';
+
+// Klien UTAMA untuk API (Login, dll.) - Definisikan ini dulu
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let realtimeChannel = null; // Channel untuk Realtime
+
+// Variabel global
+let transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
+let editIndex = null;
+let currentFilteredDate = null;
+let currentConfirmCallback = null;
+let itemRowCounter = 0;
+
+// Variabel Paginasi
+let currentPage = 1;
+const transactionsPerPage = 10;
+
+// Variabel untuk Fitur Scan
+let cameraStream = null;
+let cropper = null; // [BARU] Variabel untuk instance Cropper.js
+
+// Inisialisasi Tema Lengkap
+// GANTI SELURUH FUNGSI LAMA DENGAN INI
+// Inisialisasi Tema Lengkap
+// GANTI SELURUH FUNGSI LAMA DENGAN INI
+function initTheme() {
+  // Logika pengaturan tema (setAttribute, setProperty) TELAH DIPINDAH
+  // ke inline script di <head> index.html untuk mencegah "flash".
+  
+  // Fungsi ini sekarang hanya bertugas menginisialisasi UI
+  // yang bergantung pada DOM (seperti color picker) agar nilainya sesuai.
+
+  const savedColorTheme = localStorage.getItem('colorTheme') || 'ocean';
+  const customAccentColor = localStorage.getItem('customAccentColor');
+
+  const colorPicker = document.getElementById('custom-color-input');
+
+  if (colorPicker) {
+    if (savedColorTheme === 'custom' && customAccentColor) {
+      // Atur nilai color picker ke warna kustom yang tersimpan
+      colorPicker.value = customAccentColor;
+    } else {
+      // Atur nilai color picker ke default
+      colorPicker.value = '#4f46e5';
+    }
+  }
+}
+
+// Mengubah Tema
+function toggleTheme() {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+}
+
+// Fungsi untuk menerapkan tema warna preset
+function applyColorTheme(themeName) {
+  document.documentElement.style.removeProperty('--primary-gradient');
+  document.documentElement.style.removeProperty('--primary-accent-color');
+  document.documentElement.style.removeProperty('--primary-accent-color-glow');
+  document.documentElement.setAttribute('data-color-theme', themeName);
+  localStorage.setItem('colorTheme', themeName);
+  localStorage.removeItem('customAccentColor');
+  const capitalizedThemeName = themeName.charAt(0).toUpperCase() + themeName.slice(1);
+  showNotification(`Tema ${capitalizedThemeName} diterapkan`, 'success');
+  updateActiveThemeButton(themeName);
+  updateActiveSwatch();
+
+  const colorPicker = document.getElementById('custom-color-input');
+  if (colorPicker) colorPicker.value = '#4f46e5';
+}
+
+function resetColorTheme() {
+  applyColorTheme('ocean');
+  showNotification('Tema dikembalikan ke default', 'info');
+}
+
+// Fungsi helper untuk mencerahkan warna & membuat gradien
+function lightenHexColor(hex, percent) {
+  hex = hex.replace(/^#/, '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  const newR = Math.min(255, r + (255 - r) * (percent / 100));
+  const newG = Math.min(255, g + (255 - g) * (percent / 100));
+  const newB = Math.min(255, b + (255 - b) * (percent / 100));
+
+  return `#${Math.round(newR).toString(16).padStart(2, '0')}${Math.round(newG).toString(16).padStart(2, '0')}${Math.round(newB).toString(16).padStart(2, '0')}`;
+}
+
+function generateGradient(hexColor) {
+  const lighterColor = lightenHexColor(hexColor, 30);
+  return `linear-gradient(135deg, ${hexColor} 0%, ${lighterColor} 100%)`;
+}
+
+function hexToRgba(hex, alpha = 1) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// Fungsi untuk update tombol tema aktif
+function updateActiveThemeButton(activeThemeName) {
+  document.querySelectorAll('.theme-option').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.themeName === activeThemeName);
+  });
+}
+
+// Fungsi untuk mengelola palet warna kustom
+function initializeCustomColorPalette() {
+  const paletteContainer = document.getElementById('color-palette');
+  if (!paletteContainer) return;
+
+  const colors = [{
+    name: 'Slate',
+    value: '#475569'
+  }, {
+    name: 'Sky',
+    value: '#0ea5e9'
+  }, {
+    name: 'Emerald',
+    value: '#10b981'
+  }, {
+    name: 'Amber',
+    value: '#f59e0b'
+  }, {
+    name: 'Rose',
+    value: '#f43f5e'
+  }, {
+    name: 'Indigo',
+    value: '#4f46e5'
+  }];
+
+  paletteContainer.innerHTML = ''; // Hapus isi sebelumnya
+
+  colors.forEach(color => {
+    const swatch = document.createElement('button');
+    swatch.className = 'color-swatch';
+    swatch.style.backgroundColor = color.value;
+    swatch.title = color.name;
+    swatch.dataset.color = color.value;
+
+    swatch.addEventListener('click', () => {
+      const customColor = swatch.dataset.color;
+      const gradient = generateGradient(customColor);
+      applyCustomColor(customColor);
+
+      showNotification(`Warna kustom ${color.name} diterapkan`, 'success');
+    });
+    paletteContainer.appendChild(swatch);
+  });
+}
+
+function updateActiveSwatch() {
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+
+  const colorTheme = localStorage.getItem('colorTheme');
+  const customColor = localStorage.getItem('customAccentColor');
+
+  if (colorTheme === 'custom' && customColor) {
+    const activeSwatch = document.querySelector(`.color-swatch[data-color="${customColor}"]`);
+    if (activeSwatch) {
+      activeSwatch.classList.add('active');
+    }
+    updateActiveThemeButton(null);
+  }
+}
+
+
+// Mengelola Foto Profil
+function handleProfilePhotoChange(event) {
+  if (!checkLoginStatus()) {
+        event.target.value = null; // Batalkan pemilihan file
+        return;
+  }
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const profilePhoto = document.getElementById('profile-photo');
+      const profilePlaceholder = document.getElementById('profile-placeholder');
+
+      profilePhoto.src = e.target.result;
+      profilePhoto.classList.add('show');
+      profilePlaceholder.classList.add('hide');
+
+      localStorage.setItem('profilePhoto', e.target.result);
+
+      showNotification('Foto profil berhasil diperbarui', 'success');
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// Memuat Foto Profil
+function loadProfilePhoto() {
+  const savedPhoto = localStorage.getItem('profilePhoto');
+  if (savedPhoto) {
+    const profilePhoto = document.getElementById('profile-photo');
+    const profilePlaceholder = document.getElementById('profile-placeholder');
+
+    profilePhoto.src = savedPhoto;
+    profilePhoto.classList.add('show');
+    profilePlaceholder.classList.add('hide');
+  }
+}
+
+// Fungsionalitas Pengeditan Judul Modern
+function editTitle() {
+  if (!checkLoginStatus()) return;
+  const titleElement = document.getElementById('app-title');
+  const modal = document.getElementById('title-edit-modal');
+  const input = document.getElementById('title-edit-input');
+
+  input.value = titleElement.textContent;
+  modal.classList.add('show');
+
+  setTimeout(() => {
+    input.focus();
+    input.select();
+  }, 100);
+}
+
+function closeTitleEditModal() {
+  const modal = document.getElementById('title-edit-modal');
+  modal.classList.remove('show');
+}
+
+function saveTitleFromModal() {
+  const titleElement = document.getElementById('app-title');
+  const input = document.getElementById('title-edit-input');
+
+  const newTitle = input.value.trim();
+  if (newTitle) {
+    titleElement.textContent = newTitle;
+    localStorage.setItem('appTitle', newTitle);
+    showNotification(`Nama aplikasi berhasil diubah`, 'success');
+  }
+
+  closeTitleEditModal();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const input = document.getElementById('title-edit-input');
+  input.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      saveTitleFromModal();
+    } else if (event.key === 'Escape') {
+      closeTitleEditModal();
+    }
+  });
+
+  const modal = document.getElementById('title-edit-modal');
+  modal.addEventListener('click', function(event) {
+    if (event.target === modal) {
+      closeTitleEditModal();
+    }
+  });
+
+  document.getElementById('confirmActionBtn').addEventListener('click', () => {
+    if (currentConfirmCallback) {
+      currentConfirmCallback();
+      currentConfirmCallback = null;
+    }
+    closeConfirmationModal();
+  });
+
+  initializeCustomColorPalette();
+ 
+});
+
+function loadAppTitle() {
+  const savedTitle = localStorage.getItem('appTitle');
+  if (savedTitle) {
+    document.getElementById('app-title').textContent = savedTitle;
+  }
+}
+
+// Elemen DOM
+const form = document.getElementById('form-transaksi');
+const cancelEditBtn = document.getElementById('cancel-edit-btn');
+const submitBtn = document.getElementById('submit-btn');
+const submitText = document.getElementById('submit-text');
+const formTitle = document.getElementById('form-title');
+const emptyState = document.getElementById('empty-state');
+const pdfSettingsModal = document.getElementById('pdfSettingsModal');
+const deleteModal = document.getElementById('deleteModal');
+const pdfOrientationSelect = document.getElementById('pdf-orientation');
+const pdfFilenameInput = document.getElementById('pdf-filename');
+const pdfModalBtn = document.getElementById('pdf-modal-btn');
+const confirmationModal = document.getElementById('confirmationModal');
+const confirmationModalMessage = document.getElementById('confirmationModalMessage');
+const importModal = document.getElementById('importModal');
+const importFileInput = document.getElementById('import-file');
+const confirmImportBtn = document.getElementById('confirm-import-btn');
+const dataActionsDropdown = document.getElementById('data-actions-dropdown');
+const dataActionsToggleBtn = document.getElementById('data-actions-toggle-btn');
+const calendarFilterIcon = document.getElementById('calendar-filter-icon');
+const hiddenDateFilterInput = document.getElementById('hidden-date-filter');
+const activeDateFilterDisplay = document.getElementById('active-date-filter-display');
+const clearDateFilterBtn = document.getElementById('clear-date-filter-btn');
+const deleteFilterSelect = document.getElementById('delete-filter');
+const dateRangeDeleteGroup = document.getElementById('date-range-delete-group');
+const deleteStartDateInput = document.getElementById('delete-start-date');
+const deleteEndDateInput = document.getElementById('delete-end-date');
+
+const themeSettingsModal = document.getElementById('themeSettingsModal');
+
+
+function setTodayDate() {
+  const today = new Date();
+  const dateString = today.toISOString().split('T')[0];
+  document.getElementById('tanggal').value = dateString;
+}
+
+function setupMidnightDateUpdate() {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+
+  const msUntilMidnight = tomorrow.getTime() - now.getTime();
+
+  setTimeout(() => {
+    setTodayDate();
+    setInterval(() => {
+      setTodayDate();
+    }, 24 * 60 * 60 * 1000);
+  }, msUntilMidnight);
+}
+
+// script.js
+async function checkMaintenanceStatus() {
+    try {
+        const { data } = await supabaseClient
+            .from('pengaturan_admin')
+            .select('status, value')
+            .eq('setting_fitur', 'maintenance mode')
+            .maybeSingle();
+
+        const screen = document.getElementById('maintenance-screen');
+        const textEl = document.getElementById('maintenance-text');
+
+        if (data && data.status === true) {
+            // Jika ON: Tetap tampilkan dan pasang pesan kustom
+            screen.style.display = 'flex';
+            textEl.innerText = data.value || "Kami sedang melakukan pemeliharaan rutin.";
+            document.body.style.overflow = 'hidden'; 
+        } else {
+            // JIKA OFF: Sembunyikan layar agar aplikasi bisa digunakan
+            screen.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    } catch (err) {
+        // Jika internet error, amannya kita sembunyikan saja layarnya
+        document.getElementById('maintenance-screen').style.display = 'none';
+    }
+}
+// Fungsi untuk memantau perubahan Mode Maintenance secara Realtime
+function startMaintenanceRealtime() {
+    supabaseClient
+        .channel('maintenance-channel')
+        .on('postgres_changes', { 
+            event: 'UPDATE', 
+            schema: 'public', 
+            table: 'pengaturan_admin',
+            filter: 'setting_fitur=eq.maintenance mode' 
+        }, 
+        (payload) => {
+            const statusBaru = payload.new.status;
+            const pesanBaru = payload.new.value; // Ambil pesan terbaru dari payload
+            const screen = document.getElementById('maintenance-screen');
+            const textEl = document.getElementById('maintenance-text');
+
+            if (statusBaru === true) {
+                screen.style.display = 'flex';
+                // Update teks secara realtime
+                textEl.innerText = pesanBaru || "Kami sedang melakukan pemeliharaan rutin.";
+                document.body.style.overflow = 'hidden';
+            } else {
+                screen.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        })
+        .subscribe();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  checkMaintenanceStatus();
+  startMaintenanceRealtime();
+  initTheme();
+  loadProfilePhoto();
+  loadAppTitle();
+  setTodayDate();
+  setupMidnightDateUpdate();
+  setupEventListeners();
+  initializeCustomSelect();
+  initializeMonthFilter(); 
+  initializePdfOrientationSelect();
+  document.getElementById('modal-login-form').addEventListener('submit', handleLogin);
+  document.getElementById('close-login-modal-btn').addEventListener('click', closeLoginModal);
+  if (localStorage.getItem('isLoggedIn') === 'true') {
+      startRealtimeSessionListener();
+  }
+  updateAuthUI();
+  updateUI();
+});
+
+function setupEventListeners() {
+  cancelEditBtn.addEventListener('click', cancelEdit);
+  // [BARU] Event Listener untuk Dropdown Menu Pengaturan
+  const settingsMenu = document.getElementById('settings-menu');
+  const settingsToggle = document.getElementById('settings-menu-toggle');
+  const openThemeModalBtn = document.getElementById('open-theme-modal-btn');
+
+  if (settingsMenu && settingsToggle && openThemeModalBtn) {
+    
+    // 1. Buka/Tutup menu saat ikon hamburger diklik
+    settingsToggle.addEventListener('click', (e) => {
+      e.stopPropagation(); // Mencegah window click listener di bawah tertutup
+      settingsMenu.classList.toggle('open');
+    });
+
+    // 2. Buka modal tema dan tutup dropdown
+    openThemeModalBtn.addEventListener('click', () => {
+      openThemeModal(); // Panggil fungsi yang sudah ada
+      settingsMenu.classList.remove('open'); // Tutup dropdown
+    });
+
+    // 3. Tutup dropdown saat klik di luar area menu
+    window.addEventListener('click', (e) => {
+      if (!settingsMenu.contains(e.target)) {
+        settingsMenu.classList.remove('open');
+      }
+    });
+  }
+  // Akhir Event Listener Baru
+
+  document.querySelectorAll('.quick-amount-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.getElementById('jumlah').value = this.dataset.amount;
+      this.style.background = 'var(--border)';
+      setTimeout(() => {
+        this.style.background = 'var(--background-secondary)';
+      }, 200);
+    });
+  });
+
+  dataActionsToggleBtn.addEventListener('click', () => {
+    dataActionsDropdown.classList.toggle('open');
+  });
+
+  window.addEventListener('click', function(e) {
+    if (!dataActionsDropdown.contains(e.target)) {
+      dataActionsDropdown.classList.remove('open');
+    }
+  });
+
+  document.getElementById('filter-bulan').addEventListener('change', () => {
+    currentPage = 1;
+    updateUI();
+  });
+
+  const searchInput = document.getElementById('search-input');
+  const searchClear = document.getElementById('search-clear');
+
+  const debouncedUpdate = debounce(() => {
+    currentPage = 1;
+    updateUI(); // Panggil updateUI HANYA setelah user berhenti mengetik
+  }, 300); // 300ms delay
+
+  searchInput.addEventListener('input', function() {
+    const searchTerm = this.value.trim();
+    if (searchTerm) {
+      searchClear.style.display = 'flex';
+    } else {
+      searchClear.style.display = 'none';
+    }
+    
+    // [DIUBAH] Panggil fungsi yang sudah di-debounce, bukan updateUI() langsung
+    debouncedUpdate();
+  });
+
+  document.getElementById('deskripsi').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('jumlah').focus();
+    }
+  });
+
+  document.getElementById('jumlah').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('tanggal').focus();
+    }
+  });
+
+  window.addEventListener('click', function(event) {
+    if (event.target == themeSettingsModal) closeThemeModal();
+    if (event.target == pdfSettingsModal) closePdfSettingsModal();
+    if (event.target == deleteModal) closeDeleteModal();
+    if (event.target == importModal) closeImportModal();
+    if (event.target == confirmationModal) closeConfirmationModal();
+    if (event.target == document.getElementById('login-modal')) closeLoginModal();
+  });
+
+  calendarFilterIcon.addEventListener('click', () => {
+    hiddenDateFilterInput.showPicker();
+  });
+
+  hiddenDateFilterInput.addEventListener('change', function() {
+    currentPage = 1;
+    currentFilteredDate = this.value;
+    updateUI();
+    updateDateFilterDisplay();
+  });
+
+  clearDateFilterBtn.addEventListener('click', clearDateFilter);
+
+  importFileInput.addEventListener('change', function() {
+    confirmImportBtn.disabled = this.files.length === 0;
+  });
+  confirmImportBtn.disabled = true;
+
+  deleteFilterSelect.addEventListener('change', function() {
+    if (this.value === 'custom-range') {
+      dateRangeDeleteGroup.style.display = 'block';
+      if (!deleteStartDateInput.value) {
+        deleteStartDateInput.value = '2000-01-01';
+      }
+      if (!deleteEndDateInput.value) {
+        const today = new Date();
+        deleteEndDateInput.value = today.toISOString().split('T')[0];
+      }
+    } else {
+      dateRangeDeleteGroup.style.display = 'none';
+    }
+  });
+
+  setupScanEventListeners();
+
+  const colorPicker = document.getElementById('custom-color-input');
+  if (colorPicker) {
+    colorPicker.addEventListener('input', (event) => {
+      const newColor = event.target.value;
+      applyCustomColor(newColor);
+    });
+  }
+}
+
+// ===============================================
+// [PEMBARUAN LENGKAP] FUNGSI-FUNGSI UNTUK FITUR SCAN STRUK
+// ===============================================
+
+function setupScanEventListeners() {
+  const scanModal = document.getElementById('scan-modal');
+  const scannerHelpBtn = document.getElementById('scanner-help-btn');
+  const toggleEditBtn = document.getElementById('toggle-edit-btn');
+  const toggleImageBtn = document.getElementById('toggle-image-btn');
+
+  document.getElementById('scan-receipt-btn').addEventListener('click', openScanner);
+  document.getElementById('capture-btn').addEventListener('click', captureImage);
+  document.getElementById('rescan-btn').addEventListener('click', resetScanner);
+  // Tombol 'process-btn' onclick diatur secara dinamis
+  document.getElementById('cancel-scan-btn').addEventListener('click', closeScanner);
+  document.getElementById('save-scanned-btn').addEventListener('click', saveScannedTransaction);
+  document.getElementById('add-item-btn').addEventListener('click', () => addScannedItemRow());
+
+  scannerHelpBtn.addEventListener('click', () => {
+    const helpMessage = `
+                <div style='text-align: left;'>
+                    <b style='display: block; margin-bottom: 8px; font-size: 1.1em;'>💡 Tips untuk Hasil Pindai Terbaik</b>
+                    <ul style='margin: 0; padding-left: 20px;'>
+                        <li style='margin-bottom: 5px;'><b>Cahaya Terang:</b> Pastikan struk berada di area dengan pencahayaan yang baik dan merata.</li>
+                        <li style='margin-bottom: 5px;'><b>Permukaan Datar:</b> Letakkan struk di atas permukaan yang rata dan tidak terlipat.</li>
+                        <li style='margin-bottom: 5px;'><b>Hindari Bayangan:</b> Posisikan kamera agar tidak ada bayangan dari tangan atau ponsel Anda yang menutupi struk.</li>
+                        <li style='margin-bottom: 5px;'><b>Fokus & Jelas:</b> Pastikan kamera fokus dan seluruh teks pada struk terlihat tajam dan tidak buram sebelum mengambil gambar.</li>
+                        <li style='margin-bottom: 0;'><b>Isi Bingkai:</b> Posisikan struk agar memenuhi area di dalam bingkai pemindai.</li>
+                    </ul>
+                </div>
+            `;
+    showNotification(helpMessage, 'info', null);
+  });
+
+
+  toggleEditBtn.addEventListener('click', () => setCorrectionView('edit'));
+  toggleImageBtn.addEventListener('click', () => setCorrectionView('image'));
+
+  scanModal.addEventListener('click', (e) => {
+    if (e.target === scanModal) {
+      closeScanner();
+    }
+  });
+}
+
+async function openScanner() {
+  if (!checkLoginStatus()) return;
+  const scanModal = document.getElementById('scan-modal');
+  scanModal.style.display = 'flex';
+  resetScannerState();
+
+  try {
+    const constraints = {
+      video: {
+        facingMode: 'environment'
+      }
+    };
+    cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+    const cameraView = document.getElementById('camera-view');
+    cameraView.srcObject = cameraStream;
+  } catch (err) {
+    console.error("Error accessing camera: ", err);
+    let message = 'Gagal mengakses kamera.';
+    if (err.name === 'NotAllowedError') {
+      message = 'Akses kamera ditolak. Silakan izinkan akses kamera di pengaturan browser Anda untuk menggunakan fitur ini.';
+    }
+    showNotification(message, 'error', 6000);
+    closeScanner();
+  }
+}
+
+function closeScanner() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(track => track.stop());
+    cameraStream = null;
+  }
+  if (cropper) {
+      cropper.destroy();
+      cropper = null;
+  }
+  document.getElementById('scan-modal').style.display = 'none';
+}
+
+function resetScannerState() {
+  document.getElementById('scanner-title').textContent = "Pindai Struk Belanja";
+  
+  // Tampilkan view kamera, sembunyikan yang lain
+  document.getElementById('scanner-view-container').style.display = 'block';
+  document.getElementById('cropper-container').style.display = 'none';
+  document.getElementById('scanner-results-container').style.display = 'none';
+
+  // Reset tombol-tombol
+  document.getElementById('capture-btn').style.display = 'inline-flex';
+  document.getElementById('preview-controls').style.display = 'none';
+  document.getElementById('correction-controls').style.display = 'none';
+
+  // Sembunyikan status OCR dan bersihkan list item
+  document.getElementById('ocr-status').style.display = 'none';
+  document.getElementById('item-list-container').innerHTML = '';
+}
+
+function captureImage() {
+    const cameraView = document.getElementById('camera-view');
+    const canvas = document.getElementById('image-preview-canvas');
+    const imageToCrop = document.getElementById('image-to-crop');
+
+    canvas.width = cameraView.videoWidth;
+    canvas.height = cameraView.videoHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(cameraView, 0, 0, canvas.width, canvas.height);
+
+    imageToCrop.src = canvas.toDataURL('image/jpeg');
+
+    // Sembunyikan tampilan kamera dan tampilkan kontainer cropper
+    document.getElementById('scanner-view-container').style.display = 'none';
+    document.getElementById('cropper-container').style.display = 'block';
+
+    // Inisialisasi Cropper.js
+    if (cropper) {
+        cropper.destroy();
+    }
+    cropper = new Cropper(imageToCrop, {
+        viewMode: 1,
+        background: false,
+        responsive: true,
+        autoCropArea: 0.9,
+    });
+
+    // Ganti tombol
+    document.getElementById('capture-btn').style.display = 'none';
+    const processBtn = document.getElementById('process-btn');
+    processBtn.querySelector('#process-btn-text').innerHTML = '✂️ Crop & Proses';
+    processBtn.onclick = processCroppedImage; // Ganti fungsi on-click
+    document.getElementById('preview-controls').style.display = 'flex';
+}
+
+
+function resetScanner() {
+    if (cropper) {
+        cropper.destroy();
+        cropper = null;
+    }
+    resetScannerState(); // Kembali ke tampilan kamera awal
+}
+
+async function processCroppedImage() {
+    if (!cropper) {
+        showNotification('Cropper tidak siap.', 'error');
+        return;
+    }
+
+    const ocrStatus = document.getElementById('ocr-status');
+    const ocrText = document.getElementById('ocr-status-text');
+    const ocrProgress = document.getElementById('ocr-progress');
+    const processBtn = document.getElementById('process-btn');
+
+    // Dapatkan kanvas hasil crop dari Cropper.js
+    const croppedCanvas = cropper.getCroppedCanvas({
+        fillColor: '#fff'
+    });
+
+    if (!croppedCanvas) {
+        showNotification('Gagal mendapatkan gambar hasil crop.', 'error');
+        return;
+    }
+
+    // Sembunyikan cropper dan tampilkan status loading
+    document.getElementById('cropper-container').style.display = 'none';
+    document.getElementById('preview-controls').style.display = 'none';
+    ocrStatus.style.display = 'block';
+    ocrText.textContent = 'Mempersiapkan pemindaian...';
+    ocrProgress.value = 0;
+    
+    processBtn.disabled = true;
+    processBtn.querySelector('#process-btn-text').innerHTML = '<span class="loading"></span> Memproses...';
+
+    try {
+        const worker = await Tesseract.createWorker('ind', 1, {
+            logger: m => {
+                ocrProgress.value = (m.progress || 0) * 100;
+                if (m.status === 'recognizing text') {
+                    ocrText.textContent = `Menganalisis teks... (${Math.round(m.progress * 100)}%)`;
+                }
+            }
+        });
+
+        const { data: { text } } = await worker.recognize(croppedCanvas);
+        await worker.terminate();
+
+        parseOCRText(text);
+
+        document.getElementById('scanner-title').textContent = "Koreksi Hasil Pindaian";
+        document.getElementById('scanner-results-container').style.display = 'flex';
+        document.getElementById('correction-controls').style.display = 'flex';
+        document.getElementById('receipt-image-display').src = croppedCanvas.toDataURL();
+        setCorrectionView('edit');
+
+    } catch (error) {
+        console.error("OCR Error:", error);
+        showNotification('Terjadi kesalahan saat pemindaian OCR.', 'error');
+        resetScanner();
+    } finally {
+        ocrStatus.style.display = 'none';
+        processBtn.disabled = false;
+        processBtn.querySelector('#process-btn-text').innerHTML = '✂️ Crop & Proses';
+    }
+}
+
+
+function parseOCRText(text) {
+  let cleanedText = text
+    .replace(/(\d)[.,](\d{3})/g, '$1$2')
+    .replace(/,00/g, '')
+    .replace(/Rp\s?/gi, '')
+    .replace(/[^\w\s.,-]/g, '');
+
+  const lines = cleanedText.split('\n');
+  const items = [];
+  const itemRegex = /^(.+?)\s+(?:x\s?)?\d{1,2}\s+(\d{4,})$/;
+  const simpleItemRegex = /^(.*?)\s+(\d{4,})$/;
+  const junkRegex = /(Total|Subtotal|Tunai|Kembali|PPN|Diskon|Kasir|Indomaret|Alfamart|Alfamidi|Member|Poin|Tgl|Wkt|Struk|Telp)/i;
+
+  lines.forEach(line => {
+    line = line.trim();
+    if (line.length < 5 || junkRegex.test(line)) {
+      return;
+    }
+
+    let match = line.match(itemRegex) || line.match(simpleItemRegex);
+
+    if (match) {
+      let name = match[1].replace(/\d+$/, '').trim();
+      let price = parseInt(match[match.length - 1], 10);
+
+      if (name.length > 2 && /[a-zA-Z]{2,}/.test(name) && !isNaN(price) && price > 0) {
+        items.push({
+          name,
+          price
+        });
+      }
+    }
+  });
+
+  displayScannedItems(items);
+}
+
+function displayScannedItems(items) {
+  const container = document.getElementById('item-list-container');
+  container.innerHTML = '';
+  if (items.length === 0) {
+    showNotification('Tidak ada item yang terdeteksi. Silakan tambah manual.', 'warning');
+    addScannedItemRow();
+  } else {
+    showNotification(`Terdeteksi ${items.length} item. Mohon periksa kembali.`, 'success');
+    items.forEach(item => addScannedItemRow(item.name, item.price));
+  }
+  updateScannedTotal();
+}
+
+function addScannedItemRow(name = '', price = '') {
+  const container = document.getElementById('item-list-container');
+  const div = document.createElement('div');
+  div.className = 'item-row';
+
+  // ID unik untuk menghubungkan label dengan input
+  const uniqueId = ++itemRowCounter;
+
+  div.innerHTML = `
+        <div class="item-details-wrapper">
+            <div class="item-input-group item-name-group">
+                <label for="item-name-${uniqueId}">Nama Barang</label>
+                <input type="text" id="item-name-${uniqueId}" class="input-field item-name-input" value="${name}" placeholder="Contoh: Indomie Goreng">
+            </div>
+            <div class="item-input-group item-price-group">
+                <label for="item-price-${uniqueId}">Harga</label>
+                <input type="number" id="item-price-${uniqueId}" class="input-field item-price-input" value="${price}" placeholder="15000" inputmode="numeric">
+            </div>
+        </div>
+        <button class="delete-item-btn" onclick="this.parentElement.remove(); updateScannedTotal();" title="Hapus item ini">✕</button>
+      `;
+
+  container.appendChild(div);
+
+  // Tambahkan event listener untuk update total
+  const priceInput = div.querySelector('.item-price-input');
+  priceInput.addEventListener('input', updateScannedTotal);
+
+  // Perbaikan untuk scroll otomatis di mobile
+  const nameInput = div.querySelector('.item-name-input');
+  const scrollIntoViewOnFocus = (event) => {
+    setTimeout(() => {
+      event.target.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest'
+      });
+    }, 300);
+  };
+  nameInput.addEventListener('focus', scrollIntoViewOnFocus);
+  priceInput.addEventListener('focus', scrollIntoViewOnFocus);
+}
+
+function updateScannedTotal() {
+  const prices = document.querySelectorAll('.item-price-input');
+  let total = 0;
+  prices.forEach(input => {
+    total += parseInt(input.value) || 0;
+  });
+  document.getElementById('total-scanned-amount').textContent = formatCurrency(total);
+}
+
+function setCorrectionView(view) {
+  const itemListWrapper = document.getElementById('item-list-wrapper');
+  const imageWrapper = document.getElementById('receipt-image-wrapper');
+  const toggleEditBtn = document.getElementById('toggle-edit-btn');
+  const toggleImageBtn = document.getElementById('toggle-image-btn');
+
+  if (view === 'edit') {
+    itemListWrapper.style.display = 'block';
+    imageWrapper.style.display = 'none';
+    toggleEditBtn.classList.add('active');
+    toggleImageBtn.classList.remove('active');
+  } else { // view === 'image'
+    itemListWrapper.style.display = 'none';
+    imageWrapper.style.display = 'block';
+    toggleEditBtn.classList.remove('active');
+    toggleImageBtn.classList.add('active');
+  }
+}
+
+function saveScannedTransaction() {
+  const itemRows = document.querySelectorAll('.item-row');
+  if (itemRows.length === 0) {
+    showNotification('Tidak ada item untuk disimpan.', 'error');
+    return;
+  }
+
+  let transactionsAdded = 0;
+  const today = new Date().toISOString().split('T')[0];
+
+  itemRows.forEach(row => {
+    const name = row.querySelector('.item-name-input').value.trim();
+    const price = parseInt(row.querySelector('.item-price-input').value) || 0;
+
+    if (name && price > 0) {
+      const newTransaction = {
+        deskripsi: name,
+        jumlah: price,
+        tanggal: today,
+        jenis: 'pengeluaran'
+      };
+      transaksi.push(newTransaction);
+      transactionsAdded++;
+    }
+  });
+
+  if (transactionsAdded > 0) {
+    localStorage.setItem('transaksi', JSON.stringify(transaksi));
+    updateUI();
+    closeScanner();
+    showNotification(`${transactionsAdded} transaksi dari struk berhasil disimpan!`, 'success');
+  } else {
+    showNotification('Tidak ada item valid untuk disimpan.', 'error');
+  }
+}
+
+
+// ===============================================
+// AKHIR FUNGSI FITUR SCAN STRUK
+// ===============================================
+
+function clearSearch() {
+  const searchInput = document.getElementById('search-input');
+  const searchClear = document.getElementById('search-clear');
+
+  searchInput.value = '';
+  searchClear.style.display = 'none';
+  currentPage = 1;
+  updateUI();
+  searchInput.focus();
+}
+
+function clearDateFilter() {
+  currentFilteredDate = null;
+  hiddenDateFilterInput.value = '';
+  updateDateFilterDisplay();
+  currentPage = 1;
+  updateUI();
+  showNotification('Filter tanggal dihapus', 'info');
+}
+
+function updateDateFilterDisplay() {
+  if (currentFilteredDate) {
+    activeDateFilterDisplay.textContent = `(${formatDate(currentFilteredDate)})`;
+    activeDateFilterDisplay.style.display = 'inline';
+    clearDateFilterBtn.style.display = 'inline';
+  } else {
+    activeDateFilterDisplay.textContent = '';
+    activeDateFilterDisplay.style.display = 'none';
+    clearDateFilterBtn.style.display = 'none';
+  }
+}
+
+function handleFormSubmit(e) {
+  e.preventDefault();
+  if (!checkLoginStatus()) {
+        return; // Hentikan jika belum login
+    }
+
+  const deskripsi = document.getElementById('deskripsi').value.trim();
+  const jumlah = parseFloat(document.getElementById('jumlah').value);
+  const tanggal = document.getElementById('tanggal').value;
+  const jenis = document.getElementById('jenis').value;
+
+  if (!deskripsi || !jumlah || !tanggal) {
+    showNotification('Data tidak lengkap', 'error');
+    return;
+  }
+
+  if (jumlah <= 0) {
+    showNotification('Jumlah tidak valid', 'error');
+    return;
+  }
+
+  submitText.innerHTML = '<span class="loading"></span> Menyimpan...';
+  submitBtn.disabled = true;
+
+  setTimeout(() => {
+    if (editIndex !== null) {
+      transaksi[editIndex] = {
+        deskripsi,
+        jumlah,
+        tanggal,
+        jenis
+      };
+      showNotification('Transaksi berhasil diupdate', 'success');
+      cancelEdit();
+    } else {
+      transaksi.push({
+        deskripsi,
+        jumlah,
+        tanggal,
+        jenis
+      });
+      showNotification('Transaksi berhasil ditambahkan', 'success');
+    }
+
+    localStorage.setItem('transaksi', JSON.stringify(transaksi));
+
+    form.reset();
+    setTodayDate();
+
+    updateUI();
+
+    submitText.textContent = 'Simpan Transaksi';
+    submitBtn.disabled = false;
+
+    document.getElementById('deskripsi').focus();
+  }, 500);
+}
+
+function cancelEdit() {
+  editIndex = null;
+  form.reset();
+  setTodayDate();
+
+  formTitle.textContent = '📝 Tambah Transaksi Baru';
+  submitText.textContent = 'Simpan Transaksi';
+  cancelEditBtn.style.display = 'none';
+
+  document.getElementById('deskripsi').focus();
+  showNotification('Edit dibatalkan', 'info');
+}
+
+// [GANTI FUNGSI LAMA ANDA DENGAN YANG INI]
+function updateUI() {
+  if (localStorage.getItem('isLoggedIn') !== 'true') {
+        // Jika pengguna adalah tamu, tampilkan UI tamu dan stop
+        loadGuestUI();
+        return; 
+    }
+
+  // ▼▼▼ PERUBAHAN UTAMA ADA DI SINI ▼▼▼
+  // Reset empty state ke default "Tidak Ada Transaksi"
+  // Ini penting agar pesan "Selamat Datang" (demo) hilang setelah login.
+  const emptyState = document.getElementById('empty-state');
+  emptyState.innerHTML = `
+    <div class="empty-state-icon">📊</div>
+    <h3>Belum ada transaksi</h3>
+    <p>Mulai tambahkan transaksi pertama Anda!</p>
+  `;
+  // ▲▲▲ AKHIR PERUBAHAN ▲▲▲
+
+  updateSummaryCards();
+  updateTransactionsTable();
+  updateMonthFilter();
+  updateDateFilterDisplay();
+
+  const tbody = document.getElementById('tbody-tabel');
+  const filteredTransactions = getFilteredTransactions();
+
+  if (filteredTransactions.length === 0 && document.getElementById('search-input').value.trim() === '' && !currentFilteredDate) {
+    emptyState.style.display = 'block';
+    document.querySelector('.table-container table').style.display = 'none';
+  } else {
+    emptyState.style.display = 'none';
+    document.querySelector('.table-container table').style.display = 'table';
+  }
+}
+
+function updateSummaryCards() {
+  let pemasukan = 0,
+    pengeluaran = 0;
+  const filtered = getFilteredTransactions();
+
+  filtered.forEach(t => {
+    if (t.jenis === 'pemasukan') pemasukan += t.jumlah;
+    if (t.jenis === 'pengeluaran') pengeluaran += t.jumlah;
+  });
+
+  const saldo = pemasukan - pengeluaran;
+
+  const pemasukanEl = document.getElementById('pemasukan');
+  const pengeluaranEl = document.getElementById('pengeluaran');
+  const saldoEl = document.getElementById('saldo');
+
+  pemasukanEl.classList.add('value-updated');
+  pengeluaranEl.classList.add('value-updated');
+  saldoEl.classList.add('value-updated');
+
+  setTimeout(() => {
+    pemasukanEl.classList.remove('value-updated');
+    pengeluaranEl.classList.remove('value-updated');
+    saldoEl.classList.remove('value-updated');
+  }, 400);
+
+  pemasukanEl.textContent = formatCurrency(pemasukan);
+  pengeluaranEl.textContent = formatCurrency(pengeluaran);
+  saldoEl.textContent = formatCurrency(saldo);
+}
+
+function getFilteredTransactions() {
+  const filter = document.getElementById('filter-bulan').value;
+  const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+
+  return transaksi.filter(t => {
+    const matchesBulan = filter === 'semua' || t.tanggal.startsWith(filter);
+
+    const transactionDate = new Date(t.tanggal);
+    const transactionYear = transactionDate.getFullYear().toString();
+    const transactionMonth = transactionDate.toLocaleString('id-ID', {
+      month: 'long'
+    }).toLowerCase();
+
+    const isNumericSearch = !isNaN(searchTerm) && searchTerm !== '';
+
+    const matchesSearch = !searchTerm ||
+      t.deskripsi.toLowerCase().includes(searchTerm) ||
+      t.jenis.toLowerCase().includes(searchTerm) ||
+      (isNumericSearch && (transactionYear.includes(searchTerm) || t.jumlah.toString().includes(searchTerm))) ||
+      transactionMonth.includes(searchTerm);
+
+    const matchesDate = !currentFilteredDate || t.tanggal === currentFilteredDate;
+
+    return matchesBulan && matchesSearch && matchesDate;
+  });
+}
+
+function updateTransactionsTable() {
+  const tbody = document.getElementById('tbody-tabel');
+  tbody.innerHTML = '';
+
+  const filteredTransactions = getFilteredTransactions();
+
+  const sortedRelevantTransactions = [...filteredTransactions]
+    .map((t, index) => ({
+      ...t,
+      originalIndex: transaksi.indexOf(t)
+    }))
+    .sort((a, b) => {
+      const dateCompare = new Date(a.tanggal) - new Date(b.tanggal);
+      if (dateCompare === 0) {
+        return a.originalIndex - b.originalIndex;
+      }
+      return dateCompare;
+    });
+
+  let currentRunningBalance = 0;
+  const transactionsWithRunningBalance = sortedRelevantTransactions.map(t => {
+    currentRunningBalance += t.jenis === 'pemasukan' ? t.jumlah : -t.jumlah;
+    return { ...t,
+      runningBalance: currentRunningBalance
+    };
+  });
+
+  const sortedForDisplay = [...transactionsWithRunningBalance].reverse();
+
+  const startIndex = (currentPage - 1) * transactionsPerPage;
+  const endIndex = startIndex + transactionsPerPage;
+  const paginatedTransactions = sortedForDisplay.slice(startIndex, endIndex);
+
+  paginatedTransactions.forEach(t => {
+    let highlightedDeskripsi = t.deskripsi;
+    const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+    if (searchTerm) {
+      const regex = new RegExp(`(${searchTerm})`, 'gi');
+      highlightedDeskripsi = t.deskripsi.replace(regex, '<mark style="background: rgba(79, 70, 229, 0.2); padding: 0.1rem 0.2rem; border-radius: 3px;">$1</mark>');
+    }
+
+    const row = document.createElement('tr');
+    row.className = 'fade-in-up';
+    row.innerHTML = `
+                <td class="text-left">${formatDate(t.tanggal)}</td>
+                <td class="text-left" style="font-weight: 500;">${highlightedDeskripsi}</td>
+                <td class="amount-positive text-right">${t.jenis === 'pemasukan' ? formatCurrency(t.jumlah) : '-'}</td>
+                <td class="amount-negative text-right">${t.jenis === 'pengeluaran' ? formatCurrency(t.jumlah) : '-'}</td>
+                <td class="balance-amount text-right">${formatCurrency(t.runningBalance)}</td>
+                <td class="text-center">
+                    <div class="transaction-actions">
+                        <button class="action-btn edit-btn" onclick="editTransaksi(${t.originalIndex})" data-tooltip="Edit transaksi" tabindex="0">
+                            <div class="action-icon edit-icon"></div>
+                        </button>
+                        <button class="action-btn delete-btn" onclick="hapusTransaksi(${t.originalIndex})" data-tooltip="Hapus transaksi" tabindex="0">
+                            <div class="action-icon delete-icon"></div>
+                        </button>
+                    </div>
+                </td>
+            `;
+    tbody.appendChild(row);
+  });
+
+  updatePaginationControls(filteredTransactions.length);
+
+  if (paginatedTransactions.length === 0 && (document.getElementById('search-input').value.trim() || currentFilteredDate || document.getElementById('filter-bulan').value !== 'semua')) {
+    const noResultsRow = document.createElement('tr');
+    noResultsRow.innerHTML = `<td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Tidak ada hasil untuk filter yang diterapkan. <a href="#" onclick="event.preventDefault(); clearAllFilters();">Hapus filter</a></td>`;
+    tbody.appendChild(noResultsRow);
+  }
+}
+
+// GANTI FUNGSI updatePaginationControls LAMA DENGAN YANG INI
+function updatePaginationControls(totalTransactions) {
+  const paginationControls = document.getElementById('pagination-controls');
+  paginationControls.innerHTML = '';
+
+  const totalPages = Math.ceil(totalTransactions / transactionsPerPage);
+
+  if (totalPages <= 1) {
+    return;
+  }
+
+  // Tombol "Sebelumnya"
+  const prevButton = document.createElement('button');
+  prevButton.innerHTML = '&lt;';
+  prevButton.className = 'pagination-btn';
+  prevButton.disabled = currentPage === 1;
+  prevButton.title = "Halaman Sebelumnya";
+  prevButton.onclick = () => {
+    if (currentPage > 1) {
+      currentPage--;
+      updateUI();
+    }
+  };
+  paginationControls.appendChild(prevButton);
+
+  // Elemen info halaman (sekarang bisa diklik)
+  const pageInfo = document.createElement('span');
+  pageInfo.className = 'page-info clickable'; // Tambahkan kelas 'clickable'
+  pageInfo.textContent = `${currentPage}/${totalPages}`;
+  pageInfo.title = "Klik untuk lompat ke halaman"; // Tambahkan tooltip
+  
+  // [BARU] Tambahkan event listener untuk memunculkan input
+  pageInfo.onclick = () => showPageInput(totalPages); 
+  
+  paginationControls.appendChild(pageInfo);
+
+  // Tombol "Berikutnya"
+  const nextButton = document.createElement('button');
+  nextButton.innerHTML = '&gt;';
+  nextButton.className = 'pagination-btn';
+  nextButton.disabled = currentPage === totalPages;
+  nextButton.title = "Halaman Berikutnya";
+  nextButton.onclick = () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      updateUI();
+    }
+  };
+  paginationControls.appendChild(nextButton);
+}
+
+// [BARU] Tambahkan FUNGSI BARU ini di bawah fungsi updatePaginationControls
+function showPageInput(totalPages) {
+  const pageInfo = document.querySelector('.page-info');
+  if (!pageInfo) return; // Keluar jika elemen tidak ditemukan
+
+  // Simpan tombol prev/next untuk dikembalikan nanti
+  const prevButton = document.querySelector('.pagination-btn:first-child');
+  const nextButton = document.querySelector('.pagination-btn:last-child');
+  
+  const paginationControls = document.getElementById('pagination-controls');
+  paginationControls.innerHTML = ''; // Kosongkan sementara
+
+  // Buat input field
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.className = 'pagination-input'; // Kelas baru untuk styling
+  input.value = currentPage;
+  input.min = 1;
+  input.max = totalPages;
+
+  const handleJump = () => {
+    let newPage = parseInt(input.value);
+    // Validasi input
+    if (newPage >= 1 && newPage <= totalPages) {
+      currentPage = newPage;
+      updateUI(); // Perbarui tampilan ke halaman baru
+    } else {
+      // Jika input tidak valid, cukup render ulang UI tanpa mengubah halaman
+      showNotification(`Masukkan halaman antara 1 dan ${totalPages}`, 'error', 2000);
+      updateUI();
+    }
+  };
+
+  // Event listener untuk tombol 'Enter'
+  input.onkeydown = (event) => {
+    if (event.key === 'Enter') {
+      handleJump();
+    } else if (event.key === 'Escape') {
+      updateUI(); // Batalkan dengan 'Escape'
+    }
+  };
+
+  // Event listener jika pengguna klik di luar input (blur)
+  input.onblur = () => {
+    // Beri sedikit jeda agar tidak konflik dengan event lain
+    setTimeout(() => updateUI(), 100);
+  };
+  
+  // Masukkan kembali tombol dan input baru
+  if (prevButton) paginationControls.appendChild(prevButton);
+  paginationControls.appendChild(input);
+  if (nextButton) paginationControls.appendChild(nextButton);
+
+  input.focus();
+  input.select();
+}
+
+
+function clearAllFilters() {
+  document.getElementById('filter-bulan').value = 'semua';
+  clearSearch();
+  clearDateFilter();
+  showNotification('Semua filter dihapus', 'info');
+}
+
+function updateMonthFilter() {
+  const bulanSet = new Set();
+  transaksi.forEach(t => bulanSet.add(t.tanggal.slice(0, 7)));
+
+  const hiddenSelect = document.getElementById('filter-bulan');
+  const currentFilter = hiddenSelect.value;
+
+  // Referensi ke dropdown kustom
+  const customContainer = document.getElementById('custom-filter-bulan');
+  const selectedDisplay = customContainer.querySelector('.select-selected');
+  const optionsContainer = customContainer.querySelector('.select-items');
+
+  // Kosongkan pilihan yang lama
+  hiddenSelect.innerHTML = '';
+  optionsContainer.innerHTML = '';
+
+  // Fungsi helper untuk membuat pilihan
+  const createOption = (text, value) => {
+    // Buat untuk <select> tersembunyi
+    const option = document.createElement('option');
+    option.value = value;
+    option.innerHTML = text;
+    hiddenSelect.appendChild(option);
+
+    // Buat untuk <div> kustom
+    const div = document.createElement('div');
+    div.innerHTML = text;
+    div.setAttribute('data-value', value);
+    optionsContainer.appendChild(div);
+
+    // Tambahkan event listener untuk pilihan kustom
+    div.addEventListener('click', function() {
+      hiddenSelect.value = this.getAttribute('data-value');
+      selectedDisplay.innerHTML = this.innerHTML;
+      // Picu event 'change' pada select tersembunyi agar filter berjalan
+      hiddenSelect.dispatchEvent(new Event('change'));
+    });
+  };
+
+  // Buat pilihan "Semua Bulan"
+  createOption('Semua Bulan', 'semua');
+
+  // Buat pilihan untuk setiap bulan yang ada
+  ([...bulanSet].sort()).reverse().forEach(bulan => {
+    createOption(`Data ${formatMonth(bulan)}`, bulan);
+  });
+
+  // Atur nilai yang terpilih saat ini
+  hiddenSelect.value = currentFilter;
+  // Perbarui tampilan dropdown kustom agar sesuai
+  const selectedOptionDiv = optionsContainer.querySelector(`[data-value="${hiddenSelect.value}"]`);
+  if (selectedOptionDiv) {
+    selectedDisplay.innerHTML = selectedOptionDiv.innerHTML;
+  }
+}
+
+function editTransaksi(index) {
+  if (!checkLoginStatus()) return;
+  const t = transaksi[index];
+
+  document.getElementById('deskripsi').value = t.deskripsi;
+  document.getElementById('jumlah').value = t.jumlah;
+  document.getElementById('tanggal').value = t.tanggal;
+  document.getElementById('jenis').value = t.jenis;
+
+  editIndex = index;
+  formTitle.textContent = '✏️ Edit Transaksi';
+  submitText.textContent = 'Update Transaksi';
+  cancelEditBtn.style.display = 'inline-flex';
+
+  document.querySelector('.form-container').scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
+  document.getElementById('deskripsi').focus();
+
+  showNotification('Mode edit aktif', 'info');
+}
+
+function hapusTransaksi(index) {
+  if (!checkLoginStatus()) return;
+  const t = transaksi[index];
+  openConfirmationModal(`Yakin ingin menghapus transaksi "${t.deskripsi}"?`, () => {
+    transaksi.splice(index, 1);
+    localStorage.setItem('transaksi', JSON.stringify(transaksi));
+
+    if (editIndex === index) {
+      cancelEdit();
+    }
+
+    updateUI();
+    showNotification('Transaksi berhasil dihapus', 'success');
+  });
+}
+
+function openThemeModal() {
+  themeSettingsModal.style.display = 'flex';
+  const currentTheme = localStorage.getItem('colorTheme') || 'ocean';
+  updateActiveThemeButton(currentTheme);
+  updateActiveSwatch();
+}
+
+function closeThemeModal() {
+  themeSettingsModal.style.display = 'none';
+}
+
+function openDeleteModal() {
+  if (!checkLoginStatus()) return;
+  if (transaksi.length === 0) {
+    showNotification('Tidak ada data untuk dihapus!', 'info');
+    return;
+  }
+  deleteModal.style.display = 'flex';
+  if (deleteFilterSelect.value === 'custom-range') {
+    dateRangeDeleteGroup.style.display = 'block';
+  } else {
+    dateRangeDeleteGroup.style.display = 'none';
+  }
+}
+
+function closeDeleteModal() {
+  deleteModal.style.display = 'none';
+}
+
+function confirmBulkDelete() {
+  const deleteFilter = document.getElementById('delete-filter').value;
+  let toDelete = [];
+  let filterName = '';
+
+  if (deleteFilter === 'semua') {
+    toDelete = [...transaksi];
+    filterName = 'semua data';
+  } else if (deleteFilter === 'pemasukan') {
+    toDelete = transaksi.filter(t => t.jenis === 'pemasukan');
+    filterName = 'data pemasukan';
+  } else if (deleteFilter === 'pengeluaran') {
+    toDelete = transaksi.filter(t => t.jenis === 'pengeluaran');
+    filterName = 'data pengeluaran';
+  } else if (deleteFilter === 'custom-range') {
+    const startDate = deleteStartDateInput.value;
+    const endDate = deleteEndDateInput.value;
+
+    if (!startDate || !endDate) {
+      showNotification('Pilih tanggal mulai dan tanggal akhir untuk rentang kustom.', 'error');
+      return;
+    }
+    if (new Date(startDate) > new Date(endDate)) {
+      showNotification('Tanggal mulai tidak boleh setelah tanggal akhir.', 'error');
+      return;
+    }
+
+    toDelete = transaksi.filter(t => {
+      const transactionDate = new Date(t.tanggal);
+      return transactionDate >= new Date(startDate) && transactionDate <= new Date(endDate);
+    });
+    filterName = `data dari ${formatDate(startDate)} sampai ${formatDate(endDate)}`;
+  } else {
+    toDelete = transaksi.filter(t => t.tanggal.startsWith(deleteFilter));
+    filterName = `data ${formatMonth(deleteFilter)}`;
+  }
+
+  if (toDelete.length === 0) {
+    showNotification('Tidak ada data untuk dihapus', 'info');
+    return;
+  }
+
+  const deleteAllBtn = document.querySelector('#deleteModal .btn-delete-all');
+
+  openConfirmationModal(`Yakin ingin menghapus ${toDelete.length} transaksi (${filterName})?`, () => {
+    deleteAllBtn.style.opacity = '0.6';
+    deleteAllBtn.style.pointerEvents = 'none';
+    deleteAllBtn.querySelector('span:last-child').textContent = 'Menghapus...';
+
+    setTimeout(() => {
+      if (deleteFilter === 'semua') {
+        transaksi = [];
+      } else if (deleteFilter === 'pemasukan') {
+        transaksi = transaksi.filter(t => t.jenis !== 'pemasukan');
+      } else if (deleteFilter === 'pengeluaran') {
+        transaksi = transaksi.filter(t => t.jenis !== 'pengeluaran');
+      } else if (deleteFilter === 'custom-range') {
+        const startDate = deleteStartDateInput.value;
+        const endDate = deleteEndDateInput.value;
+        transaksi = transaksi.filter(t => {
+          const transactionDate = new Date(t.tanggal);
+          return !(transactionDate >= new Date(startDate) && transactionDate <= new Date(endDate));
+        });
+      } else {
+        transaksi = transaksi.filter(t => !t.tanggal.startsWith(deleteFilter));
+      }
+
+      localStorage.setItem('transaksi', JSON.stringify(transaksi));
+
+      closeDeleteModal();
+      editIndex = null;
+      form.reset();
+      setTodayDate();
+
+      formTitle.textContent = '📝 Tambah Transaksi Baru';
+      submitText.textContent = 'Simpan Transaksi';
+      cancelEditBtn.style.display = 'none';
+
+      updateUI();
+      showNotification(`${toDelete.length} transaksi berhasil dihapus!`, 'success');
+
+      deleteAllBtn.style.opacity = '1';
+      deleteAllBtn.style.pointerEvents = 'auto';
+      deleteAllBtn.querySelector('span:last-child').textContent = 'Hapus Data';
+    }, 800);
+  });
+}
+
+function openPdfSettingsModal() {
+  pdfSettingsModal.style.display = 'flex';
+  const currentFilter = document.getElementById('filter-bulan').value;
+  const searchTerm = document.getElementById('search-input').value.trim();
+
+  let filenameBase = 'Laporan Keuangan';
+  if (currentFilter !== 'semua') {
+    filenameBase += ` ${formatMonth(currentFilter)}`;
+  }
+  if (currentFilteredDate) {
+    filenameBase += ` Tanggal ${formatDate(currentFilteredDate)}`;
+  }
+  if (searchTerm) {
+    filenameBase += ` Pencarian ${searchTerm}`;
+  }
+  pdfFilenameInput.value = filenameBase;
+}
+
+function closePdfSettingsModal() {
+  pdfSettingsModal.style.display = 'none';
+  pdfModalBtn.classList.remove('loading');
+  pdfModalBtn.querySelector('span:last-child').textContent = 'Export PDF';
+}
+
+function simpanPDF() {
+  if (transaksi.length === 0) {
+    showNotification('Tidak ada data', 'info');
+    closePdfSettingsModal();
+    return;
+  }
+
+  pdfModalBtn.classList.add('loading');
+  pdfModalBtn.querySelector('span:last-child').textContent = 'Generating...';
+
+  showNotification('Membangun PDF...', 'info');
+
+  const relevantTransactionsForPdf = getFilteredTransactions();
+
+  if (relevantTransactionsForPdf.length === 0) {
+    showNotification('Tidak ada data untuk periode ini', 'info');
+    closePdfSettingsModal();
+    return;
+  }
+
+  const sortedRelevantTransactionsForPdf = [...relevantTransactionsForPdf]
+    .map((t, index) => ({
+      ...t,
+      originalIndex: transaksi.indexOf(t)
+    }))
+    .sort((a, b) => {
+      const dateCompare = new Date(a.tanggal) - new Date(b.tanggal);
+      if (dateCompare === 0) {
+        return a.originalIndex - b.originalIndex;
+      }
+      return dateCompare;
+    });
+
+  let currentRunningBalanceForPdf = 0;
+  const transactionsWithRunningBalanceForPdf = sortedRelevantTransactionsForPdf.map(t => {
+    currentRunningBalanceForPdf += t.jenis === 'pemasukan' ? t.jumlah : -t.jumlah;
+    return { ...t,
+      runningBalance: currentRunningBalanceForPdf
+    };
+  });
+
+  let totalPemasukan = 0,
+    totalPengeluaran = 0;
+  transactionsWithRunningBalanceForPdf.forEach(t => {
+    if (t.jenis === 'pemasukan') totalPemasukan += t.jumlah;
+    if (t.jenis === 'pengeluaran') totalPengeluaran += t.jumlah;
+  });
+  const totalSaldo = totalPemasukan - totalPengeluaran;
+
+  const tempTable = document.createElement('table');
+  tempTable.style.width = '100%';
+  tempTable.style.borderCollapse = 'collapse';
+  tempTable.style.fontFamily = 'Inter, sans-serif';
+  tempTable.style.fontSize = '12px';
+  tempTable.style.color = '#333';
+
+  tempTable.innerHTML = `
+            <thead>
+                <tr style="background-color: #f0f8ff;">
+                    <th style="padding: 0.8rem; text-align: left; font-weight: 600; font-size: 0.9rem; border-bottom: 2px solid #a0dfff; color: #333;">Tanggal</th>
+                    <th style="padding: 0.8rem; text-align: left; font-weight: 600; font-size: 0.9rem; border-bottom: 2px solid #a0dfff; color: #333;">Deskripsi</th>
+                    <th style="padding: 0.8rem; text-align: right; font-weight: 600; font-size: 0.9rem; border-bottom: 2px solid #a0dfff; color: #333;">Pemasukan</th>
+                    <th style="padding: 0.8rem; text-align: right; font-weight: 600; font-size: 0.9rem; border-bottom: 2px solid #a0dfff; color: #333;">Pengeluaran</th>
+                    <th style="padding: 0.8rem; text-align: right; font-weight: 600; font-size: 0.9rem; border-bottom: 2px solid #a0dfff; color: #333;">Saldo</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+  const tempTbody = tempTable.querySelector('tbody');
+
+  transactionsWithRunningBalanceForPdf.forEach((t, index) => {
+    const row = document.createElement('tr');
+    row.style.backgroundColor = (index % 2 === 0) ? '#ffffff' : '#f8f8f8';
+    row.innerHTML = `
+                <td style="padding: 0.7rem; border-bottom: 1px solid #eee;">${formatDate(t.tanggal)}</td>
+                <td style="padding: 0.7rem; border-bottom: 1px solid #eee; text-align: left;">${t.deskripsi}</td>
+                <td style="padding: 0.7rem; border-bottom: 1px solid #eee; text-align: right; color: #10b981; font-weight: 500;">${t.jenis === 'pemasukan' ? formatCurrency(t.jumlah) : '-'}</td>
+                <td style="padding: 0.7rem; border-bottom: 1px solid #eee; text-align: right; color: #ef4444; font-weight: 500;">${t.jenis === 'pengeluaran' ? formatCurrency(t.jumlah) : '-'}</td>
+                <td style="padding: 0.7rem; border-bottom: 1px solid #eee; text-align: right; font-weight: 600; color: #333;">${formatCurrency(t.runningBalance)}</td>
+            `;
+    tempTbody.appendChild(row);
+  });
+
+  const summarySection = document.createElement('div');
+  summarySection.style.marginTop = '2rem';
+  summarySection.style.padding = '1.5rem';
+  summarySection.style.backgroundColor = '#f8fafc';
+  summarySection.style.borderRadius = '8px';
+  summarySection.style.border = '1px solid #e2e8f0';
+  summarySection.innerHTML = `
+            <h3 style="font-size: 1.1rem; font-weight: 600; color: #333; margin-bottom: 1rem; text-align: center;">Ringkasan Keuangan</h3>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;">
+                <div style="padding: 1rem; background: #ffffff; border-radius: 6px; border: 1px solid #e5e7eb;">
+                    <div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 500;">Total Pemasukan</div>
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #10b981;">${formatCurrency(totalPemasukan)}</div>
+                </div>
+                <div style="padding: 1rem; background: #ffffff; border-radius: 6px; border: 1px solid #e5e7eb;">
+                    <div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 500;">Total Pengeluaran</div>
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">${formatCurrency(totalPengeluaran)}</div>
+                </div>
+                <div style="padding: 1rem; background: #ffffff; border-radius: 6px; border: 1px solid #e5e7eb;">
+                    <div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 500;">Saldo Akhir</div>
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #333;">${formatCurrency(totalSaldo)}</div>
+                </div>
+            </div>
+        `;
+
+  const appTitle = document.getElementById('app-title').textContent;
+  const filter = document.getElementById('filter-bulan').value;
+  const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+  let periodText = 'Semua Periode';
+  if (filter !== 'semua') {
+    periodText = formatMonth(filter);
+  }
+  if (searchTerm) {
+    periodText += ` (Pencarian: "${searchTerm}")`;
+  }
+  if (currentFilteredDate) {
+    periodText += ` (Pencarian Tanggal: "${formatDate(currentFilteredDate)}")`;
+  }
+
+
+  const pdfHeader = document.createElement('div');
+  pdfHeader.style.textAlign = 'center';
+  pdfHeader.style.marginBottom = '1.5rem';
+  pdfHeader.style.fontFamily = 'Inter, sans-serif';
+  pdfHeader.innerHTML = `
+            <h1 style="font-size: 20px; color: #1f2937; margin-bottom: 0.75rem;">${appTitle} - Laporan Keuangan</h1>
+            <p style="font-size: 12px; color: #6b7280; margin-bottom: 0.5rem;">Periode: ${periodText} • Dibuat: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 1rem 0;">
+        `;
+
+  const pdfContentWrapper = document.createElement('div');
+  pdfContentWrapper.appendChild(pdfHeader);
+  pdfContentWrapper.appendChild(tempTable);
+  pdfContentWrapper.appendChild(summarySection);
+
+  const hiddenDiv = document.createElement('div');
+  hiddenDiv.style.position = 'absolute';
+  hiddenDiv.style.left = '-9999px';
+
+  document.body.appendChild(hiddenDiv);
+  hiddenDiv.appendChild(pdfContentWrapper);
+
+  const orientation = pdfOrientationSelect.value;
+  let filename = pdfFilenameInput.value.trim();
+  if (!filename) {
+    filename = `laporan-keuangan-${filter === 'semua' ? 'semua-periode' : filter}`;
+  }
+  filename += '.pdf';
+
+  const opt = {
+    margin: 0.5,
+    filename: filename,
+    image: {
+      type: 'jpeg',
+      quality: 0.98
+    },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      scrollY: 0,
+      windowWidth: document.documentElement.offsetWidth,
+      windowHeight: document.documentElement.offsetHeight
+    },
+    jsPDF: {
+      unit: 'in',
+      format: 'letter',
+      orientation: orientation
+    }
+  };
+
+  html2pdf().set(opt).from(pdfContentWrapper).save().then(() => {
+    showNotification('PDF berhasil dibuat!', 'success');
+    document.body.removeChild(hiddenDiv);
+    closePdfSettingsModal();
+  }).catch(error => {
+    console.error('Error generating PDF:', error);
+    showNotification('Gagal membuat PDF', 'error');
+    document.body.removeChild(hiddenDiv);
+    closePdfSettingsModal();
+  });
+}
+
+let notificationId = 0;
+
+function showNotification(message, type = 'success', duration = 3000) {
+  const container = document.getElementById('notification-container');
+  const id = ++notificationId;
+
+  let icon;
+  switch (type) {
+    case 'success':
+      icon = '✓';
+      break;
+    case 'error':
+      icon = '✕';
+      break;
+    case 'info':
+      icon = 'i';
+      break;
+    case 'warning':
+      icon = '!';
+      break;
+    default:
+      icon = '•';
+  }
+
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.id = `notification-${id}`;
+
+  notification.innerHTML = `
+        <div class="notification-icon">${icon}</div>
+        <div class="notification-message">${message}</div>
+        <button class="notification-close" onclick="closeNotification(${id})">&times;</button>
+      `;
+
+  container.appendChild(notification);
+
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 50);
+
+  if (duration !== null) {
+    setTimeout(() => {
+      closeNotification(id);
+    }, duration);
+  }
+
+  return id;
+}
+
+function closeNotification(id) {
+  const notification = document.getElementById(`notification-${id}`);
+  if (notification) {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 250);
+  }
+}
+
+function debounce(func, delay = 300) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      func.apply(this, args);
+    }, delay);
+  };
+}
+
+function formatCurrency(amount) {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount);
+}
+
+function formatDate(isoDate) {
+  const date = new Date(isoDate + 'T00:00:00');
+  return new Intl.DateTimeFormat('id-ID', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  }).format(date);
+}
+
+function formatMonth(isoMonth) {
+  const [year, month] = isoMonth.split('-');
+  const date = new Date(year, month - 1, 1);
+  return new Intl.DateTimeFormat('id-ID', {
+    month: 'long',
+    year: 'numeric'
+  }).format(date);
+}
+
+function openConfirmationModal(message, callback) {
+  confirmationModalMessage.textContent = message;
+  currentConfirmCallback = callback;
+  confirmationModal.style.display = 'flex';
+}
+
+function closeConfirmationModal() {
+  confirmationModal.style.display = 'none';
+  currentConfirmCallback = null;
+}
+
+function exportData() {
+  if (transaksi.length === 0) {
+    showNotification('Tidak ada data transaksi untuk diexport.', 'info');
+    return;
+  }
+
+  const dataStr = JSON.stringify(transaksi, null, 2);
+  const blob = new Blob([dataStr], {
+    type: 'application/json'
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const appTitle = document.getElementById('app-title').textContent.replace(/\s/g, '-');
+  a.href = url;
+  a.download = `${appTitle}-data-transaksi-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showNotification('Data transaksi berhasil diexport!', 'success');
+}
+
+function openImportModal() {
+  if (!checkLoginStatus()) return;
+  importModal.style.display = 'flex';
+  importFileInput.value = '';
+  confirmImportBtn.disabled = true;
+}
+
+function closeImportModal() {
+  importModal.style.display = 'none';
+  importFileInput.value = '';
+  confirmImportBtn.disabled = true;
+}
+
+function confirmImportData() {
+  const file = importFileInput.files[0];
+  if (!file) {
+    showNotification('Pilih file JSON untuk diimport.', 'error');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    try {
+      const importedData = JSON.parse(event.target.result);
+      if (Array.isArray(importedData) && importedData.every(item =>
+          typeof item.deskripsi === 'string' &&
+          typeof item.jumlah === 'number' &&
+          typeof item.tanggal === 'string' &&
+          typeof item.jenis === 'string'
+        )) {
+        openConfirmationModal('Semua data transaksi yang ada saat ini akan diganti. Lanjutkan?', () => {
+          transaksi = importedData;
+          localStorage.setItem('transaksi', JSON.stringify(transaksi));
+          updateUI();
+          closeImportModal();
+          showNotification('Data transaksi berhasil diimport!', 'success');
+          editIndex = null;
+          form.reset();
+          setTodayDate();
+          formTitle.textContent = '📝 Tambah Transaksi Baru';
+          submitText.textContent = 'Simpan Transaksi';
+          cancelEditBtn.style.display = 'none';
+        });
+      } else {
+        showNotification('Format file JSON tidak valid. Pastikan berisi array transaksi dengan properti yang benar.', 'error');
+      }
+    } catch (e) {
+      showNotification('Gagal membaca file JSON. Pastikan format file benar dan tidak rusak.', 'error');
+      console.error('Error parsing JSON:', e);
+    }
+  };
+  reader.onerror = function() {
+    showNotification('Gagal membaca file.', 'error');
+  };
+  reader.readAsText(file);
+}
+
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    e.preventDefault();
+    scrollToForm();
+    document.getElementById('deskripsi').focus();
+  }
+
+  if (e.key === 'Escape' && editIndex !== null) {
+    cancelEdit();
+  }
+
+  if (e.key === 'Escape') {
+    if (themeSettingsModal.style.display === 'flex') closeThemeModal();
+    if (pdfSettingsModal.style.display === 'flex') closePdfSettingsModal();
+    if (deleteModal.style.display === 'flex') closeDeleteModal();
+    if (importModal.style.display === 'flex') closeImportModal();
+    if (document.getElementById('title-edit-modal').classList.contains('show')) closeTitleEditModal();
+    if (confirmationModal.style.display === 'flex') closeConfirmationModal();
+    if (dataActionsDropdown.classList.contains('open')) dataActionsDropdown.classList.remove('open');
+    if (document.getElementById('scan-modal').style.display === 'flex') closeScanner();
+  }
+});
+
+
+function scrollToForm() {
+  document.querySelector('.form-container').scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
+}
+
+// ▼▼▼ TEMPEL KODE BARU ANDA DI SINI ▼▼▼
+function initializeCustomSelect() {
+  const container = document.getElementById('custom-jenis');
+  if (!container) return;
+
+  const selectedDisplay = container.querySelector('.select-selected');
+  const hiddenInput = document.getElementById('jenis');
+  const optionsContainer = container.querySelector('.select-items');
+  const options = optionsContainer.querySelectorAll('div');
+
+  // Fungsi untuk menutup dropdown
+  const closeAllSelect = () => {
+    container.classList.remove('select-active');
+    optionsContainer.classList.add('select-hide');
+  };
+
+  // Tetapkan nilai default saat halaman dimuat (Pengeluaran)
+  const defaultOption = options[1];
+  selectedDisplay.innerHTML = defaultOption.innerHTML;
+  hiddenInput.value = defaultOption.getAttribute('data-value');
+  
+  // Event saat kotak utama diklik (untuk membuka/menutup)
+  selectedDisplay.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const isActive = container.classList.contains('select-active');
+    closeAllSelect(); // Selalu tutup dulu
+    if (!isActive) { // Jika tadinya tidak aktif, buka
+      container.classList.add('select-active');
+      optionsContainer.classList.remove('select-hide');
+    }
+  });
+
+  // Event saat salah satu pilihan di-klik
+  options.forEach(option => {
+    option.addEventListener('click', function() {
+      selectedDisplay.innerHTML = this.innerHTML;
+      hiddenInput.value = this.getAttribute('data-value');
+      closeAllSelect();
+    });
+  });
+
+  // Event untuk menutup dropdown jika klik di luar area
+  document.addEventListener('click', closeAllSelect);
+}
+
+function initializeMonthFilter() {
+  const container = document.getElementById('custom-filter-bulan');
+  if (!container) return;
+
+  const selectedDisplay = container.querySelector('.select-selected');
+  const optionsContainer = container.querySelector('.select-items');
+
+  // Fungsi untuk menutup dropdown
+  const closeAllSelect = () => {
+    container.classList.remove('select-active');
+    optionsContainer.classList.add('select-hide');
+  };
+
+  // Event saat kotak utama diklik (untuk membuka/menutup)
+  selectedDisplay.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const isActive = container.classList.contains('select-active');
+    // Tutup semua dropdown lain dulu (jika ada)
+    document.querySelectorAll('.custom-select-container').forEach(c => {
+        if (c !== container) {
+            c.classList.remove('select-active');
+            c.querySelector('.select-items').classList.add('select-hide');
+        }
+    });
+
+    if (!isActive) { // Jika tadinya tidak aktif, buka
+      container.classList.add('select-active');
+      optionsContainer.classList.remove('select-hide');
+    } else {
+      closeAllSelect();
+    }
+  });
+
+  // Event untuk menutup dropdown jika klik di luar area
+  document.addEventListener('click', closeAllSelect);
+}
+
+function initializePdfOrientationSelect() {
+  const container = document.getElementById('custom-pdf-orientation');
+  if (!container) return;
+
+  const selectedDisplay = container.querySelector('.select-selected');
+  const hiddenInput = document.getElementById('pdf-orientation');
+  const optionsContainer = container.querySelector('.select-items');
+  const options = optionsContainer.querySelectorAll('div');
+
+  const closeAllSelect = () => {
+    container.classList.remove('select-active');
+    optionsContainer.classList.add('select-hide');
+  };
+
+  // Atur nilai default saat modal dibuka
+  const defaultOption = options[0];
+  selectedDisplay.innerHTML = defaultOption.innerHTML;
+  hiddenInput.value = defaultOption.getAttribute('data-value');
+
+  // Event saat kotak utama diklik (untuk membuka/menutup)
+  selectedDisplay.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const isActive = container.classList.contains('select-active');
+    // Tutup dropdown lain dulu (jika ada)
+    document.querySelectorAll('.custom-select-container').forEach(c => {
+        if (c !== container) {
+            c.classList.remove('select-active');
+            c.querySelector('.select-items').classList.add('select-hide');
+        }
+    });
+
+    if (!isActive) { // Jika tadinya tidak aktif, buka
+      container.classList.add('select-active');
+      optionsContainer.classList.remove('select-hide');
+    } else {
+      closeAllSelect();
+    }
+  });
+
+  // Event saat salah satu pilihan di-klik
+  options.forEach(option => {
+    option.addEventListener('click', function() {
+      selectedDisplay.innerHTML = this.innerHTML;
+      hiddenInput.value = this.getAttribute('data-value');
+      closeAllSelect();
+    });
+  });
+
+  // Event untuk menutup dropdown jika klik di luar area
+  document.addEventListener('click', closeAllSelect);
+}
+
+// ===============================================
+// FUNGSI BARU UNTUK OTENTIKASI (LOGIN)
+// ===============================================
+
+// Menampilkan modal login
+function showLoginModal() {
+    const modal = document.getElementById('login-modal');
+    modal.style.display = 'flex';
+    document.getElementById('modal-kode').focus();
+}
+
+// Menutup modal login
+function closeLoginModal() {
+    const modal = document.getElementById('login-modal');
+    modal.style.display = 'none';
+    document.getElementById('modal-error-message').style.display = 'none';
+    document.getElementById('modal-kode').value = '';
+}
+
+function getDeviceId() {
+    let deviceId = localStorage.getItem('myBudgetlyDeviceId');
+    if (!deviceId) {
+        // Gunakan crypto.randomUUID jika tersedia (HTTPS), jika tidak pakai cadangan manual
+        if (window.isSecureContext && typeof crypto.randomUUID === 'function') {
+            deviceId = crypto.randomUUID();
+        } else {
+            // Cadangan: Membuat ID unik manual sederhana
+            deviceId = 'dev-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now();
+        }
+        localStorage.setItem('myBudgetlyDeviceId', deviceId);
+    }
+    return deviceId;
+}
+
+async function handleLogin(event) {
+    event.preventDefault(); 
+    const kodeInput = document.getElementById('modal-kode');
+    const errorMessage = document.getElementById('modal-error-message');
+    const loginButton = document.querySelector('.login-button');
+    
+    const kodeYangDimasukkan = kodeInput.value.trim();
+    const deviceId = getDeviceId(); 
+
+    errorMessage.style.display = 'none';
+    loginButton.disabled = true;
+    loginButton.textContent = 'Memverifikasi...';
+
+    try {
+        // 1. Cek User di tabel pelanggan
+        const { data: user, error: userError } = await supabaseClient
+            .from('pelanggan')
+            .select('*')
+            .eq('kode_akses', kodeYangDimasukkan)
+            .single();
+
+        if (userError || !user) throw new Error('Kode akses salah!');
+        if (user.status === 'pending') throw new Error('Akun menunggu persetujuan Admin.');
+        if (user.status === 'diblokir') throw new Error('Akun ini telah diblokir.');
+
+        // 2. Cek apakah perangkat ini sudah pernah terdaftar
+        const { data: deviceTerdaftar } = await supabaseClient
+            .from('device_pelanggan')
+            .select('id')
+            .eq('kode_pelanggan', kodeYangDimasukkan) // Pastikan kolom ini sesuai di DB kamu
+            .eq('device_id', deviceId)
+            .maybeSingle();
+
+        // 3. Jika perangkat BARU, cek batas kuota
+        if (!deviceTerdaftar) {
+            const { count } = await supabaseClient
+                .from('device_pelanggan')
+                .select('*', { count: 'exact', head: true })
+                .eq('kode_pelanggan', kodeYangDimasukkan);
+
+            if (count >= (user.batas_perangkat || 3)) {
+                throw new Error(`Kuota penuh! Maksimal ${user.batas_perangkat || 3} perangkat.`);
+            }
+
+            // Daftarkan perangkat baru
+            await supabaseClient
+                .from('device_pelanggan')
+                .insert({
+                    kode_pelanggan: kodeYangDimasukkan,
+                    device_id: deviceId,
+                    device_model: navigator.userAgent.slice(0, 50) // Simpan info HP singkat
+                });
+        }
+
+        // 4. Sukses Login
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('myAccessCode', kodeYangDimasukkan);
+        localStorage.setItem('myDeviceId', deviceId);
+
+        closeLoginModal();
+        updateAuthUI();
+        updateUI();
+        showNotification('Berhasil Masuk!', 'success');
+        
+        if (typeof startRealtimeSessionListener === 'function') {
+            startRealtimeSessionListener();
+        }
+
+    } catch (error) {
+        console.error("Login Failed:", error.message);
+        errorMessage.textContent = error.message;
+        errorMessage.style.display = 'block';
+        kodeInput.classList.add('shake');
+        setTimeout(() => kodeInput.classList.remove('shake'), 500);
+    } finally {
+        loginButton.disabled = false;
+        loginButton.textContent = 'Masuk';
+    }
+}
+
+// GANTI FUNGSI LAMA DENGAN VERSI BARU INI
+async function startRealtimeSessionListener() {
+    const myCode = localStorage.getItem('myAccessCode');
+    if (!myCode) return;
+
+    if (realtimeChannel) {
+        await supabaseClient.removeChannel(realtimeChannel);
+        realtimeChannel = null;
+    }
+
+    // Pantau perubahan pada tabel 'pelanggan' untuk mendeteksi blokir atau hapus kode
+    realtimeChannel = supabaseClient.channel(`access-code-${myCode}`)
+        .on(
+            'postgres_changes', 
+            {
+                event: '*', 
+                schema: 'public',
+                table: 'pelanggan', // FIX: Sesuaikan dengan nama tabel login kamu
+                filter: `kode_akses=eq.${myCode}` // FIX: Gunakan kolom 'kode_akses'
+            },
+            (payload) => {
+                if (payload.eventType === 'DELETE') {
+                    showNotification('Sesi berakhir (kode dihapus).', 'error');
+                    forceLogout("Akses dicabut oleh Admin.");
+                } else if (payload.eventType === 'UPDATE') {
+                    if (payload.new.status === 'diblokir') {
+                        showNotification('Akun Anda diblokir.', 'error');
+                        forceLogout("Akun diblokir.");
+                    }
+                }
+            }
+        )
+        .subscribe();
+}
+
+async function forceLogout(message) {
+    console.warn(`Force logout dipicu: ${message}`);
+
+    if (realtimeChannel) { 
+    await supabaseRealtimeClient.removeChannel(realtimeChannel); 
+    realtimeChannel = null; 
+}
+
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('myAccessCode');
+    localStorage.removeItem('myDeviceId');
+
+    updateAuthUI(); 
+    updateUI();     
+
+    showNotification(message, 'error', 6000);
+}
+
+// [MODIFIKASI] Menangani logout
+async function handleLogout() {
+  const codeToRelease = localStorage.getItem('myAccessCode');
+  const logoutButton = document.getElementById('auth-button');
+
+  if(logoutButton) logoutButton.disabled = true;
+
+  // 1. Berhenti mendengarkan channel Realtime (Gunakan supabaseClient)
+  if (realtimeChannel) { 
+    await supabaseClient.removeChannel(realtimeChannel); // FIX: Gunakan variabel yang benar
+    realtimeChannel = null; 
+  }
+
+  try {
+    // Bagian ini opsional: Jika kamu belum membuat Supabase Function 'nonaktifkan-perangkat',
+    // kode ini akan error, tapi kita bungkus dengan try-catch agar logout tetap jalan.
+    if (codeToRelease) {
+      const deviceId = getDeviceId();
+      await supabaseClient.from('device_pelanggan').delete().eq('device_id', deviceId);
+    }
+  } catch (error) {
+    console.error('Gagal hapus device:', error);
+  } finally {
+    // 3. Bersihkan localStorage
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('myAccessCode');
+    localStorage.removeItem('myDeviceId');
+
+    if(logoutButton) logoutButton.disabled = false;
+
+    updateAuthUI(); 
+    updateUI();     
+    showNotification('Anda telah logout.', 'info');
+
+    document.getElementById('settings-menu').classList.remove('open');
+  }
+}
+
+// Memperbarui UI berdasarkan status login (tombol Login/Logout)
+function updateAuthUI() {
+    const authButton = document.getElementById('auth-button');
+    const authButtonText = authButton.querySelector('span');
+
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+        // Jika sudah login
+        authButtonText.textContent = 'Logout';
+        authButton.onclick = handleLogout;
+    } else {
+        // Jika masih tamu
+        authButtonText.textContent = 'Login';
+        authButton.onclick = showLoginModal;
+    }
+}
+
+// Fungsi "Gatekeeper" (Satpam)
+// Ini akan dipanggil oleh setiap fungsi aksi
+function checkLoginStatus() {
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+        return true; // Lolos, lanjutkan aksi
+    } else {
+        showLoginModal(); // Blokir, tampilkan modal login
+        return false;     // Gagal
+    }
+}
+
+// Menampilkan UI untuk mode tamu (data kosong)
+function loadGuestUI() {
+    // Kosongkan kartu ringkasan
+    document.getElementById('pemasukan').textContent = formatCurrency(0);
+    document.getElementById('pengeluaran').textContent = formatCurrency(0);
+    document.getElementById('saldo').textContent = formatCurrency(0);
+
+    // Kosongkan tabel
+    const tbody = document.getElementById('tbody-tabel');
+    tbody.innerHTML = '';
+    
+    // Tampilkan pesan selamat datang
+    const emptyState = document.getElementById('empty-state');
+    emptyState.style.display = 'block';
+
+    // ▼▼▼ KONTEN HTML TELAH DIMODIFIKASI (Satu Kalimat Saja) ▼▼▼
+    emptyState.innerHTML = `
+        <div class="empty-state-icon">👋</div>
+        <h2>Selamat Datang di MyBudgetly</h2>
+        
+        <p style="font-size: 1.05rem; max-width: 550px; margin: 0 auto; line-height: 1.6; color: var(--text-secondary);">
+            Ini adalah mode demo, miliki aplikasi <b>MyBudgetly</b> versi lengkap di
+            <a href="https://lynk.id/arul.n11" target="_blank" rel="noopener noreferrer" 
+               style="color: var(--primary-accent-color); 
+                      font-weight: 600; 
+                      text-decoration: underline;
+                      text-decoration-thickness: 2px;">
+                lynk.id/arul.n11
+            </a>
+        </p>
+    `;
+    // ▲▲▲ AKHIR DARI MODIFIKASI ▲▲▲
+    
+    document.querySelector('.table-container table').style.display = 'none';
+    document.getElementById('pagination-controls').innerHTML = '';
+
+}
+
+// script.js (Tambahkan ini setelah fungsi hexToRgba)
+
+/**
+ * Menghitung kecerahan warna hex dan mengembalikan
+ * warna teks yang kontras (gelap atau terang).
+ * @param {string} hexColor - Warna latar belakang (cth: "#FFFFFF")
+ * @returns {string} - Warna teks yang sesuai ("#1f2937" atau "#ffffff")
+ */
+function getTextColorForBackground(hexColor) {
+  try {
+    // Bersihkan hex dan konversi ke RGB
+    let hex = hexColor.replace(/^#/, '');
+    if (hex.length === 3) {
+      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+
+    // Hitung 'brightness' menggunakan formula YIQ
+    const brightness = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+
+    // Jika brightness > 149 (ambang batas untuk terang), kembalikan warna gelap.
+    // Jika tidak, kembalikan warna terang (putih).
+    return brightness > 149 ? '#1f2937' : '#ffffff';
+  } catch (e) {
+    console.error("Gagal menghitung warna teks:", e);
+    return '#ffffff'; // Default ke putih jika ada error
+  }
+}
+
+// script.js (Tambahkan ini setelah fungsi getTextColorForBackground)
+
+function applyCustomColor(customColor) {
+  const gradient = generateGradient(customColor);
+  const glow = hexToRgba(customColor, 0.15);
+  // Panggil fungsi baru kita untuk mendapatkan warna teks yang tepat
+  const textColor = getTextColorForBackground(customColor);
+
+  const docStyle = document.documentElement.style;
+  docStyle.setProperty('--primary-gradient', gradient);
+  docStyle.setProperty('--primary-accent-color', customColor); 
+  docStyle.setProperty('--primary-accent-color-glow', glow);
+  // Atur variabel CSS baru untuk warna teks tombol
+  docStyle.setProperty('--primary-btn-text-color', textColor);
+  document.documentElement.setAttribute('data-color-theme', 'custom');
+
+  localStorage.setItem('colorTheme', 'custom');
+  localStorage.setItem('customAccentColor', customColor);
+
+  updateActiveThemeButton(null);
+  updateActiveSwatch();
+}
+// Fungsi untuk membuka dan menutup modal daftar
+function bukaModalDaftar() {
+    document.getElementById('modal-daftar').style.display = 'flex';
+}
+
+function tutupModalDaftar() {
+    document.getElementById('modal-daftar').style.display = 'none';
+    document.getElementById('pesan-daftar').innerText = '';
+}
+
+async function kirimPermintaan() {
+    const user = document.getElementById('reg-username').value.trim();
+    const kode = document.getElementById('reg-kode').value.trim();
+    const pesan = document.getElementById('pesan-daftar');
+
+    if(!user || !kode) {
+        pesan.innerText = "Isi semua kolom!";
+        return;
+    }
+
+    // 1. Ambil data Auto-ACC dan Limit Perangkat dari DB
+    const { data: settings } = await supabaseClient
+        .from('pengaturan_admin')
+        .select('setting_fitur, status, value') // Ambil kolom 'value'
+        .in('setting_fitur', ['auto acc', 'default device limit']);
+
+    const configAuto = settings.find(s => s.setting_fitur === 'auto acc');
+    const configLimit = settings.find(s => s.setting_fitur === 'default device limit');
+
+    const statusAwal = (configAuto && configAuto.status) ? 'aktif' : 'pending';
+    
+    // 2. Ubah teks dari database menjadi angka murni
+    const limitDefault = configLimit ? parseInt(configLimit.value) : 3; 
+
+    const { error } = await supabaseClient.from('pelanggan').insert({
+        username: user,
+        kode_akses: kode,
+        status: statusAwal,
+        batas_perangkat: limitDefault, // <--- Sekarang angka ini mengikuti Dashboard Admin
+        dibuat_tanggal: new Date().toLocaleString("sv-SE").replace(' ', 'T')
+    });
+
+    if (!error) {
+        alert(statusAwal === 'aktif' ? "Akses Aktif! Silakan Login." : "Berhasil! Tunggu persetujuan Admin.");
+        tutupModalDaftar();
+    } else {
+        pesan.innerText = "Gagal: " + error.message;
+    }
+}
