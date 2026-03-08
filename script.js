@@ -1,37 +1,23 @@
 const SUPABASE_URL = 'https://kycmnkibuxtzrbzrhezo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5Y21ua2lidXh0enJienJoZXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0ODI3NDAsImV4cCI6MjA3NzA1ODc0MH0.WtZhCS8qRUQNX5cSJAKdyA4G7Df7izGeWcjbWZTSbE4';
 
-// Klien UTAMA untuk API (Login, dll.) - Definisikan ini dulu
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let realtimeChannel = null; // Channel untuk Realtime
+let realtimeChannel = null;
 
-// Variabel global
 let transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
 let editIndex = null;
 let currentFilteredDate = null;
 let currentConfirmCallback = null;
 let itemRowCounter = 0;
 
-// Variabel Paginasi
 let currentPage = 1;
 const transactionsPerPage = 10;
 
-// Variabel untuk Fitur Scan
 let cameraStream = null;
-let cropper = null; // [BARU] Variabel untuk instance Cropper.js
+let cropper = null;
 
-// Inisialisasi Tema Lengkap
-// GANTI SELURUH FUNGSI LAMA DENGAN INI
-// Inisialisasi Tema Lengkap
-// GANTI SELURUH FUNGSI LAMA DENGAN INI
 function initTheme() {
-  // Logika pengaturan tema (setAttribute, setProperty) TELAH DIPINDAH
-  // ke inline script di <head> index.html untuk mencegah "flash".
-  
-  // Fungsi ini sekarang hanya bertugas menginisialisasi UI
-  // yang bergantung pada DOM (seperti color picker) agar nilainya sesuai.
-
   const savedColorTheme = localStorage.getItem('colorTheme') || 'ocean';
   const customAccentColor = localStorage.getItem('customAccentColor');
 
@@ -39,16 +25,13 @@ function initTheme() {
 
   if (colorPicker) {
     if (savedColorTheme === 'custom' && customAccentColor) {
-      // Atur nilai color picker ke warna kustom yang tersimpan
       colorPicker.value = customAccentColor;
     } else {
-      // Atur nilai color picker ke default
       colorPicker.value = '#4f46e5';
     }
   }
 }
 
-// Mengubah Tema
 function toggleTheme() {
   const currentTheme = document.documentElement.getAttribute('data-theme');
   const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -57,7 +40,6 @@ function toggleTheme() {
   localStorage.setItem('theme', newTheme);
 }
 
-// Fungsi untuk menerapkan tema warna preset
 function applyColorTheme(themeName) {
   document.documentElement.style.removeProperty('--primary-gradient');
   document.documentElement.style.removeProperty('--primary-accent-color');
@@ -79,7 +61,6 @@ function resetColorTheme() {
   showNotification('Tema dikembalikan ke default', 'info');
 }
 
-// Fungsi helper untuk mencerahkan warna & membuat gradien
 function lightenHexColor(hex, percent) {
   hex = hex.replace(/^#/, '');
   const r = parseInt(hex.substring(0, 2), 16);
@@ -105,14 +86,12 @@ function hexToRgba(hex, alpha = 1) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-// Fungsi untuk update tombol tema aktif
 function updateActiveThemeButton(activeThemeName) {
   document.querySelectorAll('.theme-option').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.themeName === activeThemeName);
   });
 }
 
-// Fungsi untuk mengelola palet warna kustom
 function initializeCustomColorPalette() {
   const paletteContainer = document.getElementById('color-palette');
   if (!paletteContainer) return;
@@ -137,7 +116,7 @@ function initializeCustomColorPalette() {
     value: '#4f46e5'
   }];
 
-  paletteContainer.innerHTML = ''; // Hapus isi sebelumnya
+  paletteContainer.innerHTML = '';
 
   colors.forEach(color => {
     const swatch = document.createElement('button');
@@ -148,9 +127,7 @@ function initializeCustomColorPalette() {
 
     swatch.addEventListener('click', () => {
       const customColor = swatch.dataset.color;
-      const gradient = generateGradient(customColor);
       applyCustomColor(customColor);
-
       showNotification(`Warna kustom ${color.name} diterapkan`, 'success');
     });
     paletteContainer.appendChild(swatch);
@@ -172,11 +149,9 @@ function updateActiveSwatch() {
   }
 }
 
-
-// Mengelola Foto Profil
 function handleProfilePhotoChange(event) {
   if (!checkLoginStatus()) {
-        event.target.value = null; // Batalkan pemilihan file
+        event.target.value = null;
         return;
   }
   const file = event.target.files[0];
@@ -191,14 +166,12 @@ function handleProfilePhotoChange(event) {
       profilePlaceholder.classList.add('hide');
 
       localStorage.setItem('profilePhoto', e.target.result);
-
       showNotification('Foto profil berhasil diperbarui', 'success');
     };
     reader.readAsDataURL(file);
   }
 }
 
-// Memuat Foto Profil
 function loadProfilePhoto() {
   const savedPhoto = localStorage.getItem('profilePhoto');
   if (savedPhoto) {
@@ -211,7 +184,6 @@ function loadProfilePhoto() {
   }
 }
 
-// Fungsionalitas Pengeditan Judul Modern
 function editTitle() {
   if (!checkLoginStatus()) return;
   const titleElement = document.getElementById('app-title');
@@ -273,7 +245,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   initializeCustomColorPalette();
- 
 });
 
 function loadAppTitle() {
@@ -283,7 +254,6 @@ function loadAppTitle() {
   }
 }
 
-// Elemen DOM
 const form = document.getElementById('form-transaksi');
 const cancelEditBtn = document.getElementById('cancel-edit-btn');
 const submitBtn = document.getElementById('submit-btn');
@@ -310,9 +280,7 @@ const deleteFilterSelect = document.getElementById('delete-filter');
 const dateRangeDeleteGroup = document.getElementById('date-range-delete-group');
 const deleteStartDateInput = document.getElementById('delete-start-date');
 const deleteEndDateInput = document.getElementById('delete-end-date');
-
 const themeSettingsModal = document.getElementById('themeSettingsModal');
-
 
 function setTodayDate() {
   const today = new Date();
@@ -336,8 +304,11 @@ function setupMidnightDateUpdate() {
   }, msUntilMidnight);
 }
 
-// script.js
 async function checkMaintenanceStatus() {
+    const screen = document.getElementById('maintenance-screen');
+    const textEl = document.getElementById('maintenance-text');
+    const mainContent = document.getElementById('main-app-content');
+    
     try {
         const { data } = await supabaseClient
             .from('pengaturan_admin')
@@ -345,25 +316,26 @@ async function checkMaintenanceStatus() {
             .eq('setting_fitur', 'maintenance mode')
             .maybeSingle();
 
-        const screen = document.getElementById('maintenance-screen');
-        const textEl = document.getElementById('maintenance-text');
-
+        // Jika maintenance aktif ATAU data gagal diambil
         if (data && data.status === true) {
-            // Jika ON: Tetap tampilkan dan pasang pesan kustom
-            screen.style.display = 'flex';
+            screen.style.display = 'flex'; // Tetap tampilkan
+            mainContent.style.display = 'none';
             textEl.innerText = data.value || "Kami sedang melakukan pemeliharaan rutin.";
             document.body.style.overflow = 'hidden'; 
         } else {
-            // JIKA OFF: Sembunyikan layar agar aplikasi bisa digunakan
+            // HANYA JIKA MAINTENANCE MATI, kita tutup layarnya
             screen.style.display = 'none';
+            mainContent.style.display = 'block';
             document.body.style.overflow = 'auto';
         }
     } catch (err) {
-        // Jika internet error, amannya kita sembunyikan saja layarnya
-        document.getElementById('maintenance-screen').style.display = 'none';
+        // Jika terjadi error koneksi, amannya tampilkan aplikasi (atau tetap maintenance)
+        screen.style.display = 'none';
+        mainContent.style.display = 'block';
     }
+    
 }
-// Fungsi untuk memantau perubahan Mode Maintenance secara Realtime
+
 function startMaintenanceRealtime() {
     supabaseClient
         .channel('maintenance-channel')
@@ -375,18 +347,25 @@ function startMaintenanceRealtime() {
         }, 
         (payload) => {
             const statusBaru = payload.new.status;
-            const pesanBaru = payload.new.value; // Ambil pesan terbaru dari payload
+            const pesanBaru = payload.new.value;
             const screen = document.getElementById('maintenance-screen');
             const textEl = document.getElementById('maintenance-text');
+            const mainContent = document.getElementById('main-app-content'); // Tambahkan ini
 
             if (statusBaru === true) {
+                // Jika Maintenance ON: Tampilkan layar update, Sembunyikan aplikasi
                 screen.style.display = 'flex';
-                // Update teks secara realtime
+                if (mainContent) mainContent.style.display = 'none';
                 textEl.innerText = pesanBaru || "Kami sedang melakukan pemeliharaan rutin.";
                 document.body.style.overflow = 'hidden';
             } else {
+                // Jika Maintenance OFF: Sembunyikan layar update, Tampilkan aplikasi
                 screen.style.display = 'none';
+                if (mainContent) mainContent.style.display = 'block';
                 document.body.style.overflow = 'auto';
+                
+                // Opsional: Jalankan ulang createIcons agar icon Lucide muncul benar
+                if (window.lucide) lucide.createIcons();
             }
         })
         .subscribe();
@@ -415,33 +394,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function setupEventListeners() {
   cancelEditBtn.addEventListener('click', cancelEdit);
-  // [BARU] Event Listener untuk Dropdown Menu Pengaturan
   const settingsMenu = document.getElementById('settings-menu');
   const settingsToggle = document.getElementById('settings-menu-toggle');
   const openThemeModalBtn = document.getElementById('open-theme-modal-btn');
 
   if (settingsMenu && settingsToggle && openThemeModalBtn) {
-    
-    // 1. Buka/Tutup menu saat ikon hamburger diklik
     settingsToggle.addEventListener('click', (e) => {
-      e.stopPropagation(); // Mencegah window click listener di bawah tertutup
+      e.stopPropagation();
       settingsMenu.classList.toggle('open');
     });
 
-    // 2. Buka modal tema dan tutup dropdown
     openThemeModalBtn.addEventListener('click', () => {
-      openThemeModal(); // Panggil fungsi yang sudah ada
-      settingsMenu.classList.remove('open'); // Tutup dropdown
+      openThemeModal();
+      settingsMenu.classList.remove('open');
     });
 
-    // 3. Tutup dropdown saat klik di luar area menu
     window.addEventListener('click', (e) => {
       if (!settingsMenu.contains(e.target)) {
         settingsMenu.classList.remove('open');
       }
     });
   }
-  // Akhir Event Listener Baru
 
   document.querySelectorAll('.quick-amount-btn').forEach(btn => {
     btn.addEventListener('click', function() {
@@ -473,8 +446,8 @@ function setupEventListeners() {
 
   const debouncedUpdate = debounce(() => {
     currentPage = 1;
-    updateUI(); // Panggil updateUI HANYA setelah user berhenti mengetik
-  }, 300); // 300ms delay
+    updateUI();
+  }, 300);
 
   searchInput.addEventListener('input', function() {
     const searchTerm = this.value.trim();
@@ -483,8 +456,6 @@ function setupEventListeners() {
     } else {
       searchClear.style.display = 'none';
     }
-    
-    // [DIUBAH] Panggil fungsi yang sudah di-debounce, bukan updateUI() langsung
     debouncedUpdate();
   });
 
@@ -555,10 +526,6 @@ function setupEventListeners() {
   }
 }
 
-// ===============================================
-// [PEMBARUAN LENGKAP] FUNGSI-FUNGSI UNTUK FITUR SCAN STRUK
-// ===============================================
-
 function setupScanEventListeners() {
   const scanModal = document.getElementById('scan-modal');
   const scannerHelpBtn = document.getElementById('scanner-help-btn');
@@ -568,7 +535,6 @@ function setupScanEventListeners() {
   document.getElementById('scan-receipt-btn').addEventListener('click', openScanner);
   document.getElementById('capture-btn').addEventListener('click', captureImage);
   document.getElementById('rescan-btn').addEventListener('click', resetScanner);
-  // Tombol 'process-btn' onclick diatur secara dinamis
   document.getElementById('cancel-scan-btn').addEventListener('click', closeScanner);
   document.getElementById('save-scanned-btn').addEventListener('click', saveScannedTransaction);
   document.getElementById('add-item-btn').addEventListener('click', () => addScannedItemRow());
@@ -588,7 +554,6 @@ function setupScanEventListeners() {
             `;
     showNotification(helpMessage, 'info', null);
   });
-
 
   toggleEditBtn.addEventListener('click', () => setCorrectionView('edit'));
   toggleImageBtn.addEventListener('click', () => setCorrectionView('image'));
@@ -640,18 +605,14 @@ function closeScanner() {
 
 function resetScannerState() {
   document.getElementById('scanner-title').textContent = "Pindai Struk Belanja";
-  
-  // Tampilkan view kamera, sembunyikan yang lain
   document.getElementById('scanner-view-container').style.display = 'block';
   document.getElementById('cropper-container').style.display = 'none';
   document.getElementById('scanner-results-container').style.display = 'none';
 
-  // Reset tombol-tombol
   document.getElementById('capture-btn').style.display = 'inline-flex';
   document.getElementById('preview-controls').style.display = 'none';
   document.getElementById('correction-controls').style.display = 'none';
 
-  // Sembunyikan status OCR dan bersihkan list item
   document.getElementById('ocr-status').style.display = 'none';
   document.getElementById('item-list-container').innerHTML = '';
 }
@@ -668,11 +629,9 @@ function captureImage() {
 
     imageToCrop.src = canvas.toDataURL('image/jpeg');
 
-    // Sembunyikan tampilan kamera dan tampilkan kontainer cropper
     document.getElementById('scanner-view-container').style.display = 'none';
     document.getElementById('cropper-container').style.display = 'block';
 
-    // Inisialisasi Cropper.js
     if (cropper) {
         cropper.destroy();
     }
@@ -683,21 +642,19 @@ function captureImage() {
         autoCropArea: 0.9,
     });
 
-    // Ganti tombol
     document.getElementById('capture-btn').style.display = 'none';
     const processBtn = document.getElementById('process-btn');
     processBtn.querySelector('#process-btn-text').innerHTML = '✂️ Crop & Proses';
-    processBtn.onclick = processCroppedImage; // Ganti fungsi on-click
+    processBtn.onclick = processCroppedImage;
     document.getElementById('preview-controls').style.display = 'flex';
 }
-
 
 function resetScanner() {
     if (cropper) {
         cropper.destroy();
         cropper = null;
     }
-    resetScannerState(); // Kembali ke tampilan kamera awal
+    resetScannerState();
 }
 
 async function processCroppedImage() {
@@ -711,7 +668,6 @@ async function processCroppedImage() {
     const ocrProgress = document.getElementById('ocr-progress');
     const processBtn = document.getElementById('process-btn');
 
-    // Dapatkan kanvas hasil crop dari Cropper.js
     const croppedCanvas = cropper.getCroppedCanvas({
         fillColor: '#fff'
     });
@@ -721,7 +677,6 @@ async function processCroppedImage() {
         return;
     }
 
-    // Sembunyikan cropper dan tampilkan status loading
     document.getElementById('cropper-container').style.display = 'none';
     document.getElementById('preview-controls').style.display = 'none';
     ocrStatus.style.display = 'block';
@@ -762,7 +717,6 @@ async function processCroppedImage() {
         processBtn.querySelector('#process-btn-text').innerHTML = '✂️ Crop & Proses';
     }
 }
-
 
 function parseOCRText(text) {
   let cleanedText = text
@@ -819,7 +773,6 @@ function addScannedItemRow(name = '', price = '') {
   const div = document.createElement('div');
   div.className = 'item-row';
 
-  // ID unik untuk menghubungkan label dengan input
   const uniqueId = ++itemRowCounter;
 
   div.innerHTML = `
@@ -838,11 +791,9 @@ function addScannedItemRow(name = '', price = '') {
 
   container.appendChild(div);
 
-  // Tambahkan event listener untuk update total
   const priceInput = div.querySelector('.item-price-input');
   priceInput.addEventListener('input', updateScannedTotal);
 
-  // Perbaikan untuk scroll otomatis di mobile
   const nameInput = div.querySelector('.item-name-input');
   const scrollIntoViewOnFocus = (event) => {
     setTimeout(() => {
@@ -877,7 +828,7 @@ function setCorrectionView(view) {
     imageWrapper.style.display = 'none';
     toggleEditBtn.classList.add('active');
     toggleImageBtn.classList.remove('active');
-  } else { // view === 'image'
+  } else {
     itemListWrapper.style.display = 'none';
     imageWrapper.style.display = 'block';
     toggleEditBtn.classList.remove('active');
@@ -921,11 +872,6 @@ function saveScannedTransaction() {
   }
 }
 
-
-// ===============================================
-// AKHIR FUNGSI FITUR SCAN STRUK
-// ===============================================
-
 function clearSearch() {
   const searchInput = document.getElementById('search-input');
   const searchClear = document.getElementById('search-clear');
@@ -961,7 +907,7 @@ function updateDateFilterDisplay() {
 function handleFormSubmit(e) {
   e.preventDefault();
   if (!checkLoginStatus()) {
-        return; // Hentikan jika belum login
+        return;
     }
 
   const deskripsi = document.getElementById('deskripsi').value.trim();
@@ -1029,31 +975,24 @@ function cancelEdit() {
   showNotification('Edit dibatalkan', 'info');
 }
 
-// [GANTI FUNGSI LAMA ANDA DENGAN YANG INI]
 function updateUI() {
   if (localStorage.getItem('isLoggedIn') !== 'true') {
-        // Jika pengguna adalah tamu, tampilkan UI tamu dan stop
         loadGuestUI();
         return; 
     }
 
-  // ▼▼▼ PERUBAHAN UTAMA ADA DI SINI ▼▼▼
-  // Reset empty state ke default "Tidak Ada Transaksi"
-  // Ini penting agar pesan "Selamat Datang" (demo) hilang setelah login.
   const emptyState = document.getElementById('empty-state');
   emptyState.innerHTML = `
     <div class="empty-state-icon">📊</div>
     <h3>Belum ada transaksi</h3>
     <p>Mulai tambahkan transaksi pertama Anda!</p>
   `;
-  // ▲▲▲ AKHIR PERUBAHAN ▲▲▲
 
   updateSummaryCards();
   updateTransactionsTable();
   updateMonthFilter();
   updateDateFilterDisplay();
 
-  const tbody = document.getElementById('tbody-tabel');
   const filteredTransactions = getFilteredTransactions();
 
   if (filteredTransactions.length === 0 && document.getElementById('search-input').value.trim() === '' && !currentFilteredDate) {
@@ -1195,7 +1134,6 @@ function updateTransactionsTable() {
   }
 }
 
-// GANTI FUNGSI updatePaginationControls LAMA DENGAN YANG INI
 function updatePaginationControls(totalTransactions) {
   const paginationControls = document.getElementById('pagination-controls');
   paginationControls.innerHTML = '';
@@ -1206,7 +1144,6 @@ function updatePaginationControls(totalTransactions) {
     return;
   }
 
-  // Tombol "Sebelumnya"
   const prevButton = document.createElement('button');
   prevButton.innerHTML = '&lt;';
   prevButton.className = 'pagination-btn';
@@ -1220,18 +1157,14 @@ function updatePaginationControls(totalTransactions) {
   };
   paginationControls.appendChild(prevButton);
 
-  // Elemen info halaman (sekarang bisa diklik)
   const pageInfo = document.createElement('span');
-  pageInfo.className = 'page-info clickable'; // Tambahkan kelas 'clickable'
+  pageInfo.className = 'page-info clickable';
   pageInfo.textContent = `${currentPage}/${totalPages}`;
-  pageInfo.title = "Klik untuk lompat ke halaman"; // Tambahkan tooltip
-  
-  // [BARU] Tambahkan event listener untuk memunculkan input
+  pageInfo.title = "Klik untuk lompat ke halaman";
   pageInfo.onclick = () => showPageInput(totalPages); 
   
   paginationControls.appendChild(pageInfo);
 
-  // Tombol "Berikutnya"
   const nextButton = document.createElement('button');
   nextButton.innerHTML = '&gt;';
   nextButton.className = 'pagination-btn';
@@ -1246,55 +1179,46 @@ function updatePaginationControls(totalTransactions) {
   paginationControls.appendChild(nextButton);
 }
 
-// [BARU] Tambahkan FUNGSI BARU ini di bawah fungsi updatePaginationControls
 function showPageInput(totalPages) {
   const pageInfo = document.querySelector('.page-info');
-  if (!pageInfo) return; // Keluar jika elemen tidak ditemukan
+  if (!pageInfo) return;
 
-  // Simpan tombol prev/next untuk dikembalikan nanti
   const prevButton = document.querySelector('.pagination-btn:first-child');
   const nextButton = document.querySelector('.pagination-btn:last-child');
   
   const paginationControls = document.getElementById('pagination-controls');
-  paginationControls.innerHTML = ''; // Kosongkan sementara
+  paginationControls.innerHTML = '';
 
-  // Buat input field
   const input = document.createElement('input');
   input.type = 'number';
-  input.className = 'pagination-input'; // Kelas baru untuk styling
+  input.className = 'pagination-input';
   input.value = currentPage;
   input.min = 1;
   input.max = totalPages;
 
   const handleJump = () => {
     let newPage = parseInt(input.value);
-    // Validasi input
     if (newPage >= 1 && newPage <= totalPages) {
       currentPage = newPage;
-      updateUI(); // Perbarui tampilan ke halaman baru
+      updateUI();
     } else {
-      // Jika input tidak valid, cukup render ulang UI tanpa mengubah halaman
       showNotification(`Masukkan halaman antara 1 dan ${totalPages}`, 'error', 2000);
       updateUI();
     }
   };
 
-  // Event listener untuk tombol 'Enter'
   input.onkeydown = (event) => {
     if (event.key === 'Enter') {
       handleJump();
     } else if (event.key === 'Escape') {
-      updateUI(); // Batalkan dengan 'Escape'
+      updateUI();
     }
   };
 
-  // Event listener jika pengguna klik di luar input (blur)
   input.onblur = () => {
-    // Beri sedikit jeda agar tidak konflik dengan event lain
     setTimeout(() => updateUI(), 100);
   };
   
-  // Masukkan kembali tombol dan input baru
   if (prevButton) paginationControls.appendChild(prevButton);
   paginationControls.appendChild(input);
   if (nextButton) paginationControls.appendChild(nextButton);
@@ -1302,7 +1226,6 @@ function showPageInput(totalPages) {
   input.focus();
   input.select();
 }
-
 
 function clearAllFilters() {
   document.getElementById('filter-bulan').value = 'semua';
@@ -1318,49 +1241,38 @@ function updateMonthFilter() {
   const hiddenSelect = document.getElementById('filter-bulan');
   const currentFilter = hiddenSelect.value;
 
-  // Referensi ke dropdown kustom
   const customContainer = document.getElementById('custom-filter-bulan');
   const selectedDisplay = customContainer.querySelector('.select-selected');
   const optionsContainer = customContainer.querySelector('.select-items');
 
-  // Kosongkan pilihan yang lama
   hiddenSelect.innerHTML = '';
   optionsContainer.innerHTML = '';
 
-  // Fungsi helper untuk membuat pilihan
   const createOption = (text, value) => {
-    // Buat untuk <select> tersembunyi
     const option = document.createElement('option');
     option.value = value;
     option.innerHTML = text;
     hiddenSelect.appendChild(option);
 
-    // Buat untuk <div> kustom
     const div = document.createElement('div');
     div.innerHTML = text;
     div.setAttribute('data-value', value);
     optionsContainer.appendChild(div);
 
-    // Tambahkan event listener untuk pilihan kustom
     div.addEventListener('click', function() {
       hiddenSelect.value = this.getAttribute('data-value');
       selectedDisplay.innerHTML = this.innerHTML;
-      // Picu event 'change' pada select tersembunyi agar filter berjalan
       hiddenSelect.dispatchEvent(new Event('change'));
     });
   };
 
-  // Buat pilihan "Semua Bulan"
   createOption('Semua Bulan', 'semua');
 
-  // Buat pilihan untuk setiap bulan yang ada
   ([...bulanSet].sort()).reverse().forEach(bulan => {
     createOption(`Data ${formatMonth(bulan)}`, bulan);
   });
 
-  // Atur nilai yang terpilih saat ini
   hiddenSelect.value = currentFilter;
-  // Perbarui tampilan dropdown kustom agar sesuai
   const selectedOptionDiv = optionsContainer.querySelector(`[data-value="${hiddenSelect.value}"]`);
   if (selectedOptionDiv) {
     selectedDisplay.innerHTML = selectedOptionDiv.innerHTML;
@@ -1375,6 +1287,13 @@ function editTransaksi(index) {
   document.getElementById('jumlah').value = t.jumlah;
   document.getElementById('tanggal').value = t.tanggal;
   document.getElementById('jenis').value = t.jenis;
+
+  const selectedDisplay = document.querySelector('#custom-jenis .select-selected');
+  if (t.jenis === 'pemasukan') {
+    selectedDisplay.innerHTML = '💰 Pemasukan';
+  } else {
+    selectedDisplay.innerHTML = '💸 Pengeluaran';
+  }
 
   editIndex = index;
   formTitle.textContent = '✏️ Edit Transaksi';
@@ -1668,7 +1587,6 @@ function simpanPDF() {
     periodText += ` (Pencarian Tanggal: "${formatDate(currentFilteredDate)}")`;
   }
 
-
   const pdfHeader = document.createElement('div');
   pdfHeader.style.textAlign = 'center';
   pdfHeader.style.marginBottom = '1.5rem';
@@ -1739,20 +1657,11 @@ function showNotification(message, type = 'success', duration = 3000) {
 
   let icon;
   switch (type) {
-    case 'success':
-      icon = '✓';
-      break;
-    case 'error':
-      icon = '✕';
-      break;
-    case 'info':
-      icon = 'i';
-      break;
-    case 'warning':
-      icon = '!';
-      break;
-    default:
-      icon = '•';
+    case 'success': icon = '✓'; break;
+    case 'error': icon = '✕'; break;
+    case 'info': icon = 'i'; break;
+    case 'warning': icon = '!'; break;
+    default: icon = '•';
   }
 
   const notification = document.createElement('div');
@@ -1846,20 +1755,36 @@ function exportData() {
     return;
   }
 
-  const dataStr = JSON.stringify(transaksi, null, 2);
-  const blob = new Blob([dataStr], {
-    type: 'application/json'
+  // Membuat Header (Judul Kolom)
+  const headers = ["Tanggal", "Deskripsi", "Jenis", "Jumlah"];
+  
+  // Mengubah data transaksi menjadi baris CSV
+  const csvRows = transaksi.map(t => {
+    return [
+      t.tanggal,
+      `"${t.deskripsi.replace(/"/g, '""')}"`, // Mengurung deskripsi dengan kutip agar aman jika ada koma
+      t.jenis,
+      t.jumlah
+    ].join(',');
   });
+
+  // Menggabungkan Header dan Data
+  const csvContent = ["sep=,", headers.join(','), ...csvRows].join('\n');
+  
+  // Proses Download File .csv
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const appTitle = document.getElementById('app-title').textContent.replace(/\s/g, '-');
+  
   a.href = url;
-  a.download = `${appTitle}-data-transaksi-${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `${appTitle}-data-${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showNotification('Data transaksi berhasil diexport!', 'success');
+  
+  showNotification('Data berhasil diexport ke CSV!', 'success');
 }
 
 function openImportModal() {
@@ -1878,43 +1803,52 @@ function closeImportModal() {
 function confirmImportData() {
   const file = importFileInput.files[0];
   if (!file) {
-    showNotification('Pilih file JSON untuk diimport.', 'error');
+    showNotification('Pilih file CSV untuk diimport.', 'error');
     return;
   }
 
   const reader = new FileReader();
   reader.onload = function(event) {
     try {
-      const importedData = JSON.parse(event.target.result);
-      if (Array.isArray(importedData) && importedData.every(item =>
-          typeof item.deskripsi === 'string' &&
-          typeof item.jumlah === 'number' &&
-          typeof item.tanggal === 'string' &&
-          typeof item.jenis === 'string'
-        )) {
-        openConfirmationModal('Semua data transaksi yang ada saat ini akan diganti. Lanjutkan?', () => {
+      const text = event.target.result;
+      const lines = text.split('\n').filter(line => line.trim() !== '');
+      
+      // Ambil data mulai dari baris kedua (indeks 1) karena baris pertama adalah header
+      const importedData = lines.slice(1).map(line => {
+        // Memecah kolom (mengabaikan koma di dalam tanda kutip)
+        const columns = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        
+        if (columns.length >= 4) {
+          return {
+            tanggal: columns[0].trim(),
+            // Membersihkan tanda kutip dari deskripsi
+            deskripsi: columns[1].replace(/^"|"$/g, '').replace(/""/g, '"').trim(),
+            jenis: columns[2].trim(),
+            jumlah: parseFloat(columns[3])
+          };
+        }
+        return null;
+      }).filter(item => item !== null && !isNaN(item.jumlah));
+
+      if (importedData.length > 0) {
+        openConfirmationModal(`Ditemukan ${importedData.length} transaksi. Ganti data saat ini?`, () => {
           transaksi = importedData;
           localStorage.setItem('transaksi', JSON.stringify(transaksi));
           updateUI();
           closeImportModal();
-          showNotification('Data transaksi berhasil diimport!', 'success');
+          showNotification('Data CSV berhasil diimport!', 'success');
+          
+          // Reset form ke kondisi awal
           editIndex = null;
           form.reset();
           setTodayDate();
-          formTitle.textContent = '📝 Tambah Transaksi Baru';
-          submitText.textContent = 'Simpan Transaksi';
-          cancelEditBtn.style.display = 'none';
         });
       } else {
-        showNotification('Format file JSON tidak valid. Pastikan berisi array transaksi dengan properti yang benar.', 'error');
+        showNotification('Format CSV tidak dikenali atau file kosong.', 'error');
       }
     } catch (e) {
-      showNotification('Gagal membaca file JSON. Pastikan format file benar dan tidak rusak.', 'error');
-      console.error('Error parsing JSON:', e);
+      showNotification('Gagal membaca CSV. Pastikan file tidak rusak.', 'error');
     }
-  };
-  reader.onerror = function() {
-    showNotification('Gagal membaca file.', 'error');
   };
   reader.readAsText(file);
 }
@@ -1942,7 +1876,6 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-
 function scrollToForm() {
   document.querySelector('.form-container').scrollIntoView({
     behavior: 'smooth',
@@ -1950,7 +1883,6 @@ function scrollToForm() {
   });
 }
 
-// ▼▼▼ TEMPEL KODE BARU ANDA DI SINI ▼▼▼
 function initializeCustomSelect() {
   const container = document.getElementById('custom-jenis');
   if (!container) return;
@@ -1960,29 +1892,25 @@ function initializeCustomSelect() {
   const optionsContainer = container.querySelector('.select-items');
   const options = optionsContainer.querySelectorAll('div');
 
-  // Fungsi untuk menutup dropdown
   const closeAllSelect = () => {
     container.classList.remove('select-active');
     optionsContainer.classList.add('select-hide');
   };
 
-  // Tetapkan nilai default saat halaman dimuat (Pengeluaran)
   const defaultOption = options[1];
   selectedDisplay.innerHTML = defaultOption.innerHTML;
   hiddenInput.value = defaultOption.getAttribute('data-value');
   
-  // Event saat kotak utama diklik (untuk membuka/menutup)
   selectedDisplay.addEventListener('click', function(e) {
     e.stopPropagation();
     const isActive = container.classList.contains('select-active');
-    closeAllSelect(); // Selalu tutup dulu
-    if (!isActive) { // Jika tadinya tidak aktif, buka
+    closeAllSelect();
+    if (!isActive) {
       container.classList.add('select-active');
       optionsContainer.classList.remove('select-hide');
     }
   });
 
-  // Event saat salah satu pilihan di-klik
   options.forEach(option => {
     option.addEventListener('click', function() {
       selectedDisplay.innerHTML = this.innerHTML;
@@ -1991,7 +1919,6 @@ function initializeCustomSelect() {
     });
   });
 
-  // Event untuk menutup dropdown jika klik di luar area
   document.addEventListener('click', closeAllSelect);
 }
 
@@ -2002,17 +1929,14 @@ function initializeMonthFilter() {
   const selectedDisplay = container.querySelector('.select-selected');
   const optionsContainer = container.querySelector('.select-items');
 
-  // Fungsi untuk menutup dropdown
   const closeAllSelect = () => {
     container.classList.remove('select-active');
     optionsContainer.classList.add('select-hide');
   };
 
-  // Event saat kotak utama diklik (untuk membuka/menutup)
   selectedDisplay.addEventListener('click', function(e) {
     e.stopPropagation();
     const isActive = container.classList.contains('select-active');
-    // Tutup semua dropdown lain dulu (jika ada)
     document.querySelectorAll('.custom-select-container').forEach(c => {
         if (c !== container) {
             c.classList.remove('select-active');
@@ -2020,7 +1944,7 @@ function initializeMonthFilter() {
         }
     });
 
-    if (!isActive) { // Jika tadinya tidak aktif, buka
+    if (!isActive) {
       container.classList.add('select-active');
       optionsContainer.classList.remove('select-hide');
     } else {
@@ -2028,7 +1952,6 @@ function initializeMonthFilter() {
     }
   });
 
-  // Event untuk menutup dropdown jika klik di luar area
   document.addEventListener('click', closeAllSelect);
 }
 
@@ -2046,16 +1969,13 @@ function initializePdfOrientationSelect() {
     optionsContainer.classList.add('select-hide');
   };
 
-  // Atur nilai default saat modal dibuka
   const defaultOption = options[0];
   selectedDisplay.innerHTML = defaultOption.innerHTML;
   hiddenInput.value = defaultOption.getAttribute('data-value');
 
-  // Event saat kotak utama diklik (untuk membuka/menutup)
   selectedDisplay.addEventListener('click', function(e) {
     e.stopPropagation();
     const isActive = container.classList.contains('select-active');
-    // Tutup dropdown lain dulu (jika ada)
     document.querySelectorAll('.custom-select-container').forEach(c => {
         if (c !== container) {
             c.classList.remove('select-active');
@@ -2063,7 +1983,7 @@ function initializePdfOrientationSelect() {
         }
     });
 
-    if (!isActive) { // Jika tadinya tidak aktif, buka
+    if (!isActive) {
       container.classList.add('select-active');
       optionsContainer.classList.remove('select-hide');
     } else {
@@ -2071,7 +1991,6 @@ function initializePdfOrientationSelect() {
     }
   });
 
-  // Event saat salah satu pilihan di-klik
   options.forEach(option => {
     option.addEventListener('click', function() {
       selectedDisplay.innerHTML = this.innerHTML;
@@ -2080,22 +1999,15 @@ function initializePdfOrientationSelect() {
     });
   });
 
-  // Event untuk menutup dropdown jika klik di luar area
   document.addEventListener('click', closeAllSelect);
 }
 
-// ===============================================
-// FUNGSI BARU UNTUK OTENTIKASI (LOGIN)
-// ===============================================
-
-// Menampilkan modal login
 function showLoginModal() {
     const modal = document.getElementById('login-modal');
     modal.style.display = 'flex';
     document.getElementById('modal-kode').focus();
 }
 
-// Menutup modal login
 function closeLoginModal() {
     const modal = document.getElementById('login-modal');
     modal.style.display = 'none';
@@ -2106,11 +2018,9 @@ function closeLoginModal() {
 function getDeviceId() {
     let deviceId = localStorage.getItem('myBudgetlyDeviceId');
     if (!deviceId) {
-        // Gunakan crypto.randomUUID jika tersedia (HTTPS), jika tidak pakai cadangan manual
         if (window.isSecureContext && typeof crypto.randomUUID === 'function') {
             deviceId = crypto.randomUUID();
         } else {
-            // Cadangan: Membuat ID unik manual sederhana
             deviceId = 'dev-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now();
         }
         localStorage.setItem('myBudgetlyDeviceId', deviceId);
@@ -2126,13 +2036,13 @@ async function handleLogin(event) {
     
     const kodeYangDimasukkan = kodeInput.value.trim();
     const deviceId = getDeviceId(); 
-
+    const waktuSekarang = new Date().toLocaleString("sv-SE").replace(' ', 'T');
+    
     errorMessage.style.display = 'none';
     loginButton.disabled = true;
     loginButton.textContent = 'Memverifikasi...';
 
     try {
-        // 1. Cek User di tabel pelanggan
         const { data: user, error: userError } = await supabaseClient
             .from('pelanggan')
             .select('*')
@@ -2143,15 +2053,13 @@ async function handleLogin(event) {
         if (user.status === 'pending') throw new Error('Akun menunggu persetujuan Admin.');
         if (user.status === 'diblokir') throw new Error('Akun ini telah diblokir.');
 
-        // 2. Cek apakah perangkat ini sudah pernah terdaftar
         const { data: deviceTerdaftar } = await supabaseClient
             .from('device_pelanggan')
             .select('id')
-            .eq('kode_pelanggan', kodeYangDimasukkan) // Pastikan kolom ini sesuai di DB kamu
+            .eq('kode_pelanggan', kodeYangDimasukkan)
             .eq('device_id', deviceId)
             .maybeSingle();
 
-        // 3. Jika perangkat BARU, cek batas kuota
         if (!deviceTerdaftar) {
             const { count } = await supabaseClient
                 .from('device_pelanggan')
@@ -2162,17 +2070,21 @@ async function handleLogin(event) {
                 throw new Error(`Kuota penuh! Maksimal ${user.batas_perangkat || 3} perangkat.`);
             }
 
-            // Daftarkan perangkat baru
             await supabaseClient
-                .from('device_pelanggan')
-                .insert({
-                    kode_pelanggan: kodeYangDimasukkan,
-                    device_id: deviceId,
-                    device_model: navigator.userAgent.slice(0, 50) // Simpan info HP singkat
-                });
-        }
+        .from('device_pelanggan')
+        .insert({
+            kode_pelanggan: kodeYangDimasukkan,
+            device_id: deviceId,
+            device_model: navigator.userAgent.slice(0, 50),
+            terhubung_pada: waktuSekarang
+        });
+      } else {
+    await supabaseClient
+        .from('device_pelanggan')
+        .update({ terhubung_pada: waktuSekarang })
+        .eq('device_id', deviceId);
+}
 
-        // 4. Sukses Login
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('myAccessCode', kodeYangDimasukkan);
         localStorage.setItem('myDeviceId', deviceId);
@@ -2198,7 +2110,6 @@ async function handleLogin(event) {
     }
 }
 
-// GANTI FUNGSI LAMA DENGAN VERSI BARU INI
 async function startRealtimeSessionListener() {
     const myCode = localStorage.getItem('myAccessCode');
     if (!myCode) return;
@@ -2208,15 +2119,14 @@ async function startRealtimeSessionListener() {
         realtimeChannel = null;
     }
 
-    // Pantau perubahan pada tabel 'pelanggan' untuk mendeteksi blokir atau hapus kode
     realtimeChannel = supabaseClient.channel(`access-code-${myCode}`)
         .on(
             'postgres_changes', 
             {
                 event: '*', 
                 schema: 'public',
-                table: 'pelanggan', // FIX: Sesuaikan dengan nama tabel login kamu
-                filter: `kode_akses=eq.${myCode}` // FIX: Gunakan kolom 'kode_akses'
+                table: 'pelanggan',
+                filter: `kode_akses=eq.${myCode}`
             },
             (payload) => {
                 if (payload.eventType === 'DELETE') {
@@ -2234,8 +2144,6 @@ async function startRealtimeSessionListener() {
 }
 
 async function forceLogout(message) {
-    console.warn(`Force logout dipicu: ${message}`);
-
     if (realtimeChannel) { 
     await supabaseRealtimeClient.removeChannel(realtimeChannel); 
     realtimeChannel = null; 
@@ -2251,22 +2159,18 @@ async function forceLogout(message) {
     showNotification(message, 'error', 6000);
 }
 
-// [MODIFIKASI] Menangani logout
 async function handleLogout() {
   const codeToRelease = localStorage.getItem('myAccessCode');
   const logoutButton = document.getElementById('auth-button');
 
   if(logoutButton) logoutButton.disabled = true;
 
-  // 1. Berhenti mendengarkan channel Realtime (Gunakan supabaseClient)
   if (realtimeChannel) { 
-    await supabaseClient.removeChannel(realtimeChannel); // FIX: Gunakan variabel yang benar
+    await supabaseClient.removeChannel(realtimeChannel);
     realtimeChannel = null; 
   }
 
   try {
-    // Bagian ini opsional: Jika kamu belum membuat Supabase Function 'nonaktifkan-perangkat',
-    // kode ini akan error, tapi kita bungkus dengan try-catch agar logout tetap jalan.
     if (codeToRelease) {
       const deviceId = getDeviceId();
       await supabaseClient.from('device_pelanggan').delete().eq('device_id', deviceId);
@@ -2274,7 +2178,6 @@ async function handleLogout() {
   } catch (error) {
     console.error('Gagal hapus device:', error);
   } finally {
-    // 3. Bersihkan localStorage
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('myAccessCode');
     localStorage.removeItem('myDeviceId');
@@ -2289,49 +2192,39 @@ async function handleLogout() {
   }
 }
 
-// Memperbarui UI berdasarkan status login (tombol Login/Logout)
 function updateAuthUI() {
     const authButton = document.getElementById('auth-button');
     const authButtonText = authButton.querySelector('span');
 
     if (localStorage.getItem('isLoggedIn') === 'true') {
-        // Jika sudah login
         authButtonText.textContent = 'Logout';
         authButton.onclick = handleLogout;
     } else {
-        // Jika masih tamu
         authButtonText.textContent = 'Login';
         authButton.onclick = showLoginModal;
     }
 }
 
-// Fungsi "Gatekeeper" (Satpam)
-// Ini akan dipanggil oleh setiap fungsi aksi
 function checkLoginStatus() {
     if (localStorage.getItem('isLoggedIn') === 'true') {
-        return true; // Lolos, lanjutkan aksi
+        return true;
     } else {
-        showLoginModal(); // Blokir, tampilkan modal login
-        return false;     // Gagal
+        showLoginModal();
+        return false;
     }
 }
 
-// Menampilkan UI untuk mode tamu (data kosong)
 function loadGuestUI() {
-    // Kosongkan kartu ringkasan
     document.getElementById('pemasukan').textContent = formatCurrency(0);
     document.getElementById('pengeluaran').textContent = formatCurrency(0);
     document.getElementById('saldo').textContent = formatCurrency(0);
 
-    // Kosongkan tabel
     const tbody = document.getElementById('tbody-tabel');
     tbody.innerHTML = '';
     
-    // Tampilkan pesan selamat datang
     const emptyState = document.getElementById('empty-state');
     emptyState.style.display = 'block';
 
-    // ▼▼▼ KONTEN HTML TELAH DIMODIFIKASI (Satu Kalimat Saja) ▼▼▼
     emptyState.innerHTML = `
         <div class="empty-state-icon">👋</div>
         <h2>Selamat Datang di MyBudgetly</h2>
@@ -2347,24 +2240,14 @@ function loadGuestUI() {
             </a>
         </p>
     `;
-    // ▲▲▲ AKHIR DARI MODIFIKASI ▲▲▲
     
     document.querySelector('.table-container table').style.display = 'none';
     document.getElementById('pagination-controls').innerHTML = '';
 
 }
 
-// script.js (Tambahkan ini setelah fungsi hexToRgba)
-
-/**
- * Menghitung kecerahan warna hex dan mengembalikan
- * warna teks yang kontras (gelap atau terang).
- * @param {string} hexColor - Warna latar belakang (cth: "#FFFFFF")
- * @returns {string} - Warna teks yang sesuai ("#1f2937" atau "#ffffff")
- */
 function getTextColorForBackground(hexColor) {
   try {
-    // Bersihkan hex dan konversi ke RGB
     let hex = hexColor.replace(/^#/, '');
     if (hex.length === 3) {
       hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
@@ -2373,33 +2256,31 @@ function getTextColorForBackground(hexColor) {
     const g = parseInt(hex.substring(2, 4), 16);
     const b = parseInt(hex.substring(4, 6), 16);
 
-    // Hitung 'brightness' menggunakan formula YIQ
     const brightness = ((r * 299) + (g * 587) + (b * 114)) / 1000;
 
-    // Jika brightness > 149 (ambang batas untuk terang), kembalikan warna gelap.
-    // Jika tidak, kembalikan warna terang (putih).
     return brightness > 149 ? '#1f2937' : '#ffffff';
   } catch (e) {
     console.error("Gagal menghitung warna teks:", e);
-    return '#ffffff'; // Default ke putih jika ada error
+    return '#ffffff';
   }
 }
-
-// script.js (Tambahkan ini setelah fungsi getTextColorForBackground)
 
 function applyCustomColor(customColor) {
   const gradient = generateGradient(customColor);
   const glow = hexToRgba(customColor, 0.15);
-  // Panggil fungsi baru kita untuk mendapatkan warna teks yang tepat
   const textColor = getTextColorForBackground(customColor);
 
   const docStyle = document.documentElement.style;
   docStyle.setProperty('--primary-gradient', gradient);
   docStyle.setProperty('--primary-accent-color', customColor); 
   docStyle.setProperty('--primary-accent-color-glow', glow);
-  // Atur variabel CSS baru untuk warna teks tombol
   docStyle.setProperty('--primary-btn-text-color', textColor);
   document.documentElement.setAttribute('data-color-theme', 'custom');
+  if (customColor.toLowerCase() === '#ffffff' || customColor.toLowerCase() === '#fff') {
+      document.documentElement.setAttribute('data-warna-putih', 'true');
+  } else {
+      document.documentElement.setAttribute('data-warna-putih', 'false');
+  }
 
   localStorage.setItem('colorTheme', 'custom');
   localStorage.setItem('customAccentColor', customColor);
@@ -2407,7 +2288,7 @@ function applyCustomColor(customColor) {
   updateActiveThemeButton(null);
   updateActiveSwatch();
 }
-// Fungsi untuk membuka dan menutup modal daftar
+
 function bukaModalDaftar() {
     document.getElementById('modal-daftar').style.display = 'flex';
 }
@@ -2427,10 +2308,9 @@ async function kirimPermintaan() {
         return;
     }
 
-    // 1. Ambil data Auto-ACC dan Limit Perangkat dari DB
     const { data: settings } = await supabaseClient
         .from('pengaturan_admin')
-        .select('setting_fitur, status, value') // Ambil kolom 'value'
+        .select('setting_fitur, status, value')
         .in('setting_fitur', ['auto acc', 'default device limit']);
 
     const configAuto = settings.find(s => s.setting_fitur === 'auto acc');
@@ -2438,14 +2318,13 @@ async function kirimPermintaan() {
 
     const statusAwal = (configAuto && configAuto.status) ? 'aktif' : 'pending';
     
-    // 2. Ubah teks dari database menjadi angka murni
     const limitDefault = configLimit ? parseInt(configLimit.value) : 3; 
 
     const { error } = await supabaseClient.from('pelanggan').insert({
         username: user,
         kode_akses: kode,
         status: statusAwal,
-        batas_perangkat: limitDefault, // <--- Sekarang angka ini mengikuti Dashboard Admin
+        batas_perangkat: limitDefault,
         dibuat_tanggal: new Date().toLocaleString("sv-SE").replace(' ', 'T')
     });
 
@@ -2456,3 +2335,273 @@ async function kirimPermintaan() {
         pesan.innerText = "Gagal: " + error.message;
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  lucide.createIcons();
+});
+
+let dataAset = JSON.parse(localStorage.getItem('myBudgetly_assets')) || [];
+
+function switchTab(pageId, element) {
+  document.querySelectorAll('.app-page').forEach(page => {
+    page.style.display = 'none';
+    page.classList.remove('active');
+  });
+
+  const targetPage = document.getElementById(`page-${pageId}`);
+  if (targetPage) {
+    targetPage.style.display = 'block';
+    setTimeout(() => targetPage.classList.add('active'), 10);
+  }
+
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  if (element) {
+    element.classList.add('active');
+  }
+
+  if (pageId === 'portofolio') {
+    renderHalamanPorto();
+  }
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+}
+
+// --- LOGIKA PORTOFOLIO (SAHAM ONLY) ---
+
+function bukaModalAset() {
+    const modal = document.getElementById('modal-tambah-aset');
+    modal.style.display = 'flex';
+    document.getElementById('form-aset').reset();
+    document.getElementById('input-tanggal').value = new Date().toISOString().split('T')[0];
+    document.getElementById('preview-total').innerText = "Rp 0";
+    if (window.lucide) lucide.createIcons();
+}
+
+function tutupModalAset() {
+    document.getElementById('modal-tambah-aset').style.display = 'none';
+}
+
+// Hitung Total (Harga * Lembar)
+const inpHarga = document.getElementById('input-harga');
+const inpLembar = document.getElementById('input-lembar');
+const dispTotal = document.getElementById('preview-total');
+
+function hitungTotal() {
+    const h = parseFloat(inpHarga.value) || 0;
+    const l = parseFloat(inpLembar.value) || 0;
+    dispTotal.innerText = formatCurrency(h * l);
+}
+
+if(inpHarga && inpLembar) {
+    inpHarga.addEventListener('input', hitungTotal);
+    inpLembar.addEventListener('input', hitungTotal);
+}
+
+// Simpan Data
+function handleSimpanAset(event) {
+    event.preventDefault();
+    
+    const nama = document.getElementById('input-nama').value;
+    const harga = parseFloat(document.getElementById('input-harga').value);
+    const lembar = parseFloat(document.getElementById('input-lembar').value);
+    const tanggal = document.getElementById('input-tanggal').value;
+    const catatan = document.getElementById('input-catatan').value;
+
+    if (!nama || !harga || !lembar) return;
+
+    const total = harga * lembar;
+
+    dataAset.push({
+        nama: nama,
+        kategori: "Saham", // Hardcode Saham
+        harga: harga,
+        lembar: lembar,
+        nilai: total,
+        tanggal: tanggal,
+        catatan: catatan
+    });
+
+    localStorage.setItem('myBudgetly_assets', JSON.stringify(dataAset));
+    renderHalamanPorto();
+    tutupModalAset();
+    showNotification('Aset Saham berhasil disimpan!', 'success');
+}
+
+// Render Halaman
+function renderHalamanPorto() {
+    const container = document.getElementById('list-aset-container');
+    const totalDisplay = document.getElementById('total-aset-display');
+    const countDisplay = document.getElementById('jumlah-aset-display');
+
+    if (!container) return;
+    container.innerHTML = '';
+
+    let totalAll = 0;
+
+    if (dataAset.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-secondary);">
+                <i data-lucide="layers" style="width: 48px; opacity: 0.2; margin-bottom: 10px;"></i>
+                <p>Belum ada aset.</p>
+            </div>`;
+    }
+
+    dataAset.forEach((aset, index) => {
+        totalAll += Number(aset.nilai);
+
+        const html = `
+            <div class="asset-card-design">
+                <div class="acd-header">
+                    <span class="acd-symbol">${aset.nama.toUpperCase()}</span>
+                    <span class="acd-badge">saham</span>
+                </div>
+                <div class="acd-name">${aset.nama.toLowerCase()}</div>
+                
+                <div class="acd-value">${formatCurrency(aset.nilai)}</div>
+                <div class="acd-lembar">${aset.lembar} Lembar</div>
+
+                ${aset.catatan ? `
+                    <div class="acd-note-label">Catatan</div>
+                    <div class="acd-note-text">"${aset.catatan}"</div>
+                ` : '<div style="margin-bottom:20px;"></div>'}
+
+                <div class="acd-actions">
+                    <button class="acd-btn" title="Tambah">
+                        <i data-lucide="plus" style="width:16px"></i>
+                    </button>
+                    <button class="acd-btn" title="Kurang">
+                        <i data-lucide="minus" style="width:16px"></i>
+                    </button>
+                    <button class="acd-btn" title="Riwayat">
+                        <i data-lucide="history" style="width:16px"></i>
+                    </button>
+                    <button class="acd-btn delete" onclick="hapusAset(${index})" title="Hapus">
+                        <i data-lucide="trash-2" style="width:16px"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        container.innerHTML += html;
+    });
+
+    if(totalDisplay) totalDisplay.innerText = formatCurrency(totalAll);
+    if(countDisplay) countDisplay.innerText = dataAset.length;
+    
+    if(window.lucide) lucide.createIcons();
+}
+
+function hapusAset(index) {
+    if(confirm('Hapus aset ini?')) {
+        dataAset.splice(index, 1);
+        localStorage.setItem('myBudgetly_assets', JSON.stringify(dataAset));
+        renderHalamanPorto();
+    }
+}
+// --- LOGIKA HITUNG TOTAL OTOMATIS ---
+document.addEventListener('DOMContentLoaded', () => {
+    const inpHarga = document.getElementById('input-harga');
+    const inpLembar = document.getElementById('input-lembar');
+    const dispTotal = document.getElementById('preview-total');
+
+    function hitungTotal() {
+        // Ambil nilai, kalau kosong anggap 0
+        const h = parseFloat(inpHarga.value) || 0;
+        const l = parseFloat(inpLembar.value) || 0;
+        
+        // Update teks Total
+        if (dispTotal) {
+            dispTotal.innerText = formatCurrency(h * l);
+        }
+    }
+
+    // Pasang 'pendengar' saat user mengetik
+    if(inpHarga && inpLembar) {
+        inpHarga.addEventListener('input', hitungTotal);
+        inpLembar.addEventListener('input', hitungTotal);
+    }
+});
+function initializeAssetCategorySelect() {
+  const container = document.getElementById('custom-kategori-aset');
+  if (!container) return;
+
+  const selectedDisplay = container.querySelector('.select-selected');
+  const hiddenInput = document.getElementById('input-kategori');
+  const optionsContainer = container.querySelector('.select-items');
+  const options = optionsContainer.querySelectorAll('div');
+
+  const closeAllSelect = () => {
+    container.classList.remove('select-active');
+    optionsContainer.classList.add('select-hide');
+  };
+
+  selectedDisplay.onclick = function(e) {
+    e.stopPropagation();
+    const isActive = container.classList.contains('select-active');
+    
+    document.querySelectorAll('.custom-select-container').forEach(c => {
+        if(c !== container) {
+            c.classList.remove('select-active');
+            c.querySelector('.select-items')?.classList.add('select-hide');
+        }
+    });
+    
+    if (!isActive) {
+      container.classList.add('select-active');
+      optionsContainer.classList.remove('select-hide');
+    } else {
+      closeAllSelect();
+    }
+  };
+
+  options.forEach(option => {
+    option.onclick = function(e) {
+      e.stopPropagation();
+      hiddenInput.value = this.getAttribute('data-value');
+      closeAllSelect();
+    };
+  });
+
+  window.onclick = function(event) {
+    if (!container.contains(event.target)) {
+      closeAllSelect();
+    }
+  };
+}
+
+function bukaModalAset() {
+    const modal = document.getElementById('modal-tambah-aset');
+    modal.style.display = 'flex';
+    document.getElementById('form-aset').reset();
+    document.getElementById('input-tanggal').value = new Date().toISOString().split('T')[0];
+    document.getElementById('preview-total').innerText = "Rp 0";
+    
+    initializeAssetCategorySelect(); 
+    
+    if (window.lucide) lucide.createIcons();
+}
+// Fungsi untuk merender hari dalam sebulan
+function renderCustomCalendar(date) {
+    const popup = document.getElementById('custom-calendar-popup');
+    const month = date.getMonth();
+    const year = date.getFullYear();
+
+    // Logika pembuatan grid tanggal (1-31)
+    // Update input #tanggal saat tanggal diklik:
+    // document.getElementById('tanggal').value = `${year}-${month+1}-${day}`;
+}
+
+// Event listener untuk memunculkan popup
+document.getElementById('calendar-trigger').addEventListener('click', () => {
+    const popup = document.getElementById('custom-calendar-popup');
+    popup.classList.toggle('select-hide');
+    renderCustomCalendar(new Date());
+});

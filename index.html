@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>MyBudgetly</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  
+  <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="icon" type="image/png" href="/assets/favicon-96x96.png" sizes="96x96" />
   <link rel="icon" type="image/svg+xml" href="/assetsfavicon.svg" />
   <link rel="shortcut icon" href="/assets/favicon.ico" />
@@ -17,8 +17,6 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.css" rel="stylesheet">
 <script>
     (function() {
-      // --- Fungsi Helper Minimal (Diambil dari script.js) ---
-      // Fungsi ini harus ada di sini agar bisa dieksekusi sebelum file js utama dimuat
       function lightenHexColor(hex, percent) {
         hex = hex.replace(/^#/, '');
         const r = parseInt(hex.substring(0, 2), 16);
@@ -53,19 +51,15 @@
         }
       }
 
-      // --- Logika Inti initTheme (Dieksekusi secepat mungkin) ---
       const doc = document.documentElement;
 
-      // 1. Terapkan Mode Terang/Gelap
       const savedTheme = localStorage.getItem('theme') || 'light';
       doc.setAttribute('data-theme', savedTheme);
 
-      // 2. Terapkan Tema Warna
       const savedColorTheme = localStorage.getItem('colorTheme') || 'ocean';
       const customAccentColor = localStorage.getItem('customAccentColor');
 
       if (savedColorTheme === 'custom' && customAccentColor) {
-        // Terapkan variabel CSS untuk warna kustom (kuning Anda)
         const gradient = generateGradient(customAccentColor);
         const textColor = getTextColorForBackground(customAccentColor);
         doc.style.setProperty('--primary-gradient', gradient);
@@ -73,8 +67,16 @@
         doc.style.setProperty('--primary-accent-color-glow', hexToRgba(customAccentColor, 0.15));
         doc.style.setProperty('--primary-btn-text-color', textColor);
         doc.setAttribute('data-color-theme', 'custom');
+
+        // --- INI KODE BARU YANG SUDAH DITAMBAHKAN DENGAN BENAR ---
+        if (customAccentColor.toLowerCase() === '#ffffff' || customAccentColor.toLowerCase() === '#fff') {
+            doc.setAttribute('data-warna-putih', 'true');
+        } else {
+            doc.setAttribute('data-warna-putih', 'false');
+        }
+        // ---------------------------------------------------------
+
       } else {
-        // Terapkan tema preset (ocean, sunset, dll.)
         doc.setAttribute('data-color-theme', savedColorTheme);
       }
     })();
@@ -128,8 +130,6 @@
       <span style="font-weight: 600;">Login</span>
   </button>
 </div>
-      </button>
-    </div>
   </div>
 </div>
 
@@ -146,7 +146,7 @@
       </div>
     </div>
   </div>
-
+  <div id="main-app-content" style="display: none;">
   <header class="app-header">
     <div class="floating-shapes">
       <div class="shape"></div>
@@ -170,36 +170,44 @@
       <p class="app-subtitle">Kelola keuangan Anda dengan mudah dan modern</p>
     </div>
   </header>
-
   <div class="container">
+    <div id="page-home" class="app-page active">
     <div class="summary-grid">
-      <div class="summary-card income">
-        <div class="card-header">
-          <div class="card-icon">💰</div>
-          <h3 class="card-title">Total Pemasukan</h3>
-        </div>
-        <div class="card-value" id="pemasukan">Rp0</div>
-      </div>
-
-      <div class="summary-card expense">
-        <div class="card-header">
-          <div class="card-icon">💸</div>
-          <h3 class="card-title">Total Pengeluaran</h3>
-        </div>
-        <div class="card-value" id="pengeluaran">Rp0</div>
-      </div>
+     <div class="summary-card income">
+  <div class="card-header">
+    <div class="card-icon">
+      <img src="assets/growth.png" alt="Growth Icon" class="img-icon-growth">
+    </div>
+    <h3 class="card-title">Total Pemasukan</h3>
+  </div>
+  <div class="card-value" id="pemasukan">Rp0</div>
+</div>
+     <div class="summary-card expense">
+  <div class="card-header">
+    <div class="card-icon">
+      <img src="assets/coins.png" alt="Pengeluaran" class="img-icon-expense">
+    </div>
+    <h3 class="card-title">Total Pengeluaran</h3>
+  </div>
+  <div class="card-value" id="pengeluaran">Rp0</div>
+</div>
 
       <div class="summary-card balance">
-        <div class="card-header">
-          <div class="card-icon">💳</div>
-          <h3 class="card-title">Saldo Akhir</h3>
-        </div>
-        <div class="card-value" id="saldo">Rp0</div>
-      </div>
+  <div class="card-header">
+    <div class="card-icon">
+      <img src="assets/wallet.png" alt="Saldo Akhir" class="img-icon-balance">
+    </div>
+    <h3 class="card-title">Saldo Akhir</h3>
+  </div>
+  <div class="card-value" id="saldo">Rp0</div>
+</div>
     </div>
 
     <div class="form-container">
-      <h2 class="form-title" id="form-title">📝 Tambah Transaksi Baru</h2>
+      <h2 class="form-title" id="form-title" style="display: flex; align-items: center; gap: 8px;">
+  <i data-lucide="notebook-pen" style="width: 24px; height: 24px; color: var(--primary-accent-color);"></i>
+  Tambah Transaksi Baru
+</h2>
       <form id="form-transaksi" onsubmit="handleFormSubmit(event)">
         <div class="form-grid">
           <div class="input-group">
@@ -219,18 +227,27 @@
           </div>
 
           <div class="input-group">
-            <label class="input-label" for="tanggal">Tanggal</label>
-            <input type="date" id="tanggal" class="input-field" required />
-          </div>
+    <label class="input-label" for="tanggal">Tanggal</label>
+    <div style="position: relative; display: flex; align-items: center;">
+        <input type="date" id="tanggal" class="input-field" style="width: 100%; padding-right: 40px;" required />
+        <i data-lucide="calendar" style="position: absolute; right: 12px; color: var(--text-secondary); pointer-events: none; width: 18px; height: 18px;"></i>
+    </div>
+</div>
 
          <div class="input-group">
   <label class="input-label" for="jenis">Jenis Transaksi</label>
   <div class="custom-select-container" id="custom-jenis">
     <div class="select-selected"></div>
     <div class="select-items select-hide">
-      <div data-value="pemasukan">💰 Pemasukan</div>
-      <div data-value="pengeluaran">💸 Pengeluaran</div>
-    </div>
+  <div data-value="pemasukan">
+    <img src="assets/growth.png" alt="Pemasukan" style="width: 20px; margin-right: 10px; vertical-align: middle;">
+    Pemasukan
+  </div>
+  <div data-value="pengeluaran">
+    <img src="assets/coins.png" alt="Pengeluaran" style="width: 20px; margin-right: 10px; vertical-align: middle;">
+    Pengeluaran
+  </div>
+</div>
   </div>
   <input type="hidden" id="jenis" name="jenis">
 </div> 
@@ -244,15 +261,19 @@
             Batal Edit
           </button>
           <button type="button" id="scan-receipt-btn" class="btn btn-scan">
-            📸 Scan Struk
-          </button>
+  <i data-lucide="scan-qr-code" style="width: 18px; height: 18px;"></i>
+  Pindai Struk
+</button>
         </div>
       </form>
     </div>
 
     <div class="transactions-section">
       <div class="section-header">
-        <h3 class="section-title">📊 Riwayat Transaksi</h3>
+        <h3 class="section-title" style="display: flex; align-items: center; gap: 8px;">
+  <i data-lucide="chart-column" style="width: 24px; height: 24px; color: var(--primary-accent-color);"></i>
+  Riwayat Transaksi
+</h3>
         <div class="filter-controls">
           <div class="custom-select-container" id="custom-filter-bulan">
   <div class="select-selected">Filter Bulan</div>
@@ -261,21 +282,27 @@
 </div>
 
 <select id="filter-bulan" class="filter-select" style="display: none;"></select>
-          <div class="search-container">
-            <input type="text" id="search-input" class="search-input" placeholder="🔍 Cari transaksi..." />
-            <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display: none;">✕</button>
-          </div>
+          <div class="search-container" style="position: relative; display: flex; align-items: center;">
+  <i data-lucide="search" style="position: absolute; left: 12px; width: 16px; height: 16px; color: var(--text-muted); pointer-events: none;"></i>
+  <input type="text" id="search-input" class="search-input" placeholder="Cari transaksi..." style="padding-left: 36px; width: 100%;" />
+  <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display: none;">✕</button>
+</div>
 
           <div class="data-actions-dropdown" id="data-actions-dropdown">
             <button class="data-actions-btn" id="data-actions-toggle-btn">
-              <span>⚙️ Kelola Data</span>
-              <i class="arrow"></i>
-            </button>
+  <span style="display: flex; align-items: center; gap: 6px;">
+    <i data-lucide="cog" style="width: 16px; height: 16px;"></i>
+    Kelola Data
+  </span>
+  <i class="arrow"></i>
+</button>
             <div class="dropdown-content">
-              <a class="dropdown-item" onclick="openPdfSettingsModal()">📄 Export PDF</a>
-              <a class="dropdown-item" onclick="exportData()">📤 Export Data</a>
-              <a class="dropdown-item" onclick="openImportModal()">📥 Import Data</a>
-              <a class="dropdown-item danger-item" onclick="openDeleteModal()">🗑️ Hapus Data</a>
+              <a class="dropdown-item" onclick="openPdfSettingsModal()">📄 Ekspor PDF</a>
+              <a class="dropdown-item" onclick="exportData()">📤 Ekspor Data</a>
+              <a class="dropdown-item" onclick="openImportModal()">📥 Impor Data</a>
+              <a class="dropdown-item danger-item" onclick="openDeleteModal()">
+  <i data-lucide="trash" style="width: 16px; height: 16px;"></i> Hapus Data
+</a>
             </div>
           </div>
 
@@ -297,11 +324,30 @@
                 <span id="active-date-filter-display" style="font-weight: normal; margin-left: 0.5rem; color: var(--text-secondary); font-size: 0.75rem; display: none;"></span>
                 <button id="clear-date-filter-btn" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.75rem; margin-left: 0.2rem; display: none;" title="Hapus filter tanggal">✕</button>
               </th>
-              <th class="text-left">📝 Deskripsi</th>
-              <th class="text-right">💰 Pemasukan</th>
-              <th class="text-right">💸 Pengeluaran</th>
-              <th class="text-right">💳 Saldo</th>
-              <th class="text-center">⚙️ Opsi</th>
+            <th class="text-left">
+  <div style="display: flex; align-items: center; gap: 6px;">
+    <i data-lucide="notebook-pen" style="width: 16px; height: 16px;"></i>
+    Deskripsi
+  </div>
+</th>
+             <th class="text-right">
+  <img src="assets/growth.png" alt="Icon Pemasukan" style="width: 18px; vertical-align: middle; margin-right: 5px;">
+  Pemasukan
+</th>
+<th class="text-right">
+  <img src="assets/coins.png" alt="Icon Pengeluaran" style="width: 18px; vertical-align: middle; margin-right: 5px;">
+  Pengeluaran
+</th>
+<th class="text-right">
+  <img src="assets/wallet.png" alt="Icon Saldo" style="width: 18px; vertical-align: middle; margin-right: 5px;">
+  Saldo
+</th>
+             <th class="text-center">
+  <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+    <i data-lucide="cog" style="width: 16px; height: 16px;"></i>
+    Opsi
+  </div>
+</th>
             </tr>
           </thead>
           <tbody id="tbody-tabel">
@@ -320,6 +366,39 @@
       </div>
     </div>
   </div>
+</div> 
+
+ <div id="page-portofolio" class="app-page" style="display: none; padding: 0 20px 100px 20px;">
+    
+    <div style="margin-top: 30px; margin-bottom: 20px;">
+        <h2 style="font-family: 'Times New Roman', Times, serif; font-size: 24px; font-weight: 500; color: var(--text-primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Portofolio</h2>
+        <p style="color: var(--text-secondary); font-size: 13px;">Kelola semua aset dalam satu tempat</p>
+    </div>
+
+    <div class="porto-summary-card">
+        <div class="porto-summary-header">
+            <div>
+                <span class="summary-label">Total Aset Saya</span>
+                <h2 id="total-aset-display" class="summary-value">Rp 0</h2>
+            </div>
+            <button onclick="bukaModalAset()" class="btn-add-simple">
+                <i data-lucide="plus" style="width: 14px; margin-right: 4px;"></i> Tambah aset
+            </button>
+        </div>
+        
+        <div class="porto-summary-footer">
+             <span class="summary-label">Jumlah Aset</span>
+             <div id="jumlah-aset-display" class="summary-count">0</div>
+        </div>
+    </div>
+
+    <div id="list-aset-container" class="porto-grid-container">
+        </div>
+</div>
+
+  <div id="page-ruang" class="app-page" style="display: none;"><div class="empty-state"><h3>Ruang</h3><p>Segera Hadir</p></div></div>
+  <div id="page-forum" class="app-page" style="display: none;"><div class="empty-state"><h3>Forum</h3><p>Segera Hadir</p></div></div>
+  <div id="page-saya" class="app-page" style="display: none;"><div class="empty-state"><h3>Profil Saya</h3><p>Segera Hadir</p></div></div>
 
   <div id="scan-modal" class="modal">
     <div class="modal-content">
@@ -444,7 +523,7 @@
   <div id="pdfSettingsModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title">📄 Pengaturan Export PDF</h2>
+        <h2 class="modal-title">📄 Pengaturan Ekspor PDF</h2>
         <span class="close-button" onclick="closePdfSettingsModal()">&times;</span>
       </div>
       <div class="modal-body">
@@ -467,7 +546,7 @@
       <div class="modal-footer">
         <button class="btn-pdf-modal" id="pdf-modal-btn" onclick="simpanPDF()">
           <span class="pdf-icon">📄</span>
-          <span>Export PDF</span>
+          <span>Ekspor PDF</span>
         </button>
       </div>
     </div>
@@ -521,25 +600,27 @@
   <div id="importModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title">📥 Import Data Transaksi</h2>
+        <h2 class="modal-title">📥 Impor Data Transaksi</h2>
         <span class="close-button" onclick="closeImportModal()">&times;</span>
       </div>
       <div class="modal-body">
-        <p style="margin-bottom: 1rem; color: var(--text-secondary);">Pilih file JSON transaksi Anda yang sebelumnya di-export.</p>
-        <div class="input-group">
-          <label class="input-label" for="import-file">Upload File JSON</label>
-          <input type="file" id="import-file" class="input-field" accept=".json" />
-        </div>
-        <div style="margin-top: 1rem; padding: 1rem; background: var(--background-secondary); border-radius: 8px; border-left: 4px solid var(--warning-color);">
-          <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0;">
-            ⚠️ <strong>Peringatan:</strong> Mengimpor data akan <strong style="color: var(--danger-color);">mengganti</strong> semua data transaksi yang ada saat ini. Pastikan Anda telah mencadangkan data Anda jika diperlukan.
-          </p>
-        </div>
-      </div>
+  <p style="margin-bottom: 1rem; color: var(--text-secondary);">Pilih file CSV transaksi Anda yang sebelumnya di ekspor.</p>
+  
+  <div class="input-group">
+    <label class="input-label" for="import-file">Upload File CSV</label>
+    <input type="file" id="import-file" class="input-field" accept=".csv" />
+  </div>
+
+  <div style="margin-top: 1rem; padding: 1rem; background: var(--background-secondary); border-radius: 8px; border-left: 4px solid var(--warning-color);">
+    <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0;">
+      ⚠️ <strong>Peringatan:</strong> Mengimpor data akan <strong style="color: var(--danger-color);">mengganti</strong> semua data transaksi yang ada saat ini. Pastikan Anda telah mencadangkan data Anda jika diperlukan.
+    </p>
+  </div>
+</div>
       <div class="modal-footer">
         <button class="btn btn-primary" id="confirm-import-btn" onclick="confirmImportData()">
           <span class="import-icon">📥</span>
-          <span>Import</span>
+          <span>Impor</span>
         </button>
         <button class="btn btn-secondary" onclick="closeImportModal()">
           Batal
@@ -627,7 +708,103 @@
         </div>
     </div>
 </div>
+</div>
+<nav class="bottom-nav">
+  <div class="nav-content">
+    <button class="nav-item active" onclick="switchTab('home', this)">
+      <i data-lucide="layout-dashboard"></i>
+      <span>Beranda</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('portofolio', this)">
+      <i data-lucide="pie-chart"></i>
+      <span>Porto</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('ruang', this)">
+      <i data-lucide="layers"></i>
+      <span>Ruang</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('forum', this)">
+      <i data-lucide="message-circle"></i>
+      <span>Forum</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('saya', this)">
+      <i data-lucide="shield-check"></i>
+      <span>Saya</span>
+    </button>
+  </div>
+</nav>
+<div id="modal-tambah-aset" class="modal" style="display: none; z-index: 2000; align-items: center; justify-content: center;">
+  <div class="custom-modal-content">
+    
+    <div class="custom-modal-header">
+      <h3 class="custom-modal-title">Tambah Aset</h3>
+      <button class="custom-close-btn" onclick="tutupModalAset()">
+        <i data-lucide="x" style="width: 20px;"></i>
+      </button>
+    </div>
 
+    <div class="custom-modal-body">
+      <form id="form-aset" onsubmit="handleSimpanAset(event)">
+        
+        <div class="custom-input-group" style="margin-bottom: 20px;">
+          <label class="custom-label">Kategori</label>
+          
+          <div class="custom-select-container" id="custom-kategori-aset" style="width: 100%;">
+            <div class="select-selected" style="padding-left: 40px;"> <i data-lucide="candlestick-chart" class="input-icon-left"></i>
+                <span>Saham</span>
+            </div>
+            <div class="select-items select-hide">
+                <div data-value="Saham">Saham</div>
+            </div>
+          </div>
+          <input type="hidden" id="input-kategori" value="Saham">
+        </div>
+
+        <div class="custom-row">
+          <div class="custom-input-group">
+            <label class="custom-label">Saham</label>
+            <input type="text" id="input-nama" class="custom-input" placeholder="BBCA" required autocomplete="off">
+          </div>
+          <div class="custom-input-group">
+            <label class="custom-label">Harga</label>
+            <input type="number" id="input-harga" class="custom-input" placeholder="7800" required>
+          </div>
+        </div>
+
+        <div class="custom-row">
+          <div class="custom-input-group">
+            <label class="custom-label">Lembar</label>
+            <input type="number" id="input-lembar" class="custom-input" placeholder="2000" required>
+          </div>
+          <div class="custom-input-group">
+            <label class="custom-label">Tanggal</label>
+            <div style="position: relative;">
+                <i data-lucide="calendar" class="input-icon-right" style="pointer-events: none; z-index: 10;"></i>
+                <input type="date" id="input-tanggal" class="custom-input" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="custom-input-group" style="margin-top: 15px;">
+          <label class="custom-label">Catatan (opsional)</label>
+          <textarea id="input-catatan" class="custom-input" style="height: 100px; resize: none;"></textarea>
+        </div>
+
+        <div class="custom-footer">
+          <div class="total-section">
+             <span class="custom-label" style="font-size: 16px;">Total</span>
+             <div id="preview-total" class="total-value">Rp 0</div>
+          </div>
+          <div class="button-section">
+             <button type="submit" class="btn-simpan">Simpan</button>
+             <button type="button" class="btn-batal" onclick="tutupModalAset()">Batal</button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
 </body>
 
 </html>

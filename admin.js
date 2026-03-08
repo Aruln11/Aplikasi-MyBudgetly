@@ -1,28 +1,20 @@
 const SUPABASE_URL = "https://kycmnkibuxtzrbzrhezo.supabase.co"
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5Y21ua2lidXh0enJienJoZXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0ODI3NDAsImV4cCI6MjA3NzA1ODc0MH0.WtZhCS8qRUQNX5cSJAKdyA4G7Df7izGeWcjbWZTSbE4"
+const SUPABASE_ANON_KEY ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5Y21ua2lidXh0enJienJoZXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0ODI3NDAsImV4cCI6MjA3NzA1ODc0MH0.WtZhCS8qRUQNX5cSJAKdyA4G7Df7izGeWcjbWZTSbE4"
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-// ⚡ EVENT LISTENER (Cek Login & Load Tab Terakhir)
 document.addEventListener("DOMContentLoaded", () => {
-  // Cek Login
   const isAdmin = localStorage.getItem("isAdminLoggedIn")
 
   if (isAdmin === "true") {
     document.getElementById("admin-login-modal").style.display = "none"
-
-    // 🔥 FITUR BARU: Load tab terakhir yang dibuka
     const lastTab = localStorage.getItem("activeTab") || "pending"
     switchTab(lastTab)
-
-    // Load data dashboard
     initDashboard()
   } else {
     document.getElementById("admin-login-modal").style.display = "flex"
   }
 
-  // Listener Tombol Close & Klik Luar
   const closeBtn = document.getElementById("close-admin-login-btn")
   if (closeBtn) closeBtn.addEventListener("click", closeAdminLoginModal)
 })
@@ -31,7 +23,6 @@ function closeAdminLoginModal() {
   window.location.href = "index.html"
 }
 
-// 🚀 SISTEM LOGIN ADMIN
 async function checkAdminLogin() {
   const inputField = document.getElementById("admin-code-input")
   const input = inputField.value.trim()
@@ -54,7 +45,7 @@ async function checkAdminLogin() {
       localStorage.setItem("isAdminLoggedIn", "true")
       document.getElementById("admin-login-modal").style.display = "none"
       initDashboard()
-      switchTab("pending") // Default masuk ke pending
+      switchTab("pending")
     } else {
       throw new Error("Kode Salah")
     }
@@ -72,12 +63,11 @@ async function checkAdminLogin() {
 function adminLogout() {
   if (confirm("Keluar dari Dashboard?")) {
     localStorage.removeItem("isAdminLoggedIn")
-    localStorage.removeItem("activeTab") // Hapus history tab
+    localStorage.removeItem("activeTab")
     location.reload()
   }
 }
 
-// 📊 DASHBOARD LOGIC
 function initDashboard() {
   loadAdminData();
   loadPendingUsers();
@@ -86,7 +76,6 @@ function initDashboard() {
   loadSettings();
   startAdminRealtime();
 }
-// admin.js
 
 async function loadPendingUsers() {
     const tbody = document.getElementById("tbody-pending");
@@ -94,7 +83,6 @@ async function loadPendingUsers() {
     const searchQuery = document.getElementById("search-pending")?.value.trim().toLowerCase() || "";
     const sortOrder = document.getElementById("sort-pending")?.value || "desc";
 
-    // 1. Ambil semua data pending dari database terlebih dahulu
     const { data, error } = await supabaseClient
         .from("pelanggan")
         .select("*")
@@ -103,15 +91,12 @@ async function loadPendingUsers() {
 
     if (error) return;
 
-    // 2. Filter data secara cerdas di sisi klien (Omnisearch)
     const filteredData = !searchQuery ? data : data.filter(p => {
-        // Format tanggal daftar persis seperti yang tampil di tabel untuk dicocokkan
         const displayDate = new Date(p.dibuat_tanggal).toLocaleString("id-ID", { 
             day: "numeric", month: "short", year: "numeric",
             hour: "2-digit", minute: "2-digit", hour12: false 
         }).replace(',', '').replace('.', ':').toLowerCase();
 
-        // Cek apakah kata kunci ada di Nama, Kode Akses, atau Tanggal Lengkap (termasuk bulan & jam)
         return (
             p.username.toLowerCase().includes(searchQuery) || 
             p.kode_akses.toLowerCase().includes(searchQuery) || 
@@ -119,7 +104,6 @@ async function loadPendingUsers() {
         );
     });
 
-    // Update Badge (tetap berdasarkan total data asli di database)
     if (data && data.length > 0) {
         badge.innerText = data.length;
         badge.style.display = "inline-block";
@@ -127,7 +111,6 @@ async function loadPendingUsers() {
         badge.style.display = "none";
     }
 
-    // 3. Render hasil filter ke tabel
     tbody.innerHTML = "";
     if (filteredData && filteredData.length > 0) {
         filteredData.forEach(p => {
@@ -155,11 +138,7 @@ async function loadPendingUsers() {
     }
 }
 
-// admin.js
-
-// --- 1. Fungsi Tolak SEMUA Antrean (DIPERBAIKI) ---
 async function rejectAllPending() {
-    // Ambil data menggunakan 'kode_akses' karena kolom 'id' tidak ada
     const { data: list, error: fetchError } = await supabaseClient
         .from("pelanggan")
         .select("kode_akses") 
@@ -168,10 +147,8 @@ async function rejectAllPending() {
     if (fetchError) return alert("Gagal cek database: " + fetchError.message);
     if (!list || list.length === 0) return alert("Tidak ada antrean untuk dibersihkan.");
 
-    // Konfirmasi dengan jumlah data yang akurat
     if (!confirm(`Hapus permanen seluruh (${list.length}) permintaan antrean?`)) return;
 
-    // Hapus massal berdasarkan status 'pending'
     const { error: deleteError } = await supabaseClient
         .from("pelanggan")
         .delete()
@@ -181,15 +158,12 @@ async function rejectAllPending() {
         alert("Gagal menghapus: " + deleteError.message);
     } else {
         alert("Seluruh antrean berhasil dihapus.");
-        loadPendingUsers(); // Refresh tampilan
+        loadPendingUsers();
     }
 }
 
-// --- 2. Fungsi Tolak Satu User (DIPERBAIKI) ---
 async function rejectUser(kode) {
     if (!confirm(`Tolak permintaan akses untuk kode "${kode}"?`)) return;
-    
-    // Gunakan 'kode_akses' sebagai kunci penghapusan
     const { error } = await supabaseClient
         .from("pelanggan")
         .delete()
@@ -198,16 +172,12 @@ async function rejectUser(kode) {
     if (error) {
         alert("Gagal menolak: " + error.message);
     } else {
-        // Tampilan akan otomatis refresh karena sistem Realtime Anda aktif
         loadPendingUsers();
     }
 }
 
-// --- 3. Fungsi Terima/Aktivasi User (DIPERBAIKI) ---
 async function activateUser(kode) {
     if (!confirm(`Aktifkan akses untuk user "${kode}"?`)) return;
-    
-    // Update status menjadi 'aktif' berdasarkan 'kode_akses'
     const { error } = await supabaseClient
         .from("pelanggan")
         .update({ status: "aktif" })
@@ -221,42 +191,33 @@ async function activateUser(kode) {
         loadDataPelanggan();
     }
 }
-async function loadDevicePelanggan() {
-  const tbody = document.getElementById("tbody-device-pelanggan");
-  const { data, error } = await supabaseClient.from("device_pelanggan").select("*");
-  if (error) return;
-  tbody.innerHTML = "";
-  if (data && data.length > 0) {
-    data.forEach(d => {
-      tbody.innerHTML += `<tr><td>${d.username || '-'}</td><td>${d.kode_akses}</td><td>${d.device_model}</td><td>${d.device_id}</td><td>${d.last_login || '-'}</td></tr>`;
-    });
-  } else {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center">Tidak Ada Device Terhubung</td></tr>';
-  }
-}
 
-// 🔥 CRUD ADMIN - FITUR BARU
 let editingAdminId = null
 
 async function loadAdminData() {
-  const tbody = document.getElementById("tbody-admin")
-  const { data, error } = await supabaseClient.from("admin").select("*").order("dibuat_tanggal", { ascending: false })
+  const tbody = document.getElementById("tbody-admin");
+  const urutan = document.getElementById("val-sort-admin")?.value || "desc";
 
-  tbody.innerHTML = ""
+  const { data, error } = await supabaseClient
+    .from("admin")
+    .select("*")
+    .order("dibuat_tanggal", { ascending: urutan === "asc" });
+
+  tbody.innerHTML = "";
 
   if (data && data.length > 0) {
     data.forEach((admin) => {
-      // admin.js
-const date = new Date(admin.dibuat_tanggal).toLocaleString("id-ID", { 
-    timeZone: "Asia/Jakarta",
-    day: "numeric", 
-    month: "short", 
-    year: "numeric",
-    hour: "2-digit", 
-    minute: "2-digit",
-    hour12: false
-}).replace(',', '').replace('.', ':');
-      const row = `
+      const date = new Date(admin.dibuat_tanggal).toLocaleString("id-ID", { 
+          timeZone: "Asia/Jakarta",
+          day: "numeric", 
+          month: "short", 
+          year: "numeric",
+          hour: "2-digit", 
+          minute: "2-digit",
+          hour12: false
+      }).replace(',', '').replace('.', ':');
+
+      tbody.innerHTML += `
         <tr>
             <td><strong>${admin.id}</strong></td>
             <td>${admin.username}</td>
@@ -265,20 +226,17 @@ const date = new Date(admin.dibuat_tanggal).toLocaleString("id-ID", {
             <td class="text-center">
                 <div class="action-buttons" style="display: flex; justify-content: center !important; gap: 8px;">
                     <button class="btn-outline-black" onclick="editAdmin(${admin.id}, '${admin.username}', '${admin.kode_akses}')">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         Edit
                     </button>
                     <button class="btn-solid-black" onclick="deleteAdmin(${admin.id})">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         Hapus
                     </button>
                 </div>
             </td>
-        </tr>`
-      tbody.innerHTML += row
-    })
+        </tr>`;
+    });
   } else {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="padding:1.5rem; color:#999">Belum ada data admin</td></tr>'
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="padding:1.5rem; color:#999">Belum ada data admin</td></tr>';
   }
 }
 
@@ -316,7 +274,6 @@ async function saveAdmin() {
 
   try {
     if (editingAdminId) {
-      // Update
       const { error } = await supabaseClient
         .from("admin")
         .update({ username, kode_akses: kode })
@@ -325,7 +282,6 @@ async function saveAdmin() {
       if (error) throw error
       alert("Admin berhasil diupdate!")
     } else {
-      // Insert
       const { error } = await supabaseClient.from("admin").insert({ username, kode_akses: kode })
 
       if (error) throw error
@@ -355,19 +311,17 @@ async function deleteAdmin(id) {
   }
 }
 
-// ==========================================
-// 👥 MANAJEMEN PELANGGAN (CRUD + INDIKATOR)
-// ==========================================
-let editingPelangganId = null; // Variabel untuk menyimpan ID saat edit
+let editingPelangganId = null;
 
 async function loadDataPelanggan() {
   const tbody = document.getElementById("tbody-data-pelanggan");
+  const urutan = document.getElementById("val-sort-pelanggan").value;
   
   const { data, error } = await supabaseClient
     .from("pelanggan")
     .select(`*, device_pelanggan (id)`)
     .neq("status", "pending")
-    .order("dibuat_tanggal", { ascending: false });
+    .order("dibuat_tanggal", { ascending: urutan==="asc" });
 
   tbody.innerHTML = "";
 
@@ -431,14 +385,12 @@ async function loadDataPelanggan() {
   }
 }
 
-// --- FUNGSI CRUD PELANGGAN ---
-
 function openPelangganModal() {
-    editingPelangganId = null; // Reset ID (Mode Tambah)
+    editingPelangganId = null;
     document.getElementById('pelanggan-modal-title').innerText = "Tambah Pelanggan";
     document.getElementById('pelanggan-username').value = "";
     document.getElementById('pelanggan-kode').value = "";
-    document.getElementById('pelanggan-kode').disabled = false; // Kode bisa diedit kalau baru
+    document.getElementById('pelanggan-kode').disabled = false;
     document.getElementById('pelanggan-batas').value = "3";
     document.getElementById('pelanggan-error').innerText = "";
     document.getElementById('pelanggan-crud-modal').style.display = "flex";
@@ -449,11 +401,11 @@ function closePelangganModal() {
 }
 
 function editPelanggan(id, username, kode, batas) {
-    editingPelangganId = id; // Set ID (Mode Edit)
+    editingPelangganId = id;
     document.getElementById('pelanggan-modal-title').innerText = "Edit Pelanggan";
     document.getElementById('pelanggan-username').value = username;
     document.getElementById('pelanggan-kode').value = kode;
-    document.getElementById('pelanggan-kode').disabled = false; // Kode TIDAK boleh diganti saat edit (biar tidak error relasi)
+    document.getElementById('pelanggan-kode').disabled = false;
     document.getElementById('pelanggan-batas').value = batas;
     document.getElementById('pelanggan-error').innerText = "";
     document.getElementById('pelanggan-crud-modal').style.display = "flex";
@@ -472,12 +424,11 @@ async function savePelanggan() {
 
     try {
         if (editingPelangganId) {
-            // MODE EDIT: Tambahkan kode_akses agar ikut diperbarui
             const { error } = await supabaseClient
                 .from('pelanggan')
                 .update({ 
                     username: username, 
-                    kode_akses: kode, // PERBAIKAN: Masukkan kode_akses di sini
+                    kode_akses: kode,
                     batas_perangkat: batas 
                 })
                 .eq('id', editingPelangganId);
@@ -485,16 +436,17 @@ async function savePelanggan() {
             if (error) throw error;
             alert('Data pelanggan berhasil diperbarui!');
         } else {
-            // MODE TAMBAH BARU (Tetap sama)
             const { data: existing } = await supabaseClient.from('pelanggan').select('id').eq('kode_akses', kode).maybeSingle();
             if (existing) throw new Error("Kode akses sudah digunakan!");
+
+            const tanggalSekarang = new Date().toLocaleString("sv-SE").replace(' ', 'T');
 
             await supabaseClient.from('pelanggan').insert({ 
                 username, 
                 kode_akses: kode, 
                 batas_perangkat: batas, 
                 status: 'aktif',
-                dibuat_tanggal: new Date().toISOString() 
+                dibuat_tanggal: tanggalSekarang
             });
             alert('Pelanggan baru berhasil ditambahkan!');
         }
@@ -507,8 +459,6 @@ async function savePelanggan() {
 async function deletePelanggan(kode) {
     if (!confirm(`Yakin hapus pelanggan dengan kode "${kode}"?\n\nPERINGATAN: Semua data transaksi dan perangkat user ini akan dihapus permanen!`)) return;
 
-    // Hapus dari tabel pelanggan (karena Cascade Delete biasanya aktif, data device & transaksi ikut terhapus)
-    // Jika tidak cascade, hapus manual satu-satu. Kita asumsikan Cascade atau hapus Parent dulu.
     const { error } = await supabaseClient.from('pelanggan').delete().eq('kode_akses', kode);
 
     if (error) {
@@ -516,11 +466,10 @@ async function deletePelanggan(kode) {
     } else {
         alert("Pelanggan berhasil dihapus.");
         loadDataPelanggan();
-        loadDevicePelanggan(); // Refresh tabel device juga
+        loadDevicePelanggan();
     }
 }
 
-// Fungsi Aktivasi & Blokir (Updated)
 async function activateUser(kode) {
   if (!confirm("Aktifkan user ini?")) return
   await supabaseClient.from("pelanggan").update({ status: "aktif" }).eq("kode_akses", kode)
@@ -544,34 +493,25 @@ function filterTable(type) {
   })
 }
 
-// Ganti fungsi loadSettings lama kamu dengan ini
 async function loadSettings() {
-    // 1. Load status Auto-ACC
     const { data: autoAcc } = await supabaseClient.from("pengaturan_admin").select("status").eq("setting_fitur", "auto acc").maybeSingle();
-    
-    // 2. Load status Maintenance DAN Pesannya
     const { data: maintenance } = await supabaseClient
         .from("pengaturan_admin")
-        .select("status, value") // Ambil kolom value juga
+        .select("status, value")
         .eq("setting_fitur", "maintenance mode")
         .maybeSingle();
 
-    // 3. Load Batas Perangkat
     const { data: limitSetting } = await supabaseClient
         .from("pengaturan_admin")
         .select("value") 
         .eq("setting_fitur", "default device limit")
         .maybeSingle();
 
-    // Tampilkan ke UI
     if (autoAcc) document.getElementById("toggle-auto-acc").checked = autoAcc.status;
-    
     if (maintenance) {
         document.getElementById("toggle-maintenance").checked = maintenance.status;
-        // Masukkan pesan dari database ke kotak teks
         document.getElementById("input-maintenance-msg").value = maintenance.value || "";
     }
-
     if (limitSetting) {
         document.getElementById("input-default-limit").value = limitSetting.value;
     }
@@ -582,17 +522,15 @@ async function updateDefaultLimit() {
 
     const { error } = await supabaseClient
         .from("pengaturan_admin")
-        .update({ value: newLimit.toString() }) // Simpan ke kolom 'value'
+        .update({ value: newLimit.toString() })
         .eq("setting_fitur", "default device limit");
 
     if (!error) {
         alert("Batas perangkat default berhasil diperbarui!");
     }
 }
-// Tambahkan sebagai fungsi baru di bawah updateDefaultLimit
 async function saveMaintenanceMessage() {
     const msg = document.getElementById("input-maintenance-msg").value;
-    
     const { error } = await supabaseClient
         .from("pengaturan_admin")
         .update({ value: msg })
@@ -615,11 +553,9 @@ async function toggleMaintenance(el) {
   }
 }
 
-// admin.js
 async function toggleAutoAcc(el) {
     const isAutoAccOn = el.checked;
 
-    // 1. Simpan pengaturan ke database
     const { error: settingsError } = await supabaseClient
         .from("pengaturan_admin")
         .update({ status: isAutoAccOn })
@@ -627,7 +563,6 @@ async function toggleAutoAcc(el) {
 
     if (settingsError) return alert("Gagal mengubah pengaturan Auto-ACC");
 
-    // 2. Jika ON, langsung proses ACC semua user yang sedang pending
     if (isAutoAccOn) {
         const { error: updateError } = await supabaseClient
             .from("pelanggan")
@@ -636,27 +571,20 @@ async function toggleAutoAcc(el) {
 
         if (!updateError) {
             alert("Auto-ACC Aktif: Semua antrean telah disetujui otomatis!");
-            loadPendingUsers(); // Refresh tabel antrean
-            loadDataPelanggan(); // Refresh tabel pelanggan
+            loadPendingUsers();
+            loadDataPelanggan();
         }
     }
 }
 function switchTab(tab) {
-  // 1. Simpan tab aktif ke localStorage
   localStorage.setItem("activeTab", tab)
-
-  // 2. Sembunyikan semua section
   document.querySelectorAll(".content-section").forEach((el) => (el.style.display = "none"))
-
-  // 3. Reset semua menu & submenu
   document.querySelectorAll(".menu-item").forEach((el) => el.classList.remove("active", "expanded"))
   document.querySelectorAll(".submenu-item").forEach((el) => el.classList.remove("active"))
 
-  // 4. Tampilkan section yang dipilih
   const targetSection = document.getElementById(`view-${tab}`)
   if (targetSection) targetSection.style.display = "block"
 
-  // 5. Update page title
   const titles = {
     admin: "Data Admin",
     "data-pelanggan": "Data Pelanggan",
@@ -666,18 +594,15 @@ function switchTab(tab) {
   }
   document.getElementById("page-title").innerText = titles[tab] || "Dashboard"
 
-  // 6. Set active state pada menu yang sesuai
   const menuItems = document.querySelectorAll(".menu-item")
   const submenuItems = document.querySelectorAll(".submenu-item")
 
   if (tab === "admin") {
     menuItems[0].classList.add("active")
   } else if (tab === "data-pelanggan" || tab === "device-pelanggan" || tab === "pending") {
-    // Expand submenu pelanggan
     menuItems[1].classList.add("expanded")
     document.getElementById("submenu-pelanggan").classList.add("open")
 
-    // Set active pada submenu item
     if (tab === "data-pelanggan") submenuItems[0].classList.add("active")
     if (tab === "device-pelanggan") submenuItems[1].classList.add("active")
     if (tab === "pending") submenuItems[2].classList.add("active")
@@ -689,7 +614,6 @@ function switchTab(tab) {
 function toggleSubmenu(menu) {
   const submenu = document.getElementById(`submenu-${menu}`)
   const menuItem = event.currentTarget
-
   submenu.classList.toggle("open")
   menuItem.classList.toggle("expanded")
 }
@@ -699,13 +623,10 @@ function toggleSidebar() {
   const overlay = document.querySelector(".sidebar-overlay")
   const body = document.body
 
-  // Cek apakah mode mobile atau desktop (batas 1024px)
   if (window.innerWidth <= 1024) {
-    // --- LOGIC MOBILE ---
     sidebar.classList.toggle("open")
     overlay.classList.toggle("open")
   } else {
-    // --- LOGIC DESKTOP ---
     body.classList.toggle("sidebar-closed")
   }
 }
@@ -718,33 +639,26 @@ function toggleSidebarMobile() {
     overlay.classList.remove("open")
   }
 }
-// --- 2. FUNGSI IMPORT (UPLOAD CSV) - VERSI BERSIH ---
+
 function importCSV(input, table) {
     const file = input.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    
     reader.onload = async function(e) {
         const text = e.target.result;
         const rows = text.split('\n');
-        // Bersihkan header dari spasi/karakter aneh
         const headers = rows[0].split(',').map(h => h.trim().replace(/[\r\n]+/gm, ""));
         
         let successCount = 0;
         let failCount = 0;
 
-        // Loop baris data (mulai index 1)
         for (let i = 1; i < rows.length; i++) {
-            // Bersihkan baris dari spasi kosong dan enter
             const rowString = rows[i].trim(); 
-            if (!rowString) continue; // Skip baris kosong
+            if (!rowString) continue;
 
             const rowData = rowString.split(',');
-            
-            // Validasi jumlah kolom
             if (rowData.length !== headers.length) {
-                console.warn("Baris tidak valid (jumlah kolom beda):", rowString);
                 failCount++;
                 continue; 
             }
@@ -752,7 +666,6 @@ function importCSV(input, table) {
             const record = {};
             headers.forEach((header, index) => {
                 let value = rowData[index].trim();
-                // Hapus tanda kutip jika ada (biasanya CSV pakai "value")
                 value = value.replace(/^"|"$/g, '');
                 
                 if (value !== 'null' && value !== '') {
@@ -760,20 +673,16 @@ function importCSV(input, table) {
                 }
             });
 
-            // Hapus ID agar auto-increment database bekerja (untuk menghindari konflik ID ganda)
             delete record.id; 
 
             const { error } = await supabaseClient.from(table).insert(record);
             if (!error) successCount++;
             else {
-                console.error("Gagal import:", error);
                 failCount++;
             }
         }
 
-        // Alert Tanpa Emoji (Profesional)
         alert(`Impor Selesai.\nBerhasil: ${successCount}\nGagal: ${failCount}`);
-        
         if (table === 'pelanggan') loadDataPelanggan();
         if (table === 'admin') loadAdminData();
     };
@@ -781,35 +690,26 @@ function importCSV(input, table) {
     reader.readAsText(file);
     input.value = ''; 
 }
-// --- FUNGSI EKSPOR (DOWNLOAD CSV) ---
-// --- FUNGSI EKSPOR TERUPDATE (FIX ERROR ID) ---
+
 async function exportCSV(table) {
     try {
-        console.log(`Memulai ekspor tabel: ${table}...`);
-        
-        // PERBAIKAN: Gunakan 'dibuat_tanggal' untuk mengurutkan, bukan 'id'
         const { data, error } = await supabaseClient
             .from(table)
             .select('*')
             .order('dibuat_tanggal', { ascending: false }); 
 
         if (error) throw error;
-
         if (!data || data.length === 0) {
             alert(`Tidak ada data di tabel ${table} untuk diekspor.`);
             return;
         }
 
-        // Ambil nama kolom (header) dari data pertama
         const headers = Object.keys(data[0]);
-        
-        // Gabungkan header dan isi data menjadi format CSV
         const csvContent = [
             headers.join(','), 
             ...data.map(row => 
                 headers.map(fieldName => {
                     let value = row[fieldName] === null ? '' : row[fieldName];
-                    // Bungkus dengan tanda kutip jika data mengandung koma agar tidak berantakan
                     if (typeof value === 'string' && value.includes(',')) {
                         return `"${value}"`;
                     }
@@ -818,49 +718,46 @@ async function exportCSV(table) {
             )
         ].join('\n');
 
-        // Proses Download Otomatis
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        
         const date = new Date().toISOString().split('T')[0];
         link.setAttribute("href", url);
         link.setAttribute("download", `backup-${table}-${date}.csv`);
         link.style.visibility = 'hidden';
-        
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
-        console.log(`Ekspor ${table} berhasil!`);
-
     } catch (err) {
-        console.error("Gagal mengekspor data:", err);
+        console.error(err);
         alert("Gagal ekspor: " + err.message);
     }
 }
 
-// admin.js
-
 async function loadDevicePelanggan() {
   const tbody = document.getElementById("tbody-device-pelanggan");
-  
-  // KUNCI: Gunakan .select("*, pelanggan(username)") untuk mengambil nama pemilik perangkat
+  const urutan = document.getElementById("val-sort-device")?.value || "desc";
+
   const { data, error } = await supabaseClient
     .from("device_pelanggan")
-    .select(`*, pelanggan(username)`); 
+    .select(`*, pelanggan(username)`)
+    .order("terhubung_pada", { ascending: urutan === "asc" });
 
   if (error) return;
   
   tbody.innerHTML = "";
   if (data && data.length > 0) {
     data.forEach(d => {
-      // Ambil username dari tabel pelanggan yang terhubung
       const ownerName = d.pelanggan ? d.pelanggan.username : (d.username || 'Tamu');
-      
-      const date = d.last_login ? new Date(d.last_login).toLocaleString("id-ID", { 
-          day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
-      }).replace('.', ':') : '-';
+      const date = d.terhubung_pada ? new Date(d.terhubung_pada).toLocaleString("id-ID", { 
+          timeZone: "Asia/Jakarta",
+          day: "numeric", 
+          month: "short", 
+          year: "numeric",
+          hour: "2-digit", 
+          minute: "2-digit",
+          hour12: false
+      }).replace(',', '') : '-';
 
       const cleanModel = formatDeviceModel(d.device_model);
 
@@ -881,7 +778,6 @@ async function loadDevicePelanggan() {
   }
 }
 
-// Fungsi Hapus Device Spesifik
 async function deleteDevice(deviceId) {
     if (!confirm("Cabut akses perangkat ini?")) return;
     const { error } = await supabaseClient.from("device_pelanggan").delete().eq("device_id", deviceId);
@@ -891,10 +787,8 @@ async function deleteDevice(deviceId) {
         loadDataPelanggan();
     }
 }
-// admin.js
 
 function startAdminRealtime() {
-    // 1. Monitor Perubahan Data Pelanggan (ACC/Tolak/Edit)
     supabaseClient
         .channel('admin-updates')
         .on('postgres_changes', { 
@@ -907,7 +801,6 @@ function startAdminRealtime() {
         })
         .subscribe();
 
-    // 2. MONITOR PERANGKAT (KUNCI BARU: Agar realtime saat user login/logout)
     supabaseClient
         .channel('device-updates')
         .on('postgres_changes', { 
@@ -915,29 +808,19 @@ function startAdminRealtime() {
             schema: 'public', 
             table: 'device_pelanggan' 
         }, () => {
-            console.log("Ada aktivitas perangkat baru...");
-            loadDevicePelanggan(); // Refresh tabel device otomatis
-            loadDataPelanggan();   // Refresh indikator kuota device di menu Pelanggan
+            loadDevicePelanggan();
+            loadDataPelanggan();
         })
         .subscribe();
 }
-// admin.js
 
-// Fungsi untuk buka/tutup menu urutan
 function toggleSortMenu() {
     document.getElementById('sortMenu').classList.toggle('show');
 }
 
-// admin.js
-
 function selectSort(value, label) {
-    // 1. Update teks tombol utama
     document.getElementById('current-sort-text').innerText = label;
-    
-    // 2. Update nilai input hidden untuk query
     document.getElementById('sort-pending').value = value;
-    
-    // 3. Reset semua item, lalu beri tanda aktif pada yang dipilih
     const items = document.querySelectorAll('.sort-item');
     items.forEach(item => {
         if (item.innerText === label) {
@@ -947,26 +830,37 @@ function selectSort(value, label) {
         }
     });
 
-    // 4. Tutup menu & load data
     document.getElementById('sortMenu').classList.remove('show');
     loadPendingUsers(); 
 }
 
-// Tutup menu jika klik di luar
 window.addEventListener('click', function(e) {
-    if (!document.getElementById('customSort').contains(e.target)) {
+    const sortPending = document.getElementById('customSort');
+    if (sortPending && !sortPending.contains(e.target)) {
         document.getElementById('sortMenu').classList.remove('show');
     }
+
+    const sortPelanggan = document.getElementById('sortContainerPelanggan');
+    if (sortPelanggan && !sortPelanggan.contains(e.target)) {
+        document.getElementById('menuSortPelanggan').classList.remove('show');
+    }
+
+    const sortDevice = document.getElementById('sortContainerDevice');
+    if (sortDevice && !sortDevice.contains(e.target)) {
+        document.getElementById('menuSortDevice').classList.remove('show');
+    }
+
+    const sortAdmin = document.getElementById('sortContainerAdmin');
+    if (sortAdmin && !sortAdmin.contains(e.target)) {
+        document.getElementById('menuSortAdmin').classList.remove('show');
+    }
 });
-// admin.js
 
 function formatDeviceModel(ua) {
     if (!ua) return "Perangkat Tidak Dikenal";
-
     let brand = "Android";
     let browser = "Chrome";
 
-    // 1. DETEKSI BROWSER
     if (ua.includes("FBAN") || ua.includes("FBAV")) browser = "Facebook";
     else if (ua.includes("Instagram")) browser = "Instagram";
     else if (ua.includes("Edg/")) browser = "Edge";
@@ -976,9 +870,7 @@ function formatDeviceModel(ua) {
     else if (ua.includes("Chrome")) browser = "Chrome";
     else if (ua.includes("Safari") && !ua.includes("Chrome")) browser = "Safari";
 
-    // 2. DETEKSI MEREK BERDASARKAN KODE MODEL ANDROID
     if (ua.includes("Android")) {
-        // Daftar pemetaan kode model ke Merek
         const brandPatterns = [
             { name: "Samsung", patterns: ["Samsung", "SM-", "GT-", "SCH-", "SGH-"] },
             { name: "Xiaomi/Redmi", patterns: ["Xiaomi", "Redmi", "POCO", "MI ", "210", "220", "230"] },
@@ -996,20 +888,93 @@ function formatDeviceModel(ua) {
             }
         }
 
-        // Coba ambil kode model spesifik (misal: SM-A525F)
         const modelMatch = ua.match(/Android\s\d+;\s([^;]+)\)/);
         let modelCode = modelMatch ? modelMatch[1].trim() : "";
-        
-        // Bersihkan hasil jika hanya angka atau huruf K
         if (modelCode === "K" || !isNaN(modelCode)) modelCode = "";
-
         return `${brand}${modelCode ? ' (' + modelCode + ')' : ''} — ${browser}`;
     } 
     
-    // 3. DETEKSI PERANGKAT NON-ANDROID
     if (ua.includes("iPhone")) return `iPhone — ${browser}`;
     if (ua.includes("Windows NT 10.0")) return `Windows PC — ${browser}`;
     if (ua.includes("Mac OS X")) return `MacBook — ${browser}`;
-
     return `Lainnya — ${browser}`;
+}
+
+async function deleteAllAdmins() {
+    const yakin = confirm("PERINGATAN: Anda akan menghapus SELURUH data admin. Anda akan otomatis logout setelah ini. Lanjutkan?");
+    if (!yakin) return;
+
+    const verifikasi = prompt("Ketik 'HAPUS SEMUA' untuk mengonfirmasi:");
+    if (verifikasi !== "HAPUS SEMUA") {
+        alert("Konfirmasi salah. Penghapusan dibatalkan.");
+        return;
+    }
+
+    try {
+        const { error } = await supabaseClient
+            .from("admin")
+            .delete()
+            .neq("id", 0); 
+
+        if (error) throw error;
+        alert("All data admin deleted.");
+        adminLogout(); 
+    } catch (err) {
+        alert("Gagal: " + err.message);
+    }
+}
+
+async function deleteAllPelanggan() {
+    const jumlahData = document.querySelectorAll("#tbody-data-pelanggan tr").length;
+    if (jumlahData === 0) return alert("Tidak ada data pelanggan untuk dihapus.");
+
+    const yakin = confirm(`Apakah Anda benar-benar ingin menghapus ${jumlahData} data pelanggan? Semua device dan riwayat mereka akan hilang permanen.`);
+    if (!yakin) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from("pelanggan")
+            .delete()
+            .neq("status", "pending"); 
+
+        if (error) throw error;
+        alert("Seluruh data pelanggan berhasil dibersihkan.");
+        loadDataPelanggan();
+        loadDevicePelanggan();
+    } catch (err) {
+        alert("Gagal: " + err.message);
+    }
+}
+
+function toggleSortMenuPelanggan() {
+    document.getElementById('menuSortPelanggan').classList.toggle('show');
+}
+
+function pilihSortPelanggan(value, label) {
+    document.getElementById('text-sort-pelanggan').innerText = label;
+    document.getElementById('val-sort-pelanggan').value = value;
+    document.getElementById('menuSortPelanggan').classList.remove('show');
+    loadDataPelanggan();
+}
+
+function toggleSortMenuDevice() {
+    document.getElementById('menuSortDevice').classList.toggle('show');
+}
+
+function pilihSortDevice(value, label) {
+    document.getElementById('text-sort-device').innerText = label;
+    document.getElementById('val-sort-device').value = value;
+    document.getElementById('menuSortDevice').classList.remove('show');
+    loadDevicePelanggan();
+}
+
+function toggleSortMenuAdmin() {
+    document.getElementById('menuSortAdmin').classList.toggle('show');
+}
+
+function pilihSortAdmin(value, label) {
+    document.getElementById('text-sort-admin').innerText = label;
+    document.getElementById('val-sort-admin').value = value;
+    document.getElementById('menuSortAdmin').classList.remove('show');
+    loadAdminData();
 }

@@ -32,7 +32,6 @@ body {
   overflow: hidden;
 }
 
-/* Redesigned sidebar with modern styling */
 .sidebar {
   width: 280px;
   background: var(--bg-sidebar);
@@ -141,7 +140,6 @@ body {
   text-align: center;
 }
 
-/* Style untuk submenu pelanggan */
 .submenu {
   max-height: 0;
   overflow: hidden;
@@ -182,7 +180,6 @@ body {
   font-weight: 600;
 }
 
-/* Chevron icon animation untuk menu dengan submenu */
 .menu-item .chevron {
   margin-left: auto;
   transition: transform 0.3s ease;
@@ -219,7 +216,6 @@ body {
   border-color: var(--danger);
 }
 
-/* Redesigned main content area */
 .main-content {
   flex: 1;
   margin-left: 280px;
@@ -229,7 +225,6 @@ body {
   transition: margin-left 0.3s ease;
 }
 
-/* Desktop sidebar collapse behavior */
 body.sidebar-closed .sidebar {
   transform: translateX(-280px);
 }
@@ -249,14 +244,13 @@ body.sidebar-closed .main-content {
   box-shadow: var(--shadow);
 }
 
-/* Update tombol toggle agar MUNCUL di Desktop */
 .menu-toggle-btn {
   background: none;
   border: none;
   cursor: pointer;
   color: var(--text-dark);
   padding: 0.5rem;
-  display: block; /* SEBELUMNYA: none (ini masalahnya) */
+  display: block; 
   transition: color 0.2s;
 }
 
@@ -276,7 +270,6 @@ body.sidebar-closed .main-content {
   flex: 1;
 }
 
-/* Redesigned cards with modern styling */
 .card {
   background: white;
   border-radius: 16px;
@@ -306,7 +299,6 @@ body.sidebar-closed .main-content {
   padding: 1.5rem;
 }
 
-/* Redesigned search box */
 .search-box {
   position: relative;
   display: flex;
@@ -335,7 +327,6 @@ body.sidebar-closed .main-content {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Redesigned table with modern styling */
 .table-responsive {
   width: 100%;
   overflow-x: auto;
@@ -382,7 +373,6 @@ body.sidebar-closed .main-content {
   text-align: right;
 }
 
-/* Redesigned action buttons */
 .action-buttons {
   display: flex;
   gap: 0.5rem;
@@ -453,7 +443,6 @@ body.sidebar-closed .main-content {
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
-/* Redesigned status badges */
 .status-badge {
   padding: 0.375rem 0.75rem;
   border-radius: 12px;
@@ -478,7 +467,6 @@ body.sidebar-closed .main-content {
   color: #991b1b;
 }
 
-/* Redesigned settings section */
 .setting-item {
   display: flex;
   justify-content: space-between;
@@ -501,7 +489,6 @@ body.sidebar-closed .main-content {
   color: var(--text-gray);
 }
 
-/* Redesigned toggle switch */
 .switch {
   position: relative;
   display: inline-block;
@@ -548,7 +535,6 @@ input:checked + .slider:before {
   transform: translateX(24px);
 }
 
-/* Redesigned login modal */
 .modal-overlay {
   display: none;
   position: fixed;
@@ -586,7 +572,6 @@ input:checked + .slider:before {
   letter-spacing: -0.025em;
 }
 
-/* Added close button styles matching index.html */
 .close-button {
   position: absolute;
   top: 0;
@@ -614,7 +599,6 @@ input:checked + .slider:before {
   margin-bottom: 1.5rem;
 }
 
-/* Updated label styling to match reference design */
 .input-group label {
   display: block;
   margin-bottom: 0.5rem;
@@ -623,7 +607,6 @@ input:checked + .slider:before {
   font-size: 0.875rem;
 }
 
-/* Updated input styling with gray underline by default and blue on focus */
 .input-group input {
   width: 100%;
   padding: 0.75rem 0;
@@ -635,7 +618,6 @@ input:checked + .slider:before {
   background: transparent;
 }
 
-/* Blue underline appears on focus */
 .input-group input:focus {
   outline: none;
   border-bottom-color: #667eea;
@@ -668,22 +650,16 @@ input:checked + .slider:before {
   margin-bottom: 0.5rem !important;
 }
 
-/* Style Pesan Error */
 .error-msg {
-  color: var(--danger); /* Merah */
-  font-size: 0.85rem; /* Ukuran pas */
+  color: var(--danger); 
+  font-size: 0.85rem; 
   text-align: center;
   font-weight: 600;
-
-  /* Jarak Atas (ke input) dan Bawah (ke tombol) */
   margin-top: 1rem;
   margin-bottom: 1.5rem;
-
-  /* Pastikan tetap ada tinggi minimal biar layout gak loncat (opsional) */
   min-height: 1.2em;
 }
 
-/* Pastikan input password ada border bawah abu-abu seperti desain */
 .input-group input {
   border-bottom: 2px solid #e5e7eb;
   border-radius: 0;
@@ -703,7 +679,6 @@ input:checked + .slider:before {
   z-index: 900;
 }
 
-/* Responsive design for mobile and tablet */
 @media (max-width: 1024px) {
   .sidebar {
     transform: translateX(-100%);
@@ -774,11 +749,9 @@ input:checked + .slider:before {
     padding: 2rem 1.5rem;
   }
 }
-/* === TOMBOL MONOKROM (HITAM PUTIH) === */
 
-/* Tombol Hitam (Dominan) - Untuk Tambah, Hapus, Blokir */
 .btn-solid-black {
-    background-color: #0f172a; /* Hitam kebiruan sangat gelap (Professional Black) */
+    background-color: #0f172a; 
     color: #ffffff;
     border: 1px solid #0f172a;
     padding: 0.5rem 1rem;
@@ -800,7 +773,6 @@ input:checked + .slider:before {
     transform: translateY(-1px);
 }
 
-/* Tombol Putih (Outline) - Untuk Edit, Export CSV */
 .btn-outline-black {
     background-color: #ffffff;
     color: #0f172a;
@@ -822,31 +794,29 @@ input:checked + .slider:before {
     border-color: #0f172a;
     background-color: #f8fafc;
 }
-/* Penyesuaian Icon di dalam tombol */
+
 .btn-solid-black svg, 
 .btn-outline-black svg {
     width: 16px;
     height: 16px;
     stroke-width: 2;
 }
-/* admin.css */
+
 .settings-grid {
     display: grid;
-    grid-template-columns: 1fr; /* Tampilan HP */
+    grid-template-columns: 1fr; 
     gap: 1.5rem;
     align-items: start;
 }
 
 @media (min-width: 1024px) {
     .settings-grid {
-        grid-template-columns: 1fr 1fr; /* Tampilan Desktop: Dua Kolom */
+        grid-template-columns: 1fr 1fr; 
     }
 }
-/* admin.css */
 
-/* Redesigned Terima & Tolak Buttons */
 .btn-terima-modern {
-    background-color: #0f172a; /* Hitam Solid */
+    background-color: #0f172a; 
     color: #ffffff;
     border: none;
     padding: 6px 16px;
@@ -865,7 +835,7 @@ input:checked + .slider:before {
 
 .btn-tolak-modern {
     background-color: transparent;
-    color: #ef4444; /* Merah */
+    color: #ef4444; 
     border: 1px solid #fee2e2;
     padding: 6px 16px;
     border-radius: 6px;
@@ -880,13 +850,12 @@ input:checked + .slider:before {
     border-color: #ef4444;
 }
 
-/* Penyesuaian khusus untuk tombol Tolak Semua */
 .btn-reject-all {
     background-color: #ffffff;
     color: #ef4444;
     border: 1px solid #ef4444;
     padding: 8px 16px;
-    border-radius: 20px; /* Bentuk pil */
+    border-radius: 20px; 
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
@@ -897,9 +866,7 @@ input:checked + .slider:before {
     background-color: #ef4444;
     color: #ffffff;
 }
-/* admin.css */
 
-/* --- 1. Tombol Tolak Semua Monokrom --- */
 .btn-reject-mono {
     display: flex;
     align-items: center;
@@ -915,14 +882,13 @@ input:checked + .slider:before {
 }
 
 .btn-reject-mono:hover {
-    background-color: #ffefef; /* GANTI: Latar belakang biru muda saat kursor diarahkan */
-    border-color:  #fc2626;     /* GANTI: Garis tepi berubah biru agar serasi */
+    background-color: #ffefef; 
+    border-color:  #fc2626;     
     color: #fc2626;
     transform: translateY(-1px);
 
 }
 
-/* --- 2. Switch Auto-ACC Monokrom --- */
 .toggle-mono-wrapper {
     display: flex;
     align-items: center;
@@ -966,39 +932,34 @@ input:checked + .slider:before {
 }
 
 input:checked + .slider-mono {
-    background-color: #0f172a; /* Hitam saat Aktif */
+    background-color: #0f172a; 
 }
 
 input:checked + .slider-mono:before {
     transform: translateX(16px);
 }
 
-/* admin.css */
-
-/* --- Container Dropdown --- */
 .custom-sort-container {
     position: relative;
     min-width: 160px;
 }
 
-/* --- Kotak Utama (Trigger) --- */
 .sort-trigger {
     display: flex;
     align-items: center;
     justify-content: space-between;
     background-color: #ffffff;
     color: #0f172a;
-    border: 1px solid #e2e8f0; /* Garis sangat tipis */
+    border: 1px solid #e2e8f0; 
     padding: 8px 12px;
     border-radius: 8px;
     font-size: 0.85rem;
-    font-weight: 500; /* KUNCI: Ketebalan font sedang/tipis */
+    font-weight: 500; 
     cursor: pointer;
     height: 40px;
     transition: all 0.2s ease;
 }
 
-/* --- List Menu --- */
 .sort-menu {
     display: none;
     position: absolute;
@@ -1006,7 +967,7 @@ input:checked + .slider-mono:before {
     left: 0;
     right: 0;
     background: #ffffff;
-    border: 1px solid #f1f5f9; /* Garis menu sangat tipis */
+    border: 1px solid #f1f5f9; 
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
     z-index: 100;
@@ -1015,25 +976,22 @@ input:checked + .slider-mono:before {
 
 .sort-menu.show { display: block; }
 
-/* --- Item Pilihan (Terbaru & Terlama) --- */
 .sort-item {
     padding: 10px 12px;
     font-size: 0.85rem;
-    color: #64748b; /* Abu-abu halus */
+    color: #64748b; 
     cursor: pointer;
-    font-weight: 500; /* DISAMAKAN: Agar tidak jomplang */
-    border-bottom: 1px solid #f8fafc; /* Line item sangat tipis */
+    font-weight: 500; 
+    border-bottom: 1px solid #f8fafc; 
     transition: all 0.2s ease;
 }
 
-/* --- State Aktif (Hanya Ubah Warna, Font Tetap Tipis) --- */
 .sort-item.active {
-    color: #0f172a; /* Menjadi hitam pekat */
+    color: #0f172a; 
     background-color: #f8fafc;
-    font-weight: 500; /* TETAP 500: Tidak boleh lebih tebal */
+    font-weight: 500; 
 }
 
-/* Hover: Latar tetap putih bersih sesuai perintah */
 .sort-item:hover {
     background-color: #ffffff;
     color: #000000;
