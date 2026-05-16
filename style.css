@@ -2904,100 +2904,120 @@ body {
   gap: 20px;
 }
 
+/* Card Aset Super Minimalis */
 .asset-card-design {
-  background: var(--card-bg);
-  border: 1px solid #f0f0f0;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-  display: flex;
-  flex-direction: column;
+    background: #ffffff;
+    border: none;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
 }
 
-.acd-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
+.acd-title {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 20px;
+    font-weight: bold;
+    color: #004080; /* Biru klasik */
+    margin-bottom: 2px;
 }
 
-.acd-symbol {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-primary);
-  text-transform: uppercase;
-}
-
-.acd-badge {
-  background: #e0f2fe;
-  color: #0284c7;
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  border: 1px solid #bae6fd;
-}
-
-.acd-name {
-  font-size: 12px;
-  color: #999;
-  margin-bottom: 12px;
-  text-transform: lowercase;
+.acd-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: #333;
+    margin-bottom: 25px;
 }
 
 .acd-value {
-  font-size: 24px;
-  font-weight: 500;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-  font-family: 'Courier New', monospace;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 28px;
+    font-weight: bold;
+    color: #222;
+    margin-bottom: 5px;
 }
 
 .acd-lembar {
-  font-size: 13px;
-  color: #666;
-  font-weight: 500;
-  margin-bottom: 15px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 20px;
 }
 
 .acd-note-label {
-  font-size: 11px;
-  color: #999;
-  font-weight: 600;
-  margin-bottom: 2px;
-  font-family: 'Times New Roman', serif;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
 }
 
 .acd-note-text {
-  font-size: 13px;
-  color: var(--text-primary);
-  font-style: italic;
-  margin-bottom: 20px;
-  line-height: 1.4;
-  font-family: 'Times New Roman', serif;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 30px;
+    line-height: 1.4;
 }
 
 .acd-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-start;
-  margin-top: auto;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: auto;
 }
 
-.acd-btn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid #eee;
-  background: #fff;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #666;
+.acd-icon-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #333;
+    padding: 5px;
+    transition: transform 0.2s ease;
 }
-.acd-btn:hover { background: #f9f9f9; border-color: #ddd; }
+
+.acd-icon-btn:hover {
+    transform: scale(1.1);
+}
+
+.acd-icon-btn svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 1.5px;
+}
+
+/* Style Toggle Jual/Beli di Modal Transaksi */
+.toggle-jb-container {
+    display: flex;
+    border: 1px solid #cbd5e0;
+    margin-bottom: 20px;
+    background: #fff;
+}
+
+.jb-divider {
+    width: 1px;
+    background-color: #cbd5e0;
+}
+
+.btn-jb {
+    flex: 1;
+    padding: 10px;
+    background: transparent;
+    border: none;
+    font-family: 'Times New Roman', serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-jb#btn-jual { color: #ff4d4f; }
+.btn-jb#btn-beli { color: #52c41a; }
+
+/* Indikator Aktif: Teks jadi Bold */
+.btn-jb.active {
+    font-weight: bold;
+    background: #f8fafc;
+}
 
 /* === STYLE MODAL BARU (SERIF) === */
 .custom-modal-content {
@@ -3205,4 +3225,35 @@ html[data-warna-putih="true"]:not([data-theme="dark"]) h2.form-title svg,
 html[data-warna-putih="true"]:not([data-theme="dark"]) h3.section-title svg {
     stroke: #1f2937 !important;
     color: #1f2937 !important;
+}
+/* Solusi cerdas agar ikon gambar (Base64) terlihat di tema gelap */
+[data-theme="dark"] .dropdown-item img,
+[data-theme="dark"] .transactions-table th img,
+[data-theme="dark"] .select-items img {
+    filter: brightness(0) invert(1); /* Mengubah ikon hitam menjadi putih */
+    opacity: 0.9;
+}
+
+/* Pastikan transisi halus saat ganti tema */
+.dropdown-item img, 
+.transactions-table th img {
+    transition: filter 0.3s ease;
+}
+/* Perbaikan ikon di Ringkasan Kartu & Dropdown Jenis Transaksi untuk Dark Mode */
+[data-theme="dark"] .summary-card .card-icon img,
+[data-theme="dark"] .select-items div img,
+[data-theme="dark"] .select-selected img {
+    filter: brightness(0) invert(1); /* Mengubah ikon menjadi putih bersih */
+    opacity: 1;
+    transition: filter 0.3s ease;
+}
+
+/* Pastikan ukuran ikon di dropdown tetap konsisten */
+.select-items div img,
+.select-selected img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    margin-right: 10px;
+    vertical-align: middle;
 }

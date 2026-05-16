@@ -2220,30 +2220,26 @@ function loadGuestUI() {
     document.getElementById('saldo').textContent = formatCurrency(0);
 
     const tbody = document.getElementById('tbody-tabel');
-    tbody.innerHTML = '';
+    if(tbody) tbody.innerHTML = '';
     
     const emptyState = document.getElementById('empty-state');
-    emptyState.style.display = 'block';
-
-    emptyState.innerHTML = `
-        <div class="empty-state-icon">👋</div>
-        <h2>Selamat Datang di MyBudgetly</h2>
-        
-        <p style="font-size: 1.05rem; max-width: 550px; margin: 0 auto; line-height: 1.6; color: var(--text-secondary);">
-            Ini adalah mode demo, miliki aplikasi <b>MyBudgetly</b> versi lengkap di
-            <a href="https://lynk.id/arul.n11" target="_blank" rel="noopener noreferrer" 
-               style="color: var(--primary-accent-color); 
-                      font-weight: 600; 
-                      text-decoration: underline;
-                      text-decoration-thickness: 2px;">
-                lynk.id/arul.n11
-            </a>
-        </p>
-    `;
+    if(emptyState) {
+        emptyState.style.display = 'block'; // Pastikan empty state aktif
+        emptyState.innerHTML = `
+            <div class="empty-state-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-empty-state">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M4 19l16 0" />
+                    <path d="M4 15l4 -6l4 2l4 -5l4 4" />
+                </svg>
+            </div>
+            <h3>Belum ada transaksi</h3>
+            <p>Mulai tambahkan transaksi pertama Anda!</p>
+        `;
+    }
     
-    document.querySelector('.table-container table').style.display = 'none';
-    document.getElementById('pagination-controls').innerHTML = '';
-
+    const table = document.querySelector('.table-container table');
+    if(table) table.style.display = 'none';
 }
 
 function getTextColorForBackground(hexColor) {
@@ -2361,6 +2357,23 @@ function switchTab(pageId, element) {
     element.classList.add('active');
   }
 
+  // === TAMBAHAN LOGIKA SEMBUNYIKAN HEADER ===
+  const appHeader = document.querySelector('.app-header');
+  const container = document.querySelector('.container');
+  
+  if (appHeader && container) {
+    if (pageId === 'home') {
+      // Tampilkan kembali header jika di Beranda
+      appHeader.style.display = 'flex';
+      container.style.marginTop = '-2rem'; // Kembalikan efek tumpang-tindih
+    } else {
+      // Sembunyikan header untuk Porto, Ruang, Forum, Saya
+      appHeader.style.display = 'none';
+      container.style.marginTop = '4rem'; // Beri jarak agar tidak menabrak tombol Settings di atas
+    }
+  }
+  // ==========================================
+
   if (pageId === 'portofolio') {
     renderHalamanPorto();
   }
@@ -2375,233 +2388,265 @@ function switchTab(pageId, element) {
   }
 }
 
-// --- LOGIKA PORTOFOLIO (SAHAM ONLY) ---
+// --- LOGIKA PORTOFOLIO ---
+function tutupModalAset() { document.getElementById('modal-tambah-aset').style.display = 'none'; }
+function tutupModalTransaksiAset() { document.getElementById('modal-transaksi-aset').style.display = 'none'; }
 
-function bukaModalAset() {
-    const modal = document.getElementById('modal-tambah-aset');
-    modal.style.display = 'flex';
-    document.getElementById('form-aset').reset();
-    document.getElementById('input-tanggal').value = new Date().toISOString().split('T')[0];
-    document.getElementById('preview-total').innerText = "Rp 0";
-    if (window.lucide) lucide.createIcons();
-}
-
-function tutupModalAset() {
-    document.getElementById('modal-tambah-aset').style.display = 'none';
-}
-
-// Hitung Total (Harga * Lembar)
-const inpHarga = document.getElementById('input-harga');
-const inpLembar = document.getElementById('input-lembar');
-const dispTotal = document.getElementById('preview-total');
-
-function hitungTotal() {
-    const h = parseFloat(inpHarga.value) || 0;
-    const l = parseFloat(inpLembar.value) || 0;
-    dispTotal.innerText = formatCurrency(h * l);
-}
-
-if(inpHarga && inpLembar) {
-    inpHarga.addEventListener('input', hitungTotal);
-    inpLembar.addEventListener('input', hitungTotal);
-}
-
-// Simpan Data
+// 1. Simpan Wadah Aset (Tanpa Harga)
 function handleSimpanAset(event) {
     event.preventDefault();
-    
+    const kategori = document.getElementById('input-kategori').value;
     const nama = document.getElementById('input-nama').value;
-    const harga = parseFloat(document.getElementById('input-harga').value);
-    const lembar = parseFloat(document.getElementById('input-lembar').value);
-    const tanggal = document.getElementById('input-tanggal').value;
     const catatan = document.getElementById('input-catatan').value;
 
-    if (!nama || !harga || !lembar) return;
+    if (!nama) return;
 
-    const total = harga * lembar;
-
+    // Struktur Data Baru: Aset menyimpan array "transaksi"
     dataAset.push({
+        id: 'aset_' + Date.now(),
         nama: nama,
-        kategori: "Saham", // Hardcode Saham
-        harga: harga,
-        lembar: lembar,
-        nilai: total,
-        tanggal: tanggal,
-        catatan: catatan
+        kategori: kategori,
+        catatan: catatan,
+        transaksi: [] // Kosong pada awalnya
     });
 
     localStorage.setItem('myBudgetly_assets', JSON.stringify(dataAset));
     renderHalamanPorto();
     tutupModalAset();
-    showNotification('Aset Saham berhasil disimpan!', 'success');
+    showNotification('Aset berhasil ditambahkan!', 'success');
 }
 
-// Render Halaman
+// 2. Render Card Aset & Kalkulasi dari Transaksi
 function renderHalamanPorto() {
     const container = document.getElementById('list-aset-container');
     const totalDisplay = document.getElementById('total-aset-display');
     const countDisplay = document.getElementById('jumlah-aset-display');
-
     if (!container) return;
+    
     container.innerHTML = '';
-
-    let totalAll = 0;
+    let totalPortfolioValue = 0;
 
     if (dataAset.length === 0) {
-        container.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-secondary);">
-                <i data-lucide="layers" style="width: 48px; opacity: 0.2; margin-bottom: 10px;"></i>
-                <p>Belum ada aset.</p>
-            </div>`;
+        container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-secondary);"><p>Belum ada aset.</p></div>`;
     }
 
-    dataAset.forEach((aset, index) => {
-        totalAll += Number(aset.nilai);
+    dataAset.forEach((aset) => {
+        // Kalkulasi dari riwayat transaksi
+        let totalLembar = 0;
+        let totalModalBeli = 0;
+        let totalLembarBeli = 0;
+
+        // Pastikan array transaksi ada (untuk data lama)
+        if(!aset.transaksi) aset.transaksi = []; 
+
+        aset.transaksi.forEach(trx => {
+            if(trx.jenis === 'beli') {
+                totalLembar += trx.lembar;
+                totalLembarBeli += trx.lembar;
+                totalModalBeli += (trx.harga * trx.lembar);
+            } else if (trx.jenis === 'jual') {
+                totalLembar -= trx.lembar;
+            }
+        });
+
+        // Hitung nilai saat ini berdasarkan Harga Beli Rata-Rata (Average Price)
+        let avgBuyPrice = totalLembarBeli > 0 ? (totalModalBeli / totalLembarBeli) : 0;
+        let nilaiAsetSaatIni = totalLembar * avgBuyPrice;
+        
+        totalPortfolioValue += nilaiAsetSaatIni;
 
         const html = `
             <div class="asset-card-design">
-                <div class="acd-header">
-                    <span class="acd-symbol">${aset.nama.toUpperCase()}</span>
-                    <span class="acd-badge">saham</span>
-                </div>
-                <div class="acd-name">${aset.nama.toLowerCase()}</div>
+                <div class="acd-title">${aset.nama.toUpperCase()}</div>
+                <div class="acd-subtitle">${aset.nama.toLowerCase()}</div>
                 
-                <div class="acd-value">${formatCurrency(aset.nilai)}</div>
-                <div class="acd-lembar">${aset.lembar} Lembar</div>
+                <div class="acd-value">${formatCurrency(nilaiAsetSaatIni)}</div>
+                <div class="acd-lembar">${totalLembar} Lembar</div>
 
-                ${aset.catatan ? `
-                    <div class="acd-note-label">Catatan</div>
-                    <div class="acd-note-text">"${aset.catatan}"</div>
-                ` : '<div style="margin-bottom:20px;"></div>'}
+                <div class="acd-note-label">Catatan</div>
+                <div class="acd-note-text">${aset.catatan ? aset.catatan : '-'}</div>
 
                 <div class="acd-actions">
-                    <button class="acd-btn" title="Tambah">
-                        <i data-lucide="plus" style="width:16px"></i>
-                    </button>
-                    <button class="acd-btn" title="Kurang">
-                        <i data-lucide="minus" style="width:16px"></i>
-                    </button>
-                    <button class="acd-btn" title="Riwayat">
-                        <i data-lucide="history" style="width:16px"></i>
-                    </button>
-                    <button class="acd-btn delete" onclick="hapusAset(${index})" title="Hapus">
-                        <i data-lucide="trash-2" style="width:16px"></i>
-                    </button>
+                    <button class="acd-icon-btn" onclick="bukaModalTransaksiAset('${aset.id}')" title="Tambah Transaksi"><i data-lucide="plus"></i></button>
+                    <button class="acd-icon-btn" title="Riwayat"><i data-lucide="history"></i></button>
+                    <button class="acd-icon-btn delete" onclick="hapusAset('${aset.id}')" title="Hapus Aset"><i data-lucide="trash-2"></i></button>
                 </div>
             </div>
         `;
         container.innerHTML += html;
     });
 
-    if(totalDisplay) totalDisplay.innerText = formatCurrency(totalAll);
+    if(totalDisplay) totalDisplay.innerText = formatCurrency(totalPortfolioValue);
     if(countDisplay) countDisplay.innerText = dataAset.length;
-    
     if(window.lucide) lucide.createIcons();
 }
 
-function hapusAset(index) {
-    if(confirm('Hapus aset ini?')) {
-        dataAset.splice(index, 1);
+// 3. Logika Modal Transaksi Jual/Beli
+function bukaModalTransaksiAset(idAset) {
+    document.getElementById('trans-aset-id').value = idAset;
+    document.getElementById('form-transaksi-aset').reset();
+    setJenisTransaksiAset('beli'); // Default Beli
+    document.getElementById('trans-tanggal').value = new Date().toISOString().split('T')[0];
+    document.getElementById('trans-total-preview').innerText = "Rp 0";
+    document.getElementById('modal-transaksi-aset').style.display = 'flex';
+}
+
+function setJenisTransaksiAset(jenis) {
+    document.getElementById('trans-aset-jenis').value = jenis;
+    if(jenis === 'jual') {
+        document.getElementById('btn-jual').classList.add('active');
+        document.getElementById('btn-beli').classList.remove('active');
+    } else {
+        document.getElementById('btn-beli').classList.add('active');
+        document.getElementById('btn-jual').classList.remove('active');
+    }
+}
+
+// Hitung Live Preview Total
+const transHarga = document.getElementById('trans-harga');
+const transLembar = document.getElementById('trans-lembar');
+const transPreview = document.getElementById('trans-total-preview');
+
+function hitungTotalTransaksi() {
+    const h = parseFloat(transHarga.value) || 0;
+    const l = parseFloat(transLembar.value) || 0;
+    if (transPreview) transPreview.innerText = formatCurrency(h * l);
+}
+if(transHarga && transLembar) {
+    transHarga.addEventListener('input', hitungTotalTransaksi);
+    transLembar.addEventListener('input', hitungTotalTransaksi);
+}
+
+// 4. Eksekusi Simpan Transaksi ke dalam Aset
+function handleSimpanTransaksiAset(event) {
+    event.preventDefault();
+    const idAset = document.getElementById('trans-aset-id').value;
+    const jenis = document.getElementById('trans-aset-jenis').value;
+    const harga = parseFloat(document.getElementById('trans-harga').value);
+    const lembar = parseFloat(document.getElementById('trans-lembar').value);
+    const tanggal = document.getElementById('trans-tanggal').value;
+
+    const targetAsetIndex = dataAset.findIndex(a => a.id === idAset);
+    if (targetAsetIndex !== -1) {
+        if (!dataAset[targetAsetIndex].transaksi) dataAset[targetAsetIndex].transaksi = [];
+        
+        dataAset[targetAsetIndex].transaksi.push({
+            jenis: jenis,
+            harga: harga,
+            lembar: lembar,
+            tanggal: tanggal,
+            id_transaksi: Date.now()
+        });
+
+        localStorage.setItem('myBudgetly_assets', JSON.stringify(dataAset));
+        renderHalamanPorto();
+        tutupModalTransaksiAset();
+        showNotification('Transaksi aset berhasil dicatat!', 'success');
+    }
+}
+
+// Hapus Aset (Menggunakan ID)
+function hapusAset(idAset) {
+    if(confirm('Yakin ingin menghapus seluruh aset ini beserta riwayat transaksinya?')) {
+        dataAset = dataAset.filter(a => a.id !== idAset);
         localStorage.setItem('myBudgetly_assets', JSON.stringify(dataAset));
         renderHalamanPorto();
     }
 }
-// --- LOGIKA HITUNG TOTAL OTOMATIS ---
-document.addEventListener('DOMContentLoaded', () => {
-    const inpHarga = document.getElementById('input-harga');
-    const inpLembar = document.getElementById('input-lembar');
-    const dispTotal = document.getElementById('preview-total');
+// ==========================================================
+// FIX: FUNGSI BUKA MODAL & LOGIKA DROPDOWN KATEGORI
+// ==========================================================
 
-    function hitungTotal() {
-        // Ambil nilai, kalau kosong anggap 0
-        const h = parseFloat(inpHarga.value) || 0;
-        const l = parseFloat(inpLembar.value) || 0;
-        
-        // Update teks Total
-        if (dispTotal) {
-            dispTotal.innerText = formatCurrency(h * l);
-        }
-    }
-
-    // Pasang 'pendengar' saat user mengetik
-    if(inpHarga && inpLembar) {
-        inpHarga.addEventListener('input', hitungTotal);
-        inpLembar.addEventListener('input', hitungTotal);
-    }
-});
-function initializeAssetCategorySelect() {
-  const container = document.getElementById('custom-kategori-aset');
-  if (!container) return;
-
-  const selectedDisplay = container.querySelector('.select-selected');
-  const hiddenInput = document.getElementById('input-kategori');
-  const optionsContainer = container.querySelector('.select-items');
-  const options = optionsContainer.querySelectorAll('div');
-
-  const closeAllSelect = () => {
-    container.classList.remove('select-active');
-    optionsContainer.classList.add('select-hide');
-  };
-
-  selectedDisplay.onclick = function(e) {
-    e.stopPropagation();
-    const isActive = container.classList.contains('select-active');
-    
-    document.querySelectorAll('.custom-select-container').forEach(c => {
-        if(c !== container) {
-            c.classList.remove('select-active');
-            c.querySelector('.select-items')?.classList.add('select-hide');
-        }
-    });
-    
-    if (!isActive) {
-      container.classList.add('select-active');
-      optionsContainer.classList.remove('select-hide');
-    } else {
-      closeAllSelect();
-    }
-  };
-
-  options.forEach(option => {
-    option.onclick = function(e) {
-      e.stopPropagation();
-      hiddenInput.value = this.getAttribute('data-value');
-      closeAllSelect();
-    };
-  });
-
-  window.onclick = function(event) {
-    if (!container.contains(event.target)) {
-      closeAllSelect();
-    }
-  };
-}
-
+// Fungsi memunculkan pop-up Tambah Aset
 function bukaModalAset() {
     const modal = document.getElementById('modal-tambah-aset');
     modal.style.display = 'flex';
     document.getElementById('form-aset').reset();
-    document.getElementById('input-tanggal').value = new Date().toISOString().split('T')[0];
-    document.getElementById('preview-total').innerText = "Rp 0";
     
-    initializeAssetCategorySelect(); 
-    
-    if (window.lucide) lucide.createIcons();
-}
-// Fungsi untuk merender hari dalam sebulan
-function renderCustomCalendar(date) {
-    const popup = document.getElementById('custom-calendar-popup');
-    const month = date.getMonth();
-    const year = date.getFullYear();
+    // Reset dropdown kembali ke default (Saham)
+    const selectedDisplay = document.querySelector('#custom-kategori-aset .select-selected');
+    if(selectedDisplay) {
+        selectedDisplay.innerHTML = `<i data-lucide="bar-chart-2" class="input-icon-left" style="color: #4a5568;"></i><span style="font-family: 'Times New Roman', Times, serif;">saham</span>`;
+    }
+    document.getElementById('label-nama-aset').innerText = "Saham";
+    document.getElementById('input-nama').placeholder = "BBCA";
+    document.getElementById('input-kategori').value = "Saham";
 
-    // Logika pembuatan grid tanggal (1-31)
-    // Update input #tanggal saat tanggal diklik:
-    // document.getElementById('tanggal').value = `${year}-${month+1}-${day}`;
+    initializeAssetCategorySelect(); // Panggil ulang logika klik dropdown
+    if (window.lucide) lucide.createIcons(); // Render ulang ikon Lucide
 }
 
-// Event listener untuk memunculkan popup
-document.getElementById('calendar-trigger').addEventListener('click', () => {
-    const popup = document.getElementById('custom-calendar-popup');
-    popup.classList.toggle('select-hide');
-    renderCustomCalendar(new Date());
-});
+// Logika agar Dropdown Kategori (Saham/Kripto) bisa diklik dan merubah UI
+function initializeAssetCategorySelect() {
+    const container = document.getElementById('custom-kategori-aset');
+    if (!container) return;
+
+    const selectedDisplay = container.querySelector('.select-selected');
+    const hiddenInput = document.getElementById('input-kategori');
+    const optionsContainer = container.querySelector('.select-items');
+    const options = optionsContainer.querySelectorAll('div');
+    const labelNamaAset = document.getElementById('label-nama-aset');
+    const inputNama = document.getElementById('input-nama');
+
+    const closeAllSelect = () => {
+        container.classList.remove('select-active');
+        optionsContainer.classList.add('select-hide');
+    };
+
+    // Bersihkan event listener lama (mencegah klik ganda jika dipanggil berkali-kali)
+    const newSelectedDisplay = selectedDisplay.cloneNode(true);
+    selectedDisplay.parentNode.replaceChild(newSelectedDisplay, selectedDisplay);
+
+    newSelectedDisplay.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isActive = container.classList.contains('select-active');
+        
+        // Tutup dropdown lain jika ada
+        document.querySelectorAll('.custom-select-container').forEach(c => {
+            if(c !== container) {
+                c.classList.remove('select-active');
+                c.querySelector('.select-items')?.classList.add('select-hide');
+            }
+        });
+        
+        if (!isActive) {
+            container.classList.add('select-active');
+            optionsContainer.classList.remove('select-hide');
+        } else {
+            closeAllSelect();
+        }
+    });
+
+    // Logika saat item di dalam dropdown dipilih
+    options.forEach(option => {
+        const newOption = option.cloneNode(true);
+        option.parentNode.replaceChild(newOption, option);
+
+        newOption.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const nilai = this.getAttribute('data-value');
+            hiddenInput.value = nilai;
+            
+            // Ubah teks UI berdasarkan Kripto atau Saham
+            if(nilai === 'Kripto') {
+                newSelectedDisplay.innerHTML = `<i data-lucide="bitcoin" class="input-icon-left" style="color: #4a5568;"></i><span style="font-family: 'Times New Roman', Times, serif;">kripto</span>`;
+                labelNamaAset.innerText = "Kripto";
+                inputNama.placeholder = "Bitcoin";
+            } else {
+                newSelectedDisplay.innerHTML = `<i data-lucide="bar-chart-2" class="input-icon-left" style="color: #4a5568;"></i><span style="font-family: 'Times New Roman', Times, serif;">saham</span>`;
+                labelNamaAset.innerText = "Saham";
+                inputNama.placeholder = "BBCA";
+            }
+            
+            if (window.lucide) lucide.createIcons();
+            closeAllSelect();
+        });
+    });
+
+    // Tutup dropdown jika user klik area kosong di luar pop-up
+    window.addEventListener('click', function(event) {
+        if (!container.contains(event.target)) {
+            closeAllSelect();
+        }
+    });
+}
