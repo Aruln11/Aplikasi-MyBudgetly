@@ -3,12 +3,12 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>MyBudgetly</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="icon" type="image/png" href="/assets/favicon-96x96.png" sizes="96x96" />
-  <link rel="icon" type="image/svg+xml" href="/assetsfavicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
   <link rel="shortcut icon" href="/assets/favicon.ico" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-title" content="MyBudgetly" />
@@ -85,7 +85,7 @@
 </head>
 
 <body>
-  <div id="maintenance-screen" class="maintenance-overlay" style="display: flex;">
+  <div id="maintenance-screen" class="maintenance-overlay" style="display: none;">
     <div class="maintenance-content">
         <div class="maintenance-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
@@ -466,13 +466,13 @@
 
         <div class="scanner-controls">
           <button id="capture-btn" class="btn btn-primary">Ambil Gambar</button>
-          <div id="preview-controls" style="display: none; display:flex; gap:1rem; justify-content:center;">
+          <div id="preview-controls" style="display: none; gap:1rem; justify-content:center;">
             <button id="rescan-btn" class="btn btn-secondary">Ulangi</button>
             <button id="process-btn" class="btn btn-primary">
               <span id="process-btn-text">Proses Struk</span>
             </button>
           </div>
-          <div id="correction-controls" style="display: none; display:flex; gap:1rem; justify-content:center;">
+          <div id="correction-controls" style="display: none; gap:1rem; justify-content:center;">
             <button id="cancel-scan-btn" class="btn btn-secondary">Batal</button>
             <button id="save-scanned-btn" class="btn btn-primary">Simpan Transaksi</button>
           </div>

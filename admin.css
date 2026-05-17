@@ -26,6 +26,7 @@
 
 body {
   display: flex;
+  min-height: 100vh;
   height: 100vh;
   background-color: var(--bg-main);
   color: var(--text-dark);
@@ -707,46 +708,148 @@ input:checked + .slider:before {
 }
 
 @media (max-width: 768px) {
+  body {
+    overflow: auto;
+  }
+
+  .main-content {
+    height: auto;
+    min-height: 100vh;
+  }
+
   .content-wrapper {
-    padding: 1rem;
+    padding: 0.875rem;
+  }
+
+  .card {
+    border-radius: 12px;
   }
 
   .card-header {
+    padding: 1rem;
     flex-direction: column;
     align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .card-header h3 {
+    font-size: 1rem;
+  }
+
+  /* Semua tombol di card-header jadi full width */
+  .card-header > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .btn-solid-black,
+  .btn-outline-black,
+  .btn-tolak-modern,
+  .btn-terima-modern,
+  .btn-reject-mono,
+  .btn-mini {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .search-box {
+    width: 100%;
   }
 
   .search-box input {
     width: 100%;
   }
 
+  .custom-sort-container {
+    width: 100%;
+  }
+
+  .sort-trigger {
+    width: 100%;
+  }
+
+  /* Toggle auto-acc tetap inline */
+  .toggle-mono-wrapper {
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.5rem 0;
+  }
+
+  /* Pending header khusus */
+  #view-pending .card-header > div:last-child {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  #view-pending .card-header > div:last-child .btn-reject-mono {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .admin-table {
+    min-width: 500px;
+  }
+
   .admin-table th,
   .admin-table td {
-    padding: 0.75rem;
-    font-size: 0.85rem;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8rem;
   }
 
   .action-buttons {
     flex-direction: column;
     gap: 0.375rem;
+    align-items: stretch;
   }
 
-  .btn-mini {
+  .action-buttons button {
     width: 100%;
+    justify-content: center;
   }
 
   #page-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
+  }
+
+  .mobile-header {
+    height: 60px;
+    padding: 0 1rem;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-body {
+    padding: 1rem;
   }
 }
 
 @media (max-width: 480px) {
   .mobile-header {
-    padding: 0 1rem;
+    padding: 0 0.875rem;
   }
 
   .login-box {
-    padding: 2rem 1.5rem;
+    padding: 2rem 1.25rem;
+  }
+
+  .content-wrapper {
+    padding: 0.75rem;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.75rem;
+  }
+
+  .status-badge {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
   }
 }
 
@@ -995,4 +1098,20 @@ input:checked + .slider-mono:before {
 .sort-item:hover {
     background-color: #ffffff;
     color: #000000;
+}
+
+/* Pending actions responsive */
+@media (max-width: 480px) {
+  .pending-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .pending-actions .btn-reject-mono {
+    flex: 1;
+  }
+
+  .toggle-mono-wrapper {
+    flex-shrink: 0;
+  }
 }
