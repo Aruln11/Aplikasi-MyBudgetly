@@ -489,7 +489,7 @@ body {
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1000px;
   margin: -2rem auto 0;
   padding: 0 1rem 2rem;
   position: relative;
@@ -1074,7 +1074,7 @@ body {
 .dropdown-content {
   display: none;
   position: absolute;
-  right: 0;
+  right: 5;
   background-color: var(--card-bg);
   min-width: 200px;
   box-shadow: var(--shadow);
@@ -2082,108 +2082,82 @@ body {
 }
 
 @media (max-width: 767px) {
-  .scanner-correction-header {
-    display: flex;
-  }
-  .theme-toggle {
-    width: 40px;
-    height: 22px;
-  }
-  .theme-toggle::before {
-    width: 18px;
-    height: 18px;
-  }
-  [data-theme="dark"] .theme-toggle::before {
-    transform: translateX(18px);
-  }
-  .theme-icon {
-    font-size: 9px;
-  }
-  .app-header {
-    padding: 2rem 1rem 3rem;
-    min-height: 250px;
-  }
-  .profile-title-section {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  .profile-photo-container {
-    width: 60px;
-    height: 60px;
-  }
-  .app-title {
-    font-size: clamp(2rem, 8vw, 3rem);
-  }
-  .container {
-    padding: 0 1rem 1rem;
-    margin-top: -1.5rem;
-  }
+  /* Pengaturan Kotak Grid Utama */
   .summary-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr; 
+    grid-template-rows: auto auto;    
+    gap: 10px;                       
     margin-bottom: 2rem;
   }
-  .summary-card {
-    padding: 1.25rem;
+
+  /* Kartu Saldo Akhir: Dibuat tumpuk tengah (center) */
+  .summary-card.balance {
+    grid-row: span 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Center vertikal */
+    align-items: center;     /* Center horizontal */
+    text-align: center;      /* Teks rata tengah */
+    padding: 1.5rem 1rem;    /* Padding lebih lega */
+    gap: 10px;
   }
+
+  /* Header Saldo Akhir: Ikon di ATAS teks */
+  .summary-card.balance .card-header {
+    flex-direction: column !important; /* Ikon di atas, Judul di bawahnya */
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 5px;
+    gap: 8px;
+    width: 100%;
+  }
+
+  /* Nominal Saldo Akhir di bawah judul */
+  .summary-card.balance .card-value {
+    font-size: clamp(1.1rem, 5vw, 1.5rem) !important; 
+    font-weight: 800;
+    margin-top: -5px;
+  }
+
+  /* Kartu Pemasukan & Pengeluaran (Tetap di Kanan) */
+  .summary-card.income, 
+  .summary-card.expense {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* Header kartu kecil tetap ikon di samping (Row) agar tidak sempit */
+  .summary-card.income .card-header,
+  .summary-card.expense .card-header {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+  }
+
+  .card-title {
+    font-size: 0.7rem !important;
+    white-space: nowrap;
+    margin: 0;
+  }
+
   .card-value {
-    font-size: 1.75rem;
-  }
-  .form-container {
-    position: relative;
-    top: 0;
-  }
-  .section-header {
-    padding: 1rem;
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .filter-controls {
-    justify-content: stretch;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  .filter-select,
-  .search-container,
-  .data-actions-dropdown {
-    flex: 1;
+    font-size: clamp(0.8rem, 3.8vw, 1.2rem) !important; 
+    font-weight: 800;
+    line-height: 1.2;
+    word-break: break-all;
+    font-variant-numeric: tabular-nums;
+    display: block;
     width: 100%;
   }
-  .data-actions-btn {
-    justify-content: center;
-    width: 100%;
-  }
-  .transactions-table th,
-  .transactions-table td {
-    padding: 0.75rem 0.5rem;
-    font-size: 0.8rem;
-    vertical-align: middle;
-  }
-  .button-group {
-    flex-direction: column;
-  }
-  .btn {
-    justify-content: center;
-  }
-  .modal-content {
-    width: 95%;
-  }
-  .btn-pdf,
-  .btn-delete-all {
-    padding: 0.625rem 1.25rem;
-    font-size: 0.8rem;
-  }
-  .btn-pdf-modal {
-    padding: 0.875rem 1.5rem;
-    font-size: 0.9rem;
-  }
-  .transaction-actions {
-    opacity: 1;
-    gap: 0.375rem;
-  }
-  .action-btn {
-    min-width: 40px;
-    min-height: 40px;
+
+  .card-icon {
+    width: 32px !important;
+    height: 32px !important;
+    flex-shrink: 0;
   }
 }
 
@@ -3256,4 +3230,66 @@ html[data-warna-putih="true"]:not([data-theme="dark"]) h3.section-title svg {
     object-fit: contain;
     margin-right: 10px;
     vertical-align: middle;
+}
+/* --- VERSI MULUS (ANTI-REFRESH) --- */
+.transaction-type-tabs {
+  display: flex;
+  gap: 8px;
+  background: var(--background-secondary);
+  padding: 5px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+  /* Kunci tinggi agar elemen di bawahnya tidak lompat/bergetar */
+  height: 52px; 
+  align-items: stretch;
+}
+
+.type-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px !important;
+  /* Gunakan border transparan agar ukuran tombol tidak berubah saat aktif */
+  border: 2px solid transparent !important; 
+  background: transparent;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--text-secondary);
+  /* Transisi warna dan border saja, tanpa gerak fisik */
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.tab-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+/* Hijau Halus - Pemasukan */
+.type-tab.income.active {
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: #10b981 !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Merah Halus - Pengeluaran */
+.type-tab.expense.active {
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+
+/* Sedikit zoom pada ikon saat aktif agar terasa interaktif */
+.type-tab.active .tab-icon {
+  transform: scale(1.1);
+}
+
+/* Agar ikon di dalam tombol tidak hilang warnanya */
+[data-theme="dark"] .tab-icon {
+    filter: none !important; /* Mencegah ikon gambar jadi putih di dark mode jika ingin warna asli */
 }

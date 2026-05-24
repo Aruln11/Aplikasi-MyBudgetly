@@ -380,7 +380,6 @@ document.addEventListener('DOMContentLoaded', function() {
   setTodayDate();
   setupMidnightDateUpdate();
   setupEventListeners();
-  initializeCustomSelect();
   initializeMonthFilter(); 
   initializePdfOrientationSelect();
   document.getElementById('modal-login-form').addEventListener('submit', handleLogin);
@@ -1883,44 +1882,7 @@ function scrollToForm() {
   });
 }
 
-function initializeCustomSelect() {
-  const container = document.getElementById('custom-jenis');
-  if (!container) return;
 
-  const selectedDisplay = container.querySelector('.select-selected');
-  const hiddenInput = document.getElementById('jenis');
-  const optionsContainer = container.querySelector('.select-items');
-  const options = optionsContainer.querySelectorAll('div');
-
-  const closeAllSelect = () => {
-    container.classList.remove('select-active');
-    optionsContainer.classList.add('select-hide');
-  };
-
-  const defaultOption = options[1];
-  selectedDisplay.innerHTML = defaultOption.innerHTML;
-  hiddenInput.value = defaultOption.getAttribute('data-value');
-  
-  selectedDisplay.addEventListener('click', function(e) {
-    e.stopPropagation();
-    const isActive = container.classList.contains('select-active');
-    closeAllSelect();
-    if (!isActive) {
-      container.classList.add('select-active');
-      optionsContainer.classList.remove('select-hide');
-    }
-  });
-
-  options.forEach(option => {
-    option.addEventListener('click', function() {
-      selectedDisplay.innerHTML = this.innerHTML;
-      hiddenInput.value = this.getAttribute('data-value');
-      closeAllSelect();
-    });
-  });
-
-  document.addEventListener('click', closeAllSelect);
-}
 
 function initializeMonthFilter() {
   const container = document.getElementById('custom-filter-bulan');
@@ -2647,6 +2609,24 @@ function initializeAssetCategorySelect() {
     window.addEventListener('click', function(event) {
         if (!container.contains(event.target)) {
             closeAllSelect();
+        }
+    });
+}
+function selectTransactionType(type) {
+    const inputJenis = document.getElementById('jenis');
+    const tabs = document.querySelectorAll('.type-tab');
+    
+    // Cegah proses jika tipe yang diklik sudah aktif (menghindari flicker)
+    if (inputJenis.value === type) return;
+
+    inputJenis.value = type;
+    
+    // Gunakan cara manual agar tidak memicu repaint seluruh container
+    tabs.forEach(tab => {
+        if (tab.classList.contains(type === 'pemasukan' ? 'income' : 'expense')) {
+            tab.classList.add('active');
+        } else {
+            tab.classList.remove('active');
         }
     });
 }
