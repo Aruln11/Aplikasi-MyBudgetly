@@ -590,10 +590,10 @@ body {
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 15px;
   margin-bottom: 1.25rem;
-  align-items: stretch;
+  align-items: flex-start;
 }
 
 .input-group {
@@ -605,15 +605,17 @@ body {
   font-weight: 500;
   margin-bottom: 0.5rem;
   color: var(--text-primary);
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Diperkecil agar tidak makan tempat */
+  white-space: nowrap; /* KUNCI: Label tidak akan turun ke baris baru */
 }
 
 .input-field,
 .select-field {
-  padding: 0.625rem 0.875rem;
+  width: 100%;
+  padding: 0.6rem 0.5rem; /* Padding dikurangi agar 3 kolom muat sejajar */
   border: 2px solid var(--border);
   border-radius: var(--radius-sm);
-  font-size: 0.9rem;
+  font-size: 0.85rem; /* Ukuran font diperkecil sedikit */
   transition: all 0.2s ease;
   background: var(--background);
   color: var(--text-primary);
@@ -2110,7 +2112,7 @@ body {
   /* KUNCI UTAMA: Grid 2 Kolom */
   .summary-grid {
     display: grid !important;
-    grid-template-columns: 1.2fr 1fr !important; 
+    grid-template-columns: 1.1fr 1fr !important; 
     grid-template-rows: auto auto !important;
     gap: 9px !important;
     margin-bottom: 15px !important;
@@ -2139,7 +2141,7 @@ body {
     display: flex !important;
     flex-direction: column !important; /* Container utama tetap kolom untuk memisahkan header & angka */
     justify-content: center !important;
-    padding: 10px 14px !important;
+    padding: 13px 12px !important;
     min-width: 0;
   }
 
@@ -2149,7 +2151,7 @@ body {
     display: flex !important;
     flex-direction: row !important; /* Menjadikan ikon dan teks satu baris */
     align-items: center !important; /* Sejajar secara vertikal */
-    gap: 4px !important;
+    gap: 7.5px !important;
     margin-bottom: 10px !important;
     width: 100% !important;
   }
@@ -2780,27 +2782,24 @@ body {
 }
 /* Floating Bottom Navigation - Equal Width Version */
 .bottom-nav {
-  position: fixed;
-  bottom: 25px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 92%;
-  max-width: 500px;
-  background: var(--card-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 10px 0;
-  z-index: 9999;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    position: fixed;
+    bottom: 10px; /* Sesuai permintaanmu: agak ke bawah sedikit */
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 30px);
+    max-width: 500px; /* Supaya di Desktop tidak melar kepanjangan */
+    background: var(--card-bg);
+    display: flex; /* KUNCI: Harus Flex agar muncul */
+    justify-content: space-around;
+    padding: 12px 10px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border: 1px solid var(--border);
+    z-index: 1000;
 }
-
 /* Sembunyikan bottom-nav di desktop */
 @media (min-width: 768px) {
-  .bottom-nav {
-    display: none;
-  }
+  
   /* Di desktop, beri padding bawah lebih kecil karena tidak ada bottom-nav */
   .container {
     padding-bottom: 2rem;
