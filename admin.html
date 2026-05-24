@@ -489,13 +489,15 @@
                   display: flex;
                   justify-content: space-between;
                   align-items: center;
+                  flex-wrap: wrap;
+                  gap: 0.75rem;
                 "
               >
                 <h3 style="font-weight: 600; color: #0f172a">
                   Permintaan Akses
                 </h3>
 
-                <div style="display: flex; gap: 12px; align-items: center">
+                <div class="pending-actions" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
                   <button class="btn-reject-mono" onclick="rejectAllPending()">
                     Tolak Semua
                   </button>
@@ -838,7 +840,6 @@
       </div>
     </div>
 
-    <script src="admin.js"></script>
     <div id="pelanggan-crud-modal" class="modal-overlay">
       <div class="login-box">
         <div class="modal-header">
@@ -888,5 +889,6 @@
         </button>
       </div>
     </div>
+    <script src="admin.js"></script>
   </body>
 </html>

@@ -316,20 +316,17 @@ async function checkMaintenanceStatus() {
             .eq('setting_fitur', 'maintenance mode')
             .maybeSingle();
 
-        // Jika maintenance aktif ATAU data gagal diambil
         if (data && data.status === true) {
-            screen.style.display = 'flex'; // Tetap tampilkan
-            mainContent.style.display = 'none';
             textEl.innerText = data.value || "Kami sedang melakukan pemeliharaan rutin.";
+            screen.style.display = 'flex';
+            mainContent.style.display = 'none';
             document.body.style.overflow = 'hidden'; 
         } else {
-            // HANYA JIKA MAINTENANCE MATI, kita tutup layarnya
             screen.style.display = 'none';
             mainContent.style.display = 'block';
             document.body.style.overflow = 'auto';
         }
     } catch (err) {
-        // Jika terjadi error koneksi, amannya tampilkan aplikasi (atau tetap maintenance)
         screen.style.display = 'none';
         mainContent.style.display = 'block';
     }
