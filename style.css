@@ -489,11 +489,8 @@ body {
 }
 
 .container {
-<<<<<<< HEAD
   max-width: 1000px;
-=======
   max-width: 960px;
->>>>>>> 19cc7df7c578de91fb284b64678d7d2cfee56446
   margin: -2rem auto 0;
   padding: 0 1rem 2rem;
   position: relative;
@@ -2105,238 +2102,87 @@ body {
 }
 
 @media (max-width: 767px) {
-<<<<<<< HEAD
-  /* Pengaturan Kotak Grid Utama */
+  /* Pengaturan Header & Profil agar lebih ramping */
+  .app-header { padding: 1rem 1rem 2rem !important; min-height: 160px !important; }
+  .profile-photo-container { width: 40px !important; height: 40px !important; }
+  .container { margin-top: -1.5rem !important; padding: 0 0.75rem 100px !important; }
+
+  /* KUNCI UTAMA: Grid 2 Kolom */
   .summary-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr; 
-    grid-template-rows: auto auto;    
-    gap: 10px;                       
-    margin-bottom: 2rem;
+    display: grid !important;
+    grid-template-columns: 1.2fr 1fr !important; 
+    grid-template-rows: auto auto !important;
+    gap: 9px !important;
+    margin-bottom: 15px !important;
   }
 
-  /* Kartu Saldo Akhir: Dibuat tumpuk tengah (center) */
+  /* Kartu Saldo Akhir (Kiri) tetap vertikal agar ikon di atas angka */
   .summary-card.balance {
-    grid-row: span 2;
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Center vertikal */
-    align-items: center;     /* Center horizontal */
-    text-align: center;      /* Teks rata tengah */
-    padding: 1.5rem 1rem;    /* Padding lebih lega */
-    gap: 10px;
-=======
-  .scanner-correction-header {
-    display: flex;
-  }
-  .theme-toggle {
-    width: 40px;
-    height: 22px;
-  }
-  .theme-toggle::before {
-    width: 18px;
-    height: 18px;
-  }
-  [data-theme="dark"] .theme-toggle::before {
-    transform: translateX(18px);
-  }
-  .theme-icon {
-    font-size: 9px;
-  }
-  .app-header {
-    padding: 1.5rem 1rem 2.5rem;
-    min-height: 180px;
-  }
-  .profile-title-section {
-    flex-direction: row;
-    gap: 0.75rem;
-    flex-wrap: nowrap;
-  }
-  .profile-photo-container {
-    width: 44px;
-    height: 44px;
-    flex-shrink: 0;
-  }
-  .profile-placeholder {
-    font-size: 1.25rem;
-  }
-  .app-title {
-    font-size: clamp(1.25rem, 5vw, 1.75rem);
-    min-width: unset;
-  }
-  .app-subtitle {
-    font-size: 0.8rem;
-    margin-bottom: 1rem;
-  }
-  .header-content {
-    padding-top: 1.25rem;
-    width: 100%;
-  }
-  .container {
-    padding: 0 0.75rem 1rem;
-    margin-top: -1.5rem;
-  }
-  .summary-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-  }
-  .summary-card {
-    padding: 1rem;
->>>>>>> 19cc7df7c578de91fb284b64678d7d2cfee56446
+    grid-row: span 2 !important; 
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 0.8rem !important;
+    min-width: 0;
   }
 
-  /* Header Saldo Akhir: Ikon di ATAS teks */
   .summary-card.balance .card-header {
-    flex-direction: column !important; /* Ikon di atas, Judul di bawahnya */
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 5px;
-    gap: 8px;
-    width: 100%;
+    flex-direction: column !important;
+    gap: 5px !important;
+    margin-bottom: 8px !important;
   }
 
-  /* Nominal Saldo Akhir di bawah judul */
-  .summary-card.balance .card-value {
-    font-size: clamp(1.1rem, 5vw, 1.5rem) !important; 
-    font-weight: 800;
-    margin-top: -5px;
-  }
-
-  /* Kartu Pemasukan & Pengeluaran (Tetap di Kanan) */
+  /* Kartu Pemasukan & Pengeluaran (Kanan) - SEJAJAR (ROW) */
   .summary-card.income, 
   .summary-card.expense {
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    display: flex !important;
+    flex-direction: column !important; /* Container utama tetap kolom untuk memisahkan header & angka */
+    justify-content: center !important;
+    padding: 10px 14px !important;
+    min-width: 0;
   }
 
-  /* Header kartu kecil tetap ikon di samping (Row) agar tidak sempit */
+  /* Ikon dan Teks "Total Pemasukan" jadi SATU BARIS (Row) */
   .summary-card.income .card-header,
   .summary-card.expense .card-header {
-    flex-direction: row !important;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 5px;
+    display: flex !important;
+    flex-direction: row !important; /* Menjadikan ikon dan teks satu baris */
+    align-items: center !important; /* Sejajar secara vertikal */
+    gap: 4px !important;
+    margin-bottom: 10px !important;
+    width: 100% !important;
   }
 
+  /* Perkecil Ikon agar pas dengan teks */
+  .card-icon {
+    width: 24px !important; /* Ukuran ikon lebih ramping */
+    height: 15px !important;
+    padding: 4px !important;
+    flex-shrink: 0; /* Mencegah ikon gepeng */
+  }
+
+  /* Sesuaikan Ukuran Teks Judul */
   .card-title {
-    font-size: 0.7rem !important;
-    white-space: nowrap;
-    margin: 0;
+    font-size: 0.75rem !important; /* Ukuran teks judul kecil */
+    white-space: nowrap; /* Mencegah teks judul turun ke baris baru */
+    margin: 0 !important;
   }
 
-  .card-value {
-<<<<<<< HEAD
-    font-size: clamp(0.8rem, 3.8vw, 1.2rem) !important; 
-    font-weight: 800;
-    line-height: 1.2;
+  /* Nominal Angka (Triliunan aman) */
+  .summary-card.balance .card-value {
+    font-size: clamp(1rem, 4.5vw, 1.4rem) !important;
     word-break: break-all;
-    font-variant-numeric: tabular-nums;
-    display: block;
-    width: 100%;
   }
 
-  .card-icon {
-    width: 32px !important;
-    height: 32px !important;
-    flex-shrink: 0;
-=======
-    font-size: 1.35rem;
+  .summary-card.income .card-value,
+  .summary-card.expense .card-value {
+    font-size: clamp(0.85rem, 3.8vw, 1.05rem) !important;
+    word-break: break-all;
+    margin-left: 0 !important; /* Menjaga angka tetap rata kiri di bawah ikon/teks */
   }
-  .card-title {
-    font-size: 0.8rem;
-  }
-  .card-icon {
-    width: 32px;
-    height: 32px;
-  }
-  .form-container {
-    padding: 1.25rem;
-  }
-  .form-title {
-    font-size: 1rem;
-    margin-bottom: 1rem;
-  }
-  .form-grid {
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-  }
-  .input-field, .select-field {
-    height: 44px;
-    font-size: 0.9rem;
-    padding: 0.75rem 0.875rem;
-  }
-  .input-label {
-    font-size: 0.8rem;
-  }
-  .section-header {
-    padding: 1rem;
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .section-title {
-    font-size: 1rem;
-  }
-  .filter-controls {
-    justify-content: stretch;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  .filter-select,
-  .search-container,
-  .data-actions-dropdown {
-    flex: 1;
-    width: 100%;
-  }
-  .data-actions-btn {
-    justify-content: center;
-    width: 100%;
-  }
-  .transactions-table th,
-  .transactions-table td {
-    padding: 0.625rem 0.4rem;
-    font-size: 0.75rem;
-    vertical-align: middle;
-  }
-  .button-group {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  .btn {
-    justify-content: center;
-    padding: 0.75rem 1.5rem;
-    font-size: 0.9rem;
-  }
-  .modal-content {
-    width: 95%;
-    padding: 1.25rem;
-  }
-  .btn-pdf,
-  .btn-delete-all {
-    padding: 0.625rem 1.25rem;
-    font-size: 0.8rem;
-  }
-  .btn-pdf-modal {
-    padding: 0.875rem 1.5rem;
-    font-size: 0.9rem;
-  }
-  .transaction-actions {
-    opacity: 1;
-    gap: 0.375rem;
-  }
-  .action-btn {
-    min-width: 36px;
-    min-height: 36px;
-    width: 36px;
-    height: 36px;
-  }
-  .pagination-controls {
-    padding: 0.75rem;
-    font-size: 0.8rem;
->>>>>>> 19cc7df7c578de91fb284b64678d7d2cfee56446
-  }
+
+  #page-portofolio { padding-bottom: 100px !important; }
 }
 
 .loading {
