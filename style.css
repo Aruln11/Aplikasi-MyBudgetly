@@ -590,10 +590,10 @@ body {
 
 .form-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 15px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
   margin-bottom: 1.25rem;
-  align-items: flex-start;
+  align-items: stretch;
 }
 
 .input-group {
@@ -605,17 +605,15 @@ body {
   font-weight: 500;
   margin-bottom: 0.5rem;
   color: var(--text-primary);
-  font-size: 0.75rem; /* Diperkecil agar tidak makan tempat */
-  white-space: nowrap; /* KUNCI: Label tidak akan turun ke baris baru */
+  font-size: 0.875rem;
 }
 
 .input-field,
 .select-field {
-  width: 100%;
-  padding: 0.6rem 0.5rem; /* Padding dikurangi agar 3 kolom muat sejajar */
+  padding: 0.625rem 0.875rem;
   border: 2px solid var(--border);
   border-radius: var(--radius-sm);
-  font-size: 0.85rem; /* Ukuran font diperkecil sedikit */
+  font-size: 0.9rem;
   transition: all 0.2s ease;
   background: var(--background);
   color: var(--text-primary);
