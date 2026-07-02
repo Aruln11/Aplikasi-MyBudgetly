@@ -126,7 +126,7 @@
     </button>
   </div>
 
-  <button class="settings-dropdown-item" id="auth-button">
+  <button class="settings-dropdown-item" id="auth-button" onclick="handleAuthButtonClick()">
       <span style="font-weight: 600;">Login</span>
   </button>
 </div>
@@ -372,37 +372,104 @@
   </div>
 </div> 
 
- <div id="page-portofolio" class="app-page" style="display: none; padding: 0 20px 100px 20px;">
-    
-    <div style="margin-top: 30px; margin-bottom: 20px;">
-        <h2 style="font-family: 'Times New Roman', Times, serif; font-size: 24px; font-weight: 500; color: var(--text-primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Portofolio</h2>
-        <p style="color: var(--text-secondary); font-size: 13px;">Kelola semua aset dalam satu tempat</p>
+ <div id="page-portofolio" class="app-page container" style="display: none;">
+    <div class="porto-header-section">
+        <h1 class="porto-main-title">PORTOFOLIO</h1>
+        <p class="porto-main-subtitle">Kelola semua aset dalam satu tempat</p>
     </div>
 
-    <div class="porto-summary-card">
-        <div class="porto-summary-header">
-            <div>
-                <span class="summary-label">Total Aset Saya</span>
-                <h2 id="total-aset-display" class="summary-value">Rp 0</h2>
-            </div>
-            <button onclick="bukaModalAset()" class="btn-add-simple">
-                <i data-lucide="plus" style="width: 14px; margin-right: 4px;"></i> Tambah aset
-            </button>
-        </div>
+    <div class="porto-summary-white">
+    <div class="psw-content">
+        <span class="psw-label">Total Aset Saya</span>
+        <div class="psw-main-value" id="total-aset-display">Rp 0</div>
         
-        <div class="porto-summary-footer">
-             <span class="summary-label">Jumlah Aset</span>
-             <div id="jumlah-aset-display" class="summary-count">0</div>
+        <div style="margin-top: 15px;">
+            <span class="psw-label">Jumlah aset</span>
+            <div class="psw-count" id="jumlah-aset-display">0</div>
         </div>
     </div>
 
-    <div id="list-aset-container" class="porto-grid-container">
+    <div class="psw-right-wrapper">
+        <button class="psw-add-btn-modern" onclick="bukaModalAset()">
+            <i data-lucide="plus-circle"></i> Tambah aset
+        </button>
+        <div class="psw-illustration">
+            <img src="assets/portoaset.png" alt="Wallet">
+        </div>
+    </div>
+</div>
+
+    <h2 class="section-title-assets">Aset Saya</h2>
+    
+    <div id="list-aset-container" class="porto-grid-layout">
         </div>
 </div>
 
   <div id="page-ruang" class="app-page" style="display: none;"><div class="empty-state"><h3>Ruang</h3><p>Segera Hadir</p></div></div>
   <div id="page-forum" class="app-page" style="display: none;"><div class="empty-state"><h3>Forum</h3><p>Segera Hadir</p></div></div>
-  <div id="page-saya" class="app-page" style="display: none;"><div class="empty-state"><h3>Profil Saya</h3><p>Segera Hadir</p></div></div>
+  <div id="page-saya" class="app-page" style="display: none;">
+    <div class="profil-page">
+
+      <!-- Foto -->
+      <div class="profil-row profil-row-foto">
+        <span class="profil-label">Foto</span>
+        <div class="profil-avatar" onclick="document.getElementById('profil-photo-input').click()">
+          <img id="profil-photo-display" class="profil-photo-img" alt="Foto Profil">
+          <div id="profil-photo-placeholder" class="profil-photo-placeholder">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26" aria-hidden="true">
+              <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+            </svg>
+          </div>
+        </div>
+        <input type="file" id="profil-photo-input" style="display:none;" accept="image/*" onchange="handleProfilePhotoChange(event); syncProfilPhoto();">
+      </div>
+      <div class="profil-divider"></div>
+
+      <!-- Username -->
+      <div class="profil-row">
+        <span class="profil-label">Username</span>
+        <span class="profil-value" id="profil-username-display">—</span>
+      </div>
+      <div class="profil-divider"></div>
+
+      <!-- Kode Akses -->
+      <div class="profil-row">
+        <span class="profil-label">Kode Akses</span>
+        <div class="profil-kode-right">
+          <span class="profil-value profil-kode-mono" id="profil-kode-text">••••••••</span>
+          <button class="profil-eye-btn" onclick="toggleKodeAkses()" aria-label="Toggle kode akses">
+            <i data-lucide="eye" id="profil-eye-icon" style="width:15px;height:15px;"></i>
+          </button>
+        </div>
+      </div>
+      <div class="profil-divider"></div>
+
+      <!-- Pengaturan Akun heading -->
+      <div class="profil-section-heading">Pengaturan Akun</div>
+
+      <!-- Backup Data -->
+      <div class="profil-row profil-row-action" onclick="/* Coming Soon */">
+        <span class="profil-label">Backup Data</span>
+        <span class="profil-coming-soon">Segera Hadir</span>
+      </div>
+      <div class="profil-divider"></div>
+
+      <!-- Hapus Akun -->
+      <div class="profil-row profil-row-action" onclick="/* Hapus Akun - Coming Soon */">
+        <span class="profil-label profil-label-danger">Hapus Akun</span>
+      </div>
+      <div class="profil-divider"></div>
+
+      <!-- Logout -->
+      <div class="profil-logout-wrap">
+        <button class="profil-logout-btn" onclick="handleLogout()">
+          <i data-lucide="log-out" style="width:16px;height:16px;"></i>
+          Logout
+        </button>
+      </div>
+
+    </div>
+  </div>
 
   <div id="scan-modal" class="modal">
     <div class="modal-content">
@@ -653,7 +720,6 @@
   <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.js'></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js"></script>
 
   <div id="login-modal" class="modal" style="display: none; z-index: 2001;">
     <div class="login-modal-content">
@@ -738,44 +804,67 @@
   </div>
 </nav>
 <div id="modal-tambah-aset" class="modal" style="display: none; z-index: 2000; align-items: center; justify-content: center;">
-  <div class="custom-modal-content">
-    <div class="custom-modal-header">
-      <h3 class="custom-modal-title">Tambah Aset</h3>
-      <button class="custom-close-btn" onclick="tutupModalAset()">X</button>
-    </div>
-    <div class="custom-modal-body">
-      <form id="form-aset" onsubmit="handleSimpanAset(event)">
-        <div class="custom-input-group" style="margin-bottom: 20px;">
-          <label class="custom-label">Kategori</label>
-          <div class="custom-select-container" id="custom-kategori-aset" style="width: 100%;">
-            <div class="select-selected" style="padding-left: 35px;"> 
-                <i data-lucide="bar-chart-2" class="input-icon-left" style="color: #4a5568;"></i>
-                <span style="font-family: 'Times New Roman', Times, serif;">saham</span>
+    <div class="custom-modal-content">
+        <div class="custom-modal-header" style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+            <div style="width: 65px; height: 65px; background: #f0f5ff; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <img src="assets/portoaset.png" alt="Wallet" style="width: 70px; height: 70px; object-fit: contain;">
             </div>
-            <div class="select-items select-hide">
-                <div data-value="Saham"><i data-lucide="bar-chart-2" style="width:16px; margin-right:8px;"></i> Saham</div>
-                <div data-value="Kripto"><i data-lucide="bitcoin" style="width:16px; margin-right:8px;"></i> Kripto</div>
+            <div style="flex: 1;">
+                <h3 style="margin: 0; font-size: 20px; font-weight: 700; color: #1a1c21;">Tambah Aset</h3>
+                <p style="margin: 4px 0 0 0; font-size: 14px; color: #6e7582;">Tambahkan aset baru ke portofolio Anda.</p>
             </div>
-          </div>
-          <input type="hidden" id="input-kategori" value="Saham">
+            <button class="custom-close-btn" onclick="tutupModalAset()" style="background: #f7f7f9; border: none; padding: 8px; border-radius: 8px; cursor: pointer;">✕</button>
         </div>
-        <div class="custom-input-group" style="margin-bottom: 20px;">
-          <label class="custom-label" id="label-nama-aset">Saham</label>
-          <input type="text" id="input-nama" class="custom-input" placeholder="BBCA" required autocomplete="off">
-        </div>
-        <div class="custom-input-group" style="margin-bottom: 25px;">
-          <label class="custom-label">Catatan (Opsional)</label>
-          <textarea id="input-catatan" class="custom-input" style="height: 80px; resize: none;"></textarea>
-        </div>
-        <div class="custom-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
-           <button type="submit" class="btn-simpan">Simpan</button>
-           <button type="button" class="btn-batal" onclick="tutupModalAset()">Batal</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
 
+        <form id="form-aset" onsubmit="handleSimpanAset(event)">
+            <div class="custom-input-group" style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #1a1c21;">Kategori</label>
+                <div class="custom-select-container" id="custom-kategori-aset" style="width: 100%;">
+                    <div class="select-selected" style="display: flex; align-items: center; padding: 12px; border: 1px solid #e1e4ea; border-radius: 12px; cursor: pointer;">
+                        <i data-lucide="bar-chart-2" style="width: 18px; margin-right: 10px; color: #4a5568;"></i>
+                        <span style="flex: 1;">Saham</span>
+                    </div>
+                    <div class="select-items select-hide" style="position: absolute; width: 100%; background: white; border: 1px solid #e1e4ea; border-radius: 12px; margin-top: 5px; z-index: 10;">
+                        <div data-value="Saham">Saham</div>
+                        <div data-value="Kripto">Kripto</div>
+                        <div data-value="Emas">Emas</div>
+                        <div data-value="Reksadana">Reksadana</div>
+                    </div>
+                </div>
+                <input type="hidden" id="input-kategori" value="Saham">
+            </div>
+
+            <div class="custom-input-group" style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #1a1c21;" id="label-nama-aset">Saham</label>
+                <input type="text" id="input-nama" class="custom-input" placeholder="BBCA" required style="width: 100%; padding: 12px; border: 1px solid #e1e4ea; border-radius: 12px; box-sizing: border-box;">
+            </div>
+
+            <!-- Jenis Reksadana (hanya muncul saat kategori = Reksadana) -->
+            <div id="section-jenis-rd" class="custom-input-group" style="display:none; margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #1a1c21;">Jenis Reksadana <span style="color:#ef4444;">*</span></label>
+                <div class="rd-jenis-pills" id="rd-jenis-pills">
+                    <button type="button" class="rd-pill" data-jenis="Pasar Uang">Pasar Uang</button>
+                    <button type="button" class="rd-pill" data-jenis="Obligasi">Obligasi</button>
+                    <button type="button" class="rd-pill" data-jenis="Saham">Saham</button>
+                    <button type="button" class="rd-pill" data-jenis="Syariah">Syariah</button>
+                    <button type="button" class="rd-pill" data-jenis="Campuran">Campuran</button>
+                </div>
+                <input type="hidden" id="input-jenis-rd" value="">
+            </div>
+
+            <div class="custom-input-group" style="margin-bottom: 24px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #1a1c21;">Catatan (Opsional)</label>
+                <textarea id="input-catatan" class="custom-input" maxlength="40" placeholder="Tulis catatan Anda (opsional)..." style="width: 100%; height: 100px; padding: 12px; border: 1px solid #e1e4ea; border-radius: 12px; resize: none; box-sizing: border-box;"></textarea>
+                <div style="text-align:right; font-size:11px; color:var(--text-muted); margin-top:4px;"><span id="catatan-counter">0</span>/40</div>
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <button type="button" onclick="tutupModalAset()" style="flex: 1; padding: 14px; background: #fff; border: 1px solid #e1e4ea; border-radius: 12px; font-weight: 600; cursor: pointer;">Batal</button>
+                <button type="submit" style="flex: 1; padding: 14px; background: #f0f2ff; border: none; border-radius: 12px; color: #4e4af2; font-weight: 600; cursor: pointer;">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
 <div id="modal-transaksi-aset" class="modal" style="display: none; z-index: 2000; align-items: center; justify-content: center;">
   <div class="custom-modal-content" style="border: 2px dashed #a0aec0; box-shadow: none;">
     <div class="custom-modal-header">
@@ -794,16 +883,17 @@
         </div>
 
         <div class="custom-input-group" style="margin-bottom: 15px;">
-          <label class="custom-label">Harga</label>
+          <label class="custom-label" id="trans-label-harga">Harga Beli Total (Rp)</label>
           <div style="position: relative;">
             <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-family: monospace; color: #555;">Rp</span>
-            <input type="number" id="trans-harga" class="custom-input" style="padding-left: 35px; font-family: monospace;" required>
+            <input type="number" id="trans-harga" class="custom-input" style="padding-left: 35px; font-family: monospace;" step="1" placeholder="0" required>
           </div>
         </div>
         
         <div class="custom-input-group" style="margin-bottom: 15px;">
-          <label class="custom-label">Lembar</label>
-          <input type="number" id="trans-lembar" class="custom-input" style="font-family: monospace;" required>
+          <label class="custom-label" id="trans-label-satuan">Jumlah (lembar)</label>
+          <input type="number" id="trans-lembar" class="custom-input" style="font-family: monospace;" step="1" placeholder="0" required>
+          <div id="trans-satuan-preview" style="display:none; margin-top:6px; font-size:13px; color: var(--primary-accent-color); font-family: monospace; font-weight:600;"></div>
         </div>
 
         <div class="custom-input-group" style="margin-bottom: 20px;">
@@ -811,7 +901,7 @@
           <input type="date" id="trans-tanggal" class="custom-input" style="font-family: 'Inter', sans-serif;" required>
         </div>
 
-        <div style="margin-bottom: 25px;">
+        <div id="trans-total-section" style="margin-bottom: 25px;">
           <h4 style="font-family: 'Times New Roman', serif; font-size: 16px; margin-bottom: 5px; color: #333;">Total</h4>
           <div id="trans-total-preview" style="font-family: monospace; font-size: 20px; font-weight: bold; color: #333;">Rp 0</div>
         </div>
@@ -826,5 +916,6 @@
 </div>
 </div>
 </body>
+  <script src="script.js"></script>
 
 </html>

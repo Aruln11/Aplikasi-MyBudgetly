@@ -2249,23 +2249,14 @@ body {
 }
 
 .select-selected {
-  background-color: var(--background);
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  padding-left: 1rem;
-  padding-right: 2.5rem;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  user-select: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  height: 49px;
-  box-sizing: border-box;
-  position: relative;
-  top: 1px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    position: relative !important;
+    padding: 12px 40px 12px 12px !important; /* kanan buat arrow, kiri rata */
+    height: 49px;
+    box-sizing: border-box;
+    gap: 10px;
 }
 
 .custom-select-container.select-active .select-selected {
@@ -2861,125 +2852,109 @@ body {
 .app-page { display: none; }
 .app-page.active { display: block; }
 
-/* === STYLE PORTOFOLIO BARU (SERIF & CLEAN) === */
+/* --- PORTOFOLIO CLEAN DESIGN (PERSIS GAMBAR) --- */
+.porto-header-section { margin-bottom: 25px; padding-top: 1.5rem; }
+.porto-main-title { font-size: 24px; font-weight: 800; color: #1a202c; letter-spacing: 0.5px; }
+.porto-main-subtitle { color: #718096; font-size: 14px; }
 
-/* Kartu Ringkasan */
-.porto-summary-card {
-  background: var(--card-bg);
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 25px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-}
-
-.porto-summary-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 25px;
-}
-
-.summary-label {
-  font-size: 13px;
-  color: #666;
-  font-family: 'Inter', sans-serif;
-  display: block;
-  margin-bottom: 5px;
-}
-
-.summary-value {
-  font-size: 36px;
-  font-weight: 500;
-  color: var(--text-primary);
-  margin: 0;
-  font-family: 'Courier New', monospace; /* Font angka tegas */
-  letter-spacing: -1px;
-}
-
-.summary-count {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-/* Tombol Tambah Simple (Text Only) */
-.btn-add-simple {
-  background: transparent;
-  border: none;
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--text-primary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-family: 'Inter', sans-serif;
-}
-.btn-add-simple:hover { background: #f5f5f5; }
-
-/* Grid & Kartu Aset */
-.porto-grid-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-/* Card Aset Super Minimalis */
-.asset-card-design {
+.porto-summary-white {
     background: #ffffff;
-    border: none;
+    border-radius: 24px;
     padding: 30px;
     display: flex;
-    flex-direction: column;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-}
-
-.acd-title {
-    font-family: 'Times New Roman', Times, serif;
-    font-size: 20px;
-    font-weight: bold;
-    color: #004080; /* Biru klasik */
-    margin-bottom: 2px;
-}
-
-.acd-subtitle {
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    color: #333;
-    margin-bottom: 25px;
-}
-
-.acd-value {
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 28px;
-    font-weight: bold;
-    color: #222;
-    margin-bottom: 5px;
-}
-
-.acd-lembar {
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 14px;
-    color: #333;
-    margin-bottom: 20px;
-}
-
-.acd-note-label {
-    font-family: 'Times New Roman', Times, serif;
-    font-size: 14px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 5px;
-}
-
-.acd-note-text {
-    font-family: 'Times New Roman', Times, serif;
-    font-size: 13px;
-    color: #666;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     margin-bottom: 30px;
-    line-height: 1.4;
+    position: relative;
+    border: 1px solid #edf2f7;
+}
+
+/* --- PORTOFOLIO SUMMARY FIX (GAMBAR GEDE & TOMBOL DI KANAN) --- */
+
+.psw-content { 
+   flex: 1; 
+    display: flex; 
+    flex-direction: column;
+    min-width: 0; /* Kunci agar konten di dalam flex bisa mengecil */
+    
+}
+
+/* Label & Nilai Utama */
+.psw-label { color: #718096; font-size: 13px; font-weight: 500; }
+.psw-main-value {
+    /* Menggunakan clamp agar font mengecil otomatis di layar kecil */
+    /* Min: 1.5rem, Preferred: 6vw, Max: 2.1rem */
+    font-size: clamp(1.4rem, 5vw, 1.8rem); 
+    font-weight: 800; 
+    color: #2d3748; 
+    margin: 5px 0; 
+    letter-spacing: -0.03em;
+    white-space: nowrap; /* Mencegah angka turun ke baris baru */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Jika tetap tidak muat, akan muncul titik-titik (...) */
+    max-width: 100%; 
+}
+.psw-count { 
+    font-size: 19px;
+    font-weight: 1000;
+    color:#2d3748;
+    margin-top: 5px;
+    display: block;
+    width: 100%;
+    padding-left: 30px;
+    overflow: visible; /* Pastikan angka tidak dipotong titik-titik */
+    white-space: nowrap; }
+
+/* KANAN: Wrapper untuk Tombol (Atas) dan Gambar (Bawah) */
+.psw-right-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Mentok ke kanan */
+    gap: 10px;
+    flex-shrink: 0;
+    width: 110px;
+}
+
+/* TOMBOL TAMBAH: Desain Modern & Anti-Tumpuk */
+.psw-add-btn-modern {
+    background: var(--primary-accent-color-glow);
+    color: var(--primary-accent-color);
+    border: 1px solid var(--primary-accent-color);
+    padding: 8px 8px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    white-space: nowrap; /* Teks tetap satu baris */
+}
+
+.psw-add-btn-modern:hover {
+    background: var(--primary-accent-color);
+    color: white;
+    transform:scale(1.05);
+}
+
+/* GAMBAR DOMPET: Diperbesar sesuai keinginanmu */
+.psw-illustration { 
+    width: 145px; 
+    height: 140px; 
+    display: flex;
+    justify-content: flex-end;
+    filter: drop-shadow(0 5px 15px rgba(0,0,0,0.08));
+}
+.psw-illustration img { width: 100%; height: 100%; object-fit: contain; }
+.section-title-assets { font-size: 18px; font-weight: 700; color: #2d3748; margin-bottom: 20px; }
+
+.porto-grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding-bottom: 120px;
 }
 
 .acd-actions {
@@ -3194,8 +3169,6 @@ body {
 .custom-modal-content {
   max-height: 85vh;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
   padding-bottom: 20px; 
 }
 
@@ -3340,4 +3313,469 @@ html[data-warna-putih="true"]:not([data-theme="dark"]) h3.section-title svg {
 /* Agar ikon di dalam tombol tidak hilang warnanya */
 [data-theme="dark"] .tab-icon {
     filter: none !important; /* Mencegah ikon gambar jadi putih di dark mode jika ingin warna asli */
+}
+/* GANTI DENGAN INI */
+.app-page {
+    display: none; /* Sembunyi secara default */
+}
+
+.app-page.active {
+    display: block !important; /* Muncul hanya saat aktif */
+}
+
+#page-portofolio {
+    background-color: var(--background) !important;
+    min-height: 100vh;
+    width: 100%;
+}
+/* Modal Wrapper agar posisi pas */
+#modal-tambah-aset {
+    background: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Konten Modal */
+.custom-modal-content {
+    background: #ffffff;
+    width: 90%;
+    max-width: 480px;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* Input style agar seragam */
+.custom-input, .custom-select-container .select-selected {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: #1a1c21;
+}
+
+/* Border dan focus ring */
+.custom-input:focus, .custom-select-container .select-selected:focus {
+    outline: none;
+    border-color: #4e4af2 !important;
+}
+/* =========================================
+   STYLE UNTUK CARD PORTOFOLIO GRID (SIZE LEBIH KECIL)
+   ========================================= */
+.porto-grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    padding-bottom: 120px;
+}
+
+/* Mobile: 2 kolom compact seperti e-commerce */
+@media (max-width: 600px) {
+    .porto-grid-layout {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .asset-card-design {
+        padding: 12px;
+        min-height: 0;
+        border-radius: 12px;
+    }
+
+    .acd-name {
+        font-size: 13px;
+    }
+
+    .acd-category {
+        font-size: 10px;
+    }
+
+    .acd-value {
+        font-size: 13px !important;
+        word-break: break-all;
+    }
+
+    .acd-lembar {
+        font-size: 11px !important;
+    }
+
+    .acd-footer {
+        gap: 6px;
+    }
+
+    .acd-action-btn {
+        width: 28px !important;
+        height: 28px !important;
+    }
+}
+
+.asset-card-design {
+    background-color: #ffffff; 
+    border-radius: 14px; /* Radius lengkungan sedikit dikurangi */
+    padding: 16px; /* Padding dalam diperkecil dari 20px ke 16px */
+    display: flex;
+    flex-direction: column;
+    min-height: 150px; /* Tinggi kotak diturunkan dari 190px ke 150px */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 2px 4px -2px rgba(0, 0, 0, 0.05),
+        0 10px 15px -3px rgba(0, 0, 0, 0.08); 
+    border: 1px solid rgba(0, 0, 0, 0.03); 
+}
+
+/* Dukungan untuk Dark Mode */
+[data-theme="dark"] .asset-card-design {
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.asset-card-design:hover {
+    transform: translateY(-4px);
+    box-shadow: 
+        0 10px 15px -3px rgba(0, 0, 0, 0.08),
+        0 4px 6px -4px rgba(0, 0, 0, 0.05),
+        0 20px 25px -5px rgba(0, 0, 0, 0.1); 
+}
+
+.acd-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.acd-name {
+    font-size: 16px; /* Font nama aset diperkecil (sebelumnya 18px) */
+    font-weight: 800;
+    color: var(--text-primary);
+    text-transform: capitalize;
+}
+
+.acd-category {
+    font-size: 11px;           /* Ukuran kecil yang proporsional */
+    font-weight: 700;          /* Tebal agar tetap terlihat tegas */
+    color: #3a3c3d;            /* Warna abu-abu soft yang simpel[cite: 17] */
+    text-transform: capitalize; /* Mengubah format dari UPPERCASE ke Capitalize (huruf depan saja) */
+    letter-spacing: 0.07em;    /* Spasi agar lebih rapi[cite: 17] */
+    margin-bottom: 13px;       /* Jarak bawah agar tidak menempel[cite: 17] */
+    display: block;            /* Memastikan teks tetap di barisnya sendiri[cite: 17] */
+}
+
+
+.acd-value {
+  font-size: 18px; /* Harga nominal diperkecil (sebelumnya 22px) */
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 2px 0 6px 0;
+}
+.acd-body {
+    margin-bottom: 12px;
+}
+
+.acd-lembar {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary); /* Menggunakan warna teks utama (hitam/gelap) */
+    background: transparent; /* Menghilangkan background warna-warni */
+    padding: 0; /* Menghilangkan jarak dalam agar rata dengan teks di atasnya */
+    display: block;
+    margin-top: 2px;
+}
+.acd-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+[data-theme="dark"] .acd-footer {
+    border-top-color: var(--border-light);
+}
+
+/* Tombol Aksi ikut diperkecil biar proporsional */
+.acd-action-btn {
+    background: #f8fafc; 
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    width: 32px; /* Ukuran tombol jadi 32px (sebelumnya 36px) */
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] .acd-action-btn {
+    background: var(--background-secondary);
+}
+
+.acd-action-btn:hover {
+    background: var(--primary-accent-color);
+    color: white;
+    border-color: var(--primary-accent-color);
+    transform: scale(1.1) translateY(-2px);
+    box-shadow: 0 4px 10px var(--primary-accent-color-glow);
+}
+
+.acd-action-btn.delete:hover {
+    background: var(--danger-color);
+    border-color: var(--danger-color);
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
+}
+
+.acd-action-btn svg {
+    width: 14px; /* Icon di dalam tombol juga menyesuaikan */
+    height: 14px;
+}
+
+/* ===== HALAMAN PROFIL / SAYA ===== */
+.profil-page {
+  padding: 8px 0 120px;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Divider ── */
+.profil-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 0 20px;
+}
+
+/* ── Base Row ── */
+.profil-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  min-height: 58px;
+  gap: 12px;
+  background: transparent;
+  transition: background 0.12s;
+}
+
+.profil-row-action {
+  cursor: pointer;
+}
+
+.profil-row-action:hover {
+  background: var(--background-secondary);
+}
+
+/* ── Foto row ── */
+.profil-row-foto {
+  padding: 16px 20px;
+}
+
+/* ── Labels & values ── */
+.profil-label {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.profil-label-danger {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.profil-value {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.profil-kode-mono {
+  font-family: ui-monospace, 'SF Mono', monospace;
+  letter-spacing: 0.04em;
+}
+
+.profil-kode-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Eye button ── */
+.profil-eye-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 5px;
+  transition: color 0.12s, background 0.12s;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.profil-eye-btn:hover {
+  color: var(--text-secondary);
+  background: var(--background-secondary);
+}
+
+/* ── Avatar ── */
+.profil-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.profil-avatar:hover { opacity: 0.75; }
+
+.profil-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+.profil-photo-img.show { display: block; }
+
+.profil-photo-placeholder {
+  color: var(--text-muted);
+  display: flex;
+}
+.profil-photo-placeholder.hide { display: none; }
+
+/* ── Section heading ── */
+.profil-section-heading {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 24px 20px 6px;
+  letter-spacing: -0.01em;
+}
+
+/* ── Coming soon tag ── */
+.profil-coming-soon {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Logout ── */
+.profil-logout-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 52px 20px 16px;
+}
+
+.profil-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1.5px solid #fca5a5;
+  color: #ef4444;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  padding: 11px 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  line-height: 1;
+}
+
+.profil-logout-btn:hover {
+  background: rgba(239,68,68,0.05);
+  border-color: #f87171;
+}
+
+.profil-logout-btn:active {
+  background: rgba(239,68,68,0.1);
+}
+
+/* ── Responsive ── */
+@media (min-width: 480px) {
+  .profil-row { padding: 18px 24px; }
+  .profil-divider { margin: 0 24px; }
+  .profil-section-heading { padding: 28px 24px 6px; }
+}
+
+/* === PILL BUTTONS JENIS REKSADANA === */
+.rd-jenis-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.rd-pill {
+    padding: 7px 14px;
+    border: 1.5px solid #e1e4ea;
+    border-radius: 20px;
+    background: #f7f8fc;
+    color: #4a5568;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    font-family: inherit;
+}
+
+.rd-pill:hover {
+    border-color: #4e4af2;
+    color: #4e4af2;
+    background: #f0f2ff;
+}
+
+.rd-pill.active {
+    background: #4e4af2;
+    border-color: #4e4af2;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .rd-pill {
+    background: #1e293b;
+    border-color: #334155;
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .rd-pill.active {
+    background: var(--primary-accent-color);
+    border-color: var(--primary-accent-color);
+    color: #fff;
+}
+
+.acd-catatan {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-style: italic;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.acd-catatan-empty {
+    opacity: 0.5;
+    font-style: italic;
+    font-size: 11px;
+}
+
+.acd-catatan-empty:hover {
+    opacity: 0.8;
 }

@@ -167,6 +167,8 @@ function handleProfilePhotoChange(event) {
 
       localStorage.setItem('profilePhoto', e.target.result);
       showNotification('Foto profil berhasil diperbarui', 'success');
+      // Sync ke halaman profil jika terbuka
+      if (typeof syncProfilPhoto === 'function') syncProfilPhoto();
     };
     reader.readAsDataURL(file);
   }
@@ -1883,15 +1885,19 @@ function scrollToForm() {
 
 function initializeMonthFilter() {
   const container = document.getElementById('custom-filter-bulan');
-  if (!container) return;
+    if (!container) return;
 
-  const selectedDisplay = container.querySelector('.select-selected');
-  const optionsContainer = container.querySelector('.select-items');
+    const selectedDisplay = container.querySelector('.select-selected');
+    const optionsContainer = container.querySelector('.select-items');
 
-  const closeAllSelect = () => {
-    container.classList.remove('select-active');
-    optionsContainer.classList.add('select-hide');
-  };
+    selectedDisplay.addEventListener('click', function(e) {
+        e.stopPropagation();
+        container.classList.toggle('select-active');
+        optionsContainer.classList.toggle('select-hide');
+        
+        // PANGGIL INI SAAT DROPDOWN DIBUKA
+        if (window.lucide) lucide.createIcons();
+    });
 
   selectedDisplay.addEventListener('click', function(e) {
     e.stopPropagation();
@@ -2047,6 +2053,7 @@ async function handleLogin(event) {
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('myAccessCode', kodeYangDimasukkan);
         localStorage.setItem('myDeviceId', deviceId);
+        localStorage.setItem('myUsername', user.username || '');
 
         closeLoginModal();
         updateAuthUI();
@@ -2111,6 +2118,7 @@ async function forceLogout(message) {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('myAccessCode');
     localStorage.removeItem('myDeviceId');
+    localStorage.removeItem('myUsername');
 
     updateAuthUI(); 
     updateUI();     
@@ -2140,8 +2148,7 @@ async function handleLogout() {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('myAccessCode');
     localStorage.removeItem('myDeviceId');
-
-    if(logoutButton) logoutButton.disabled = false;
+    localStorage.removeItem('myUsername');
 
     updateAuthUI(); 
     updateUI();     
@@ -2153,14 +2160,23 @@ async function handleLogout() {
 
 function updateAuthUI() {
     const authButton = document.getElementById('auth-button');
+    if (!authButton) return;
     const authButtonText = authButton.querySelector('span');
+    if (!authButtonText) return;
 
     if (localStorage.getItem('isLoggedIn') === 'true') {
         authButtonText.textContent = 'Logout';
-        authButton.onclick = handleLogout;
     } else {
         authButtonText.textContent = 'Login';
-        authButton.onclick = showLoginModal;
+    }
+}
+
+function handleAuthButtonClick() {
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+        handleLogout();
+    } else {
+        document.getElementById('settings-menu').classList.remove('open');
+        showLoginModal();
     }
 }
 
@@ -2293,58 +2309,68 @@ async function kirimPermintaan() {
 
 document.addEventListener('DOMContentLoaded', () => {
   lucide.createIcons();
+  initTransaksiAsetListeners();
+
+  // Counter karakter catatan
+  const catatanEl = document.getElementById('input-catatan');
+  const counterEl = document.getElementById('catatan-counter');
+  if (catatanEl && counterEl) {
+    catatanEl.addEventListener('input', () => {
+      counterEl.textContent = catatanEl.value.length;
+    });
+  }
 });
 
 let dataAset = JSON.parse(localStorage.getItem('myBudgetly_assets')) || [];
 
 function switchTab(pageId, element) {
+  // 1. Sembunyikan SEMUA halaman utama (.app-page)
   document.querySelectorAll('.app-page').forEach(page => {
     page.style.display = 'none';
     page.classList.remove('active');
   });
 
+  // 2. Ambil elemen-elemen spesifik beranda
+  const summaryGrid = document.querySelector('.summary-grid');
+  const berandaLainnya = document.querySelectorAll('.form-container, .transactions-section');
+  const appHeader = document.querySelector('.app-header');
+
+  // 3. LOGIKA SAKTI: Jika ke Beranda, tampilkan. Jika ke Porto/Lainnya, SEMBUNYIKAN TOTAL.
+  if (pageId === 'home') {
+    if (summaryGrid) summaryGrid.style.setProperty('display', 'grid', 'important');
+    berandaLainnya.forEach(el => el.style.display = 'block');
+    if (appHeader) appHeader.style.display = 'flex';
+  } else {
+    // Sembunyikan elemen beranda agar tidak "tembus"
+    if (summaryGrid) summaryGrid.style.display = 'none';
+    berandaLainnya.forEach(el => el.style.display = 'none');
+    if (appHeader) appHeader.style.display = 'none';
+  }
+
+  // 4. Tampilkan halaman tujuan
   const targetPage = document.getElementById(`page-${pageId}`);
   if (targetPage) {
     targetPage.style.display = 'block';
+    // Gunakan class active untuk memicu CSS display block tadi
     setTimeout(() => targetPage.classList.add('active'), 10);
   }
 
-  document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  if (element) {
-    element.classList.add('active');
-  }
+  // 5. Update tombol navigasi bawah
+  document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+  if (element) element.classList.add('active');
 
-  // === TAMBAHAN LOGIKA SEMBUNYIKAN HEADER ===
-  const appHeader = document.querySelector('.app-header');
-  const container = document.querySelector('.container');
-  
-  if (appHeader && container) {
-    if (pageId === 'home') {
-      // Tampilkan kembali header jika di Beranda
-      appHeader.style.display = 'flex';
-      container.style.marginTop = '-2rem'; // Kembalikan efek tumpang-tindih
-    } else {
-      // Sembunyikan header untuk Porto, Ruang, Forum, Saya
-      appHeader.style.display = 'none';
-      container.style.marginTop = '4rem'; // Beri jarak agar tidak menabrak tombol Settings di atas
-    }
-  }
-  // ==========================================
-
+  // Khusus Porto, jalankan render data
   if (pageId === 'portofolio') {
-    renderHalamanPorto();
+      renderHalamanPorto();
   }
 
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  });
-
-  if (window.lucide) {
-    lucide.createIcons();
+  // Khusus Saya, muat data profil
+  if (pageId === 'saya') {
+      loadProfilPage();
   }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (window.lucide) lucide.createIcons();
 }
 
 // --- LOGIKA PORTOFOLIO ---
@@ -2357,16 +2383,23 @@ function handleSimpanAset(event) {
     const kategori = document.getElementById('input-kategori').value;
     const nama = document.getElementById('input-nama').value;
     const catatan = document.getElementById('input-catatan').value;
+    const jenisRD = document.getElementById('input-jenis-rd').value;
 
     if (!nama) return;
 
-    // Struktur Data Baru: Aset menyimpan array "transaksi"
+    // Validasi jenis reksadana wajib dipilih
+    if (kategori === 'Reksadana' && !jenisRD) {
+        showNotification('Pilih jenis reksadana terlebih dahulu', 'error');
+        return;
+    }
+
     dataAset.push({
         id: 'aset_' + Date.now(),
         nama: nama,
         kategori: kategori,
+        jenis_rd: kategori === 'Reksadana' ? jenisRD : '',
         catatan: catatan,
-        transaksi: [] // Kosong pada awalnya
+        transaksi: []
     });
 
     localStorage.setItem('myBudgetly_assets', JSON.stringify(dataAset));
@@ -2380,73 +2413,144 @@ function renderHalamanPorto() {
     const container = document.getElementById('list-aset-container');
     const totalDisplay = document.getElementById('total-aset-display');
     const countDisplay = document.getElementById('jumlah-aset-display');
+    
     if (!container) return;
     
     container.innerHTML = '';
     let totalPortfolioValue = 0;
 
-    if (dataAset.length === 0) {
-        container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-secondary);"><p>Belum ada aset.</p></div>`;
-    }
-
     dataAset.forEach((aset) => {
-        // Kalkulasi dari riwayat transaksi
-        let totalLembar = 0;
-        let totalModalBeli = 0;
-        let totalLembarBeli = 0;
+        const config = getAsetConfig(aset.kategori);
+        const isSaham = (aset.kategori || '').toLowerCase() === 'saham';
+        let totalSatuan = 0;
+        let totalNilai = 0;
 
-        // Pastikan array transaksi ada (untuk data lama)
-        if(!aset.transaksi) aset.transaksi = []; 
+        if (aset.transaksi) {
+            aset.transaksi.forEach(trx => {
+                const jumlah = parseFloat(trx.lembar) || 0;
+                const harga  = parseFloat(trx.harga)  || 0;
+                if (trx.jenis === 'beli') {
+                    totalSatuan += jumlah;
+                    // Saham: nilai = harga per lembar × lembar
+                    // Lainnya: harga sudah = total bayar
+                    totalNilai += isSaham ? (harga * jumlah) : harga;
+                } else {
+                    const avgNilaiPerSatuan = totalSatuan > 0 ? totalNilai / totalSatuan : 0;
+                    totalSatuan -= jumlah;
+                    totalNilai  -= avgNilaiPerSatuan * jumlah;
+                }
+            });
+        }
 
-        aset.transaksi.forEach(trx => {
-            if(trx.jenis === 'beli') {
-                totalLembar += trx.lembar;
-                totalLembarBeli += trx.lembar;
-                totalModalBeli += (trx.harga * trx.lembar);
-            } else if (trx.jenis === 'jual') {
-                totalLembar -= trx.lembar;
-            }
-        });
+        // Pastikan tidak negatif akibat floating point
+        if (totalSatuan < 0) totalSatuan = 0;
+        if (totalNilai  < 0) totalNilai  = 0;
 
-        // Hitung nilai saat ini berdasarkan Harga Beli Rata-Rata (Average Price)
-        let avgBuyPrice = totalLembarBeli > 0 ? (totalModalBeli / totalLembarBeli) : 0;
-        let nilaiAsetSaatIni = totalLembar * avgBuyPrice;
-        
-        totalPortfolioValue += nilaiAsetSaatIni;
+        totalPortfolioValue += totalNilai;
 
-        const html = `
+        // Render Card sesuai gambar
+        container.innerHTML += `
             <div class="asset-card-design">
-                <div class="acd-title">${aset.nama.toUpperCase()}</div>
-                <div class="acd-subtitle">${aset.nama.toLowerCase()}</div>
-                
-                <div class="acd-value">${formatCurrency(nilaiAsetSaatIni)}</div>
-                <div class="acd-lembar">${totalLembar} Lembar</div>
-
-                <div class="acd-note-label">Catatan</div>
-                <div class="acd-note-text">${aset.catatan ? aset.catatan : '-'}</div>
-
-                <div class="acd-actions">
-                    <button class="acd-icon-btn" onclick="bukaModalTransaksiAset('${aset.id}')" title="Tambah Transaksi"><i data-lucide="plus"></i></button>
-                    <button class="acd-icon-btn" title="Riwayat"><i data-lucide="history"></i></button>
-                    <button class="acd-icon-btn delete" onclick="hapusAset('${aset.id}')" title="Hapus Aset"><i data-lucide="trash-2"></i></button>
+                <div class="acd-header">
+                    <div>
+                        <div class="acd-name">${aset.nama}</div>
+                        <div class="acd-category">${aset.kategori}${aset.jenis_rd ? ' ' + aset.jenis_rd : ''}</div>
+                    </div>
+                </div>
+                <div class="acd-body">
+                    <div style="font-size:12px; color:var(--text-secondary); font-weight:500;">Nilai Aset</div>
+                    <div class="acd-value">${formatCurrency(totalNilai)}</div>
+                    <div class="acd-lembar">${formatSatuan(totalSatuan, aset.kategori)}</div>
+                    ${aset.catatan ? `<div class="acd-catatan" id="catatan-${aset.id}">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNxdWFyZS1wZW4taWNvbiBsdWNpZGUtc3F1YXJlLXBlbiI+PHBhdGggZD0iTTEyIDNINWEyIDIgMCAwIDAtMiAydjE0YTIgMiAwIDAgMCAyIDJoMTRhMiAyIDAgMCAwIDItMnYtNyIvPjxwYXRoIGQ9Ik0xOC4zNzUgMi42MjVhMSAxIDAgMCAxIDMgM2wtOS4wMTMgOS4wMTRhMiAyIDAgMCAxLS44NTMuNTA1bC0yLjg3My44NGEuNS41IDAgMCAxLS42Mi0uNjJsLjg0LTIuODczYTIgMiAwIDAgMSAuNTA2LS44NTJ6Ii8+PC9zdmc+" 
+                             class="acd-catatan-edit-icon" 
+                             onclick="editCatatanInline('${aset.id}')" 
+                             title="Edit catatan"
+                             style="width:11px;height:11px;cursor:pointer;opacity:0.5;vertical-align:middle;margin-right:3px;">
+                        <span id="catatan-text-${aset.id}">${aset.catatan}</span>
+                    </div>` : `<div class="acd-catatan acd-catatan-empty" id="catatan-${aset.id}" onclick="editCatatanInline('${aset.id}')" style="cursor:pointer;">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNxdWFyZS1wZW4taWNvbiBsdWNpZGUtc3F1YXJlLXBlbiI+PHBhdGggZD0iTTEyIDNINWEyIDIgMCAwIDAtMiAydjE0YTIgMiAwIDAgMCAyIDJoMTRhMiAyIDAgMCAwIDItMnYtNyIvPjxwYXRoIGQ9Ik0xOC4zNzUgMi42MjVhMSAxIDAgMCAxIDMgM2wtOS4wMTMgOS4wMTRhMiAyIDAgMCAxLS44NTMuNTA1bC0yLjg3My44NGEuNS41IDAgMCAxLS42Mi0uNjJsLjg0LTIuODczYTIgMiAwIDAgMSAuNTA2LS44NTJ6Ii8+PC9zdmc+" 
+                             style="width:11px;height:11px;opacity:0.35;vertical-align:middle;margin-right:3px;">
+                        <span style="opacity:0.4;">Tambah catatan</span>
+                    </div>`}
+                </div>
+                <div class="acd-footer">
+                    <button class="acd-action-btn" title="Tambah Transaksi" onclick="bukaModalTransaksiAset('${aset.id}')"><i data-lucide="plus"></i></button>
+                    <button class="acd-action-btn" title="Riwayat" onclick="lihatRiwayat('${aset.id}')"><i data-lucide="history"></i></button>
+                    <button class="acd-action-btn delete" title="Hapus Aset" onclick="hapusAset('${aset.id}')"><i data-lucide="trash-2"></i></button>
                 </div>
             </div>
         `;
-        container.innerHTML += html;
     });
 
-    if(totalDisplay) totalDisplay.innerText = formatCurrency(totalPortfolioValue);
-    if(countDisplay) countDisplay.innerText = dataAset.length;
+    totalDisplay.innerText = formatCurrency(totalPortfolioValue);
+    countDisplay.innerText = dataAset.length;
     if(window.lucide) lucide.createIcons();
+}
+
+// Helper: konfigurasi satuan & presisi per kategori
+function getAsetConfig(kategori) {
+    switch ((kategori || '').toLowerCase()) {
+        case 'emas':
+            return { satuan: 'gram', stepSatuan: '0.0001', presisi: 4, stepHarga: '1', labelHarga: 'Nominal (Rp)', labelSatuan: 'Jumlah Gram' };
+        case 'kripto':
+            return { satuan: 'BTC', stepSatuan: '0.00000001', presisi: 8, stepHarga: '1', labelHarga: 'Nominal (Rp)', labelSatuan: 'Jumlah' };
+        case 'reksadana':
+            return { satuan: 'unit', stepSatuan: '0.0001', presisi: 4, stepHarga: '1', labelHarga: 'Nominal (Rp)', labelSatuan: 'Jumlah Unit' };
+        default: // Saham
+            return { satuan: 'Lembar', stepSatuan: '1', presisi: 0, stepHarga: '1', labelHarga: 'Harga (Rp)', labelSatuan: 'Jumlah Lembar' };
+    }
+}
+
+// Helper: format jumlah satuan sesuai kategori
+function formatSatuan(jumlah, kategori) {
+    const config = getAsetConfig(kategori);
+    const formatted = Number(jumlah).toFixed(config.presisi);
+    // Khusus kripto, tidak tampilkan satuan di card
+    if ((kategori || '').toLowerCase() === 'kripto') return formatted;
+    return `${formatted} ${config.satuan}`;
 }
 
 // 3. Logika Modal Transaksi Jual/Beli
 function bukaModalTransaksiAset(idAset) {
+    const aset = dataAset.find(a => a.id === idAset);
+    if (!aset) return;
+
+    const config = getAsetConfig(aset.kategori);
+
     document.getElementById('trans-aset-id').value = idAset;
     document.getElementById('form-transaksi-aset').reset();
-    setJenisTransaksiAset('beli'); // Default Beli
+    setJenisTransaksiAset('beli');
     document.getElementById('trans-tanggal').value = new Date().toISOString().split('T')[0];
     document.getElementById('trans-total-preview').innerText = "Rp 0";
+
+    // Tampilkan/sembunyikan section total berdasarkan kategori
+    const isSaham = (aset.kategori || '').toLowerCase() === 'saham';
+    const totalSection = document.getElementById('trans-total-section');
+    if (totalSection) totalSection.style.display = isSaham ? 'block' : 'none';
+
+    // Update label dan step input satuan
+    const labelSatuan = document.getElementById('trans-label-satuan');
+    const labelHarga  = document.getElementById('trans-label-harga');
+    const inputLembar = document.getElementById('trans-lembar');
+    const inputHarga  = document.getElementById('trans-harga');
+
+    if (labelSatuan) labelSatuan.textContent = config.labelSatuan;
+    if (labelHarga)  labelHarga.textContent  = config.labelHarga;
+
+    if (inputLembar) {
+        inputLembar.step = config.stepSatuan;
+        inputLembar.placeholder = config.presisi > 0 ? (0).toFixed(config.presisi) : '0';
+    }
+    if (inputHarga) {
+        inputHarga.step = config.stepHarga;
+        inputHarga.placeholder = '0';
+    }
+
+    // Reset preview satuan
+    const satuanPreview = document.getElementById('trans-satuan-preview');
+    if (satuanPreview) satuanPreview.style.display = 'none';
+
     document.getElementById('modal-transaksi-aset').style.display = 'flex';
 }
 
@@ -2462,18 +2566,53 @@ function setJenisTransaksiAset(jenis) {
 }
 
 // Hitung Live Preview Total
-const transHarga = document.getElementById('trans-harga');
-const transLembar = document.getElementById('trans-lembar');
-const transPreview = document.getElementById('trans-total-preview');
+let transHarga = null;
+let transLembar = null;
+let transPreview = null;
+
+function initTransaksiAsetListeners() {
+    transHarga  = document.getElementById('trans-harga');
+    transLembar = document.getElementById('trans-lembar');
+    transPreview = document.getElementById('trans-total-preview');
+    if (transHarga)  transHarga.addEventListener('input', hitungTotalTransaksi);
+    if (transLembar) transLembar.addEventListener('input', hitungTotalTransaksi);
+}
 
 function hitungTotalTransaksi() {
-    const h = parseFloat(transHarga.value) || 0;
-    const l = parseFloat(transLembar.value) || 0;
-    if (transPreview) transPreview.innerText = formatCurrency(h * l);
-}
-if(transHarga && transLembar) {
-    transHarga.addEventListener('input', hitungTotalTransaksi);
-    transLembar.addEventListener('input', hitungTotalTransaksi);
+    const hargaEl  = document.getElementById('trans-harga');
+    const lembarEl = document.getElementById('trans-lembar');
+    const h = parseFloat(hargaEl ? hargaEl.value : 0) || 0;
+    const l = parseFloat(lembarEl ? lembarEl.value : 0) || 0;
+    const idAset = document.getElementById('trans-aset-id').value;
+    const aset = dataAset.find(a => a.id === idAset);
+    const kategori = aset ? aset.kategori : 'saham';
+    const isSaham = (kategori || '').toLowerCase() === 'saham';
+    const config = getAsetConfig(kategori);
+
+    // Preview total (saham saja)
+    const totalSection = document.getElementById('trans-total-section');
+    const previewEl = document.getElementById('trans-total-preview');
+    if (isSaham) {
+        if (totalSection) totalSection.style.display = 'block';
+        if (previewEl) previewEl.innerText = formatCurrency(h * l);
+    } else {
+        if (totalSection) totalSection.style.display = 'none';
+    }
+
+    // Preview satuan (kripto, emas, reksadana)
+    const satuanPreview = document.getElementById('trans-satuan-preview');
+    if (satuanPreview) {
+        if (!isSaham && lembarEl && lembarEl.value !== '') {
+            const formatted = Number(l).toFixed(config.presisi);
+            const label = (kategori || '').toLowerCase() === 'kripto' ? ''
+                        : (kategori || '').toLowerCase() === 'emas'   ? 'gram'
+                        : 'unit';
+            satuanPreview.textContent = `= ${formatted}${label ? ' ' + label : ''}`;
+            satuanPreview.style.display = 'block';
+        } else {
+            satuanPreview.style.display = 'none';
+        }
+    }
 }
 
 // 4. Eksekusi Simpan Transaksi ke dalam Aset
@@ -2485,13 +2624,23 @@ function handleSimpanTransaksiAset(event) {
     const lembar = parseFloat(document.getElementById('trans-lembar').value);
     const tanggal = document.getElementById('trans-tanggal').value;
 
+    if (!harga || harga <= 0 || !lembar || lembar <= 0) {
+        showNotification('Harga dan jumlah harus lebih dari 0', 'error');
+        return;
+    }
+
     const targetAsetIndex = dataAset.findIndex(a => a.id === idAset);
     if (targetAsetIndex !== -1) {
         if (!dataAset[targetAsetIndex].transaksi) dataAset[targetAsetIndex].transaksi = [];
-        
+
+        const isSaham = (dataAset[targetAsetIndex].kategori || '').toLowerCase() === 'saham';
+        // Saham: simpan harga per lembar, nilai dihitung harga × lembar
+        // Lainnya: simpan total bayar langsung sebagai harga
+        const hargaSimpan = isSaham ? harga : harga;
+
         dataAset[targetAsetIndex].transaksi.push({
             jenis: jenis,
-            harga: harga,
+            harga: hargaSimpan,
             lembar: lembar,
             tanggal: tanggal,
             id_transaksi: Date.now()
@@ -2501,6 +2650,54 @@ function handleSimpanTransaksiAset(event) {
         renderHalamanPorto();
         tutupModalTransaksiAset();
         showNotification('Transaksi aset berhasil dicatat!', 'success');
+    }
+}
+
+// Edit catatan inline di card
+function editCatatanInline(idAset) {
+    const container = document.getElementById(`catatan-${idAset}`);
+    if (!container) return;
+
+    const aset = dataAset.find(a => a.id === idAset);
+    if (!aset) return;
+
+    const currentVal = aset.catatan || '';
+
+    container.innerHTML = `
+        <div style="display:flex;gap:4px;align-items:center;">
+            <input type="text" 
+                   id="catatan-input-${idAset}"
+                   value="${currentVal}" 
+                   maxlength="40"
+                   style="flex:1;font-size:11px;padding:3px 6px;border:1px solid var(--primary-accent-color);border-radius:6px;font-family:inherit;color:var(--text-primary);background:var(--background);"
+                   placeholder="Tulis catatan...">
+            <button onclick="simpanCatatanInline('${idAset}')" 
+                    style="font-size:10px;padding:3px 7px;background:var(--primary-accent-color);color:#fff;border:none;border-radius:5px;cursor:pointer;">✓</button>
+            <button onclick="renderHalamanPorto()" 
+                    style="font-size:10px;padding:3px 7px;background:var(--background-secondary);color:var(--text-secondary);border:1px solid var(--border);border-radius:5px;cursor:pointer;">✕</button>
+        </div>
+    `;
+
+    const input = document.getElementById(`catatan-input-${idAset}`);
+    if (input) {
+        input.focus();
+        input.select();
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') simpanCatatanInline(idAset);
+            if (e.key === 'Escape') renderHalamanPorto();
+        });
+    }
+}
+
+function simpanCatatanInline(idAset) {
+    const input = document.getElementById(`catatan-input-${idAset}`);
+    if (!input) return;
+
+    const idx = dataAset.findIndex(a => a.id === idAset);
+    if (idx !== -1) {
+        dataAset[idx].catatan = input.value.trim();
+        localStorage.setItem('myBudgetly_assets', JSON.stringify(dataAset));
+        renderHalamanPorto();
     }
 }
 
@@ -2525,88 +2722,94 @@ function bukaModalAset() {
     // Reset dropdown kembali ke default (Saham)
     const selectedDisplay = document.querySelector('#custom-kategori-aset .select-selected');
     if(selectedDisplay) {
-        selectedDisplay.innerHTML = `<i data-lucide="bar-chart-2" class="input-icon-left" style="color: #4a5568;"></i><span style="font-family: 'Times New Roman', Times, serif;">saham</span>`;
+        selectedDisplay.style.cssText = 'display:flex; align-items:center; padding:12px; border:1px solid #e1e4ea; border-radius:12px; cursor:pointer; gap:10px;';
+        selectedDisplay.innerHTML = `<i data-lucide="bar-chart-2" style="width:18px;height:18px;flex-shrink:0;"></i><span style="flex:1;">Saham</span>`;
     }
     document.getElementById('label-nama-aset').innerText = "Saham";
     document.getElementById('input-nama').placeholder = "BBCA";
     document.getElementById('input-kategori').value = "Saham";
-
-    initializeAssetCategorySelect(); // Panggil ulang logika klik dropdown
+    // Reset jenis reksadana
+    document.getElementById('input-jenis-rd').value = '';
+    document.getElementById('section-jenis-rd').style.display = 'none';
+    document.querySelectorAll('.rd-pill').forEach(p => p.classList.remove('active'));
+    // Reset counter catatan
+    const catatanEl = document.getElementById('input-catatan');
+    const counterEl = document.getElementById('catatan-counter');
+    if (catatanEl) catatanEl.value = '';
+    if (counterEl) counterEl.textContent = '0';
+    initializeAssetCategorySelect();
     if (window.lucide) lucide.createIcons(); // Render ulang ikon Lucide
 }
 
-// Logika agar Dropdown Kategori (Saham/Kripto) bisa diklik dan merubah UI
+// Versi Upgrade Lengkap fungsi initializeAssetCategorySelect:
 function initializeAssetCategorySelect() {
     const container = document.getElementById('custom-kategori-aset');
-    if (!container) return;
-
     const selectedDisplay = container.querySelector('.select-selected');
     const hiddenInput = document.getElementById('input-kategori');
     const optionsContainer = container.querySelector('.select-items');
-    const options = optionsContainer.querySelectorAll('div');
     const labelNamaAset = document.getElementById('label-nama-aset');
     const inputNama = document.getElementById('input-nama');
 
-    const closeAllSelect = () => {
-        container.classList.remove('select-active');
-        optionsContainer.classList.add('select-hide');
+    const optionsData = [
+        { value: 'Saham',     icon: 'bar-chart-2', label: 'Saham',     contoh: 'BBCA, BMRI, BBRI, BBNI' },
+        { value: 'Kripto',    icon: 'bitcoin',      label: 'Kripto',    contoh: 'BITCOIN, ETH, SOL' },
+        { value: 'Emas',      icon: 'cuboid',       label: 'Emas',      contoh: 'Antam, UBS' },
+        { value: 'Reksadana', icon: 'sprout',       label: 'Reksadana', contoh: 'Bahana liquid plus, Schroder dana prestasi, Sucorinvest bond fund' }
+    ];
+
+    function setSelected(opt) {
+        // Bangun konten selected tanpa Lucide — pakai span placeholder ikon lalu createIcons
+        selectedDisplay.style.cssText = 'display:flex; align-items:center; padding:12px; border:1px solid #e1e4ea; border-radius:12px; cursor:pointer; gap:10px;';
+        selectedDisplay.innerHTML = `<i data-lucide="${opt.icon}" style="width:18px;height:18px;flex-shrink:0;"></i><span style="flex:1;">${opt.label}</span>`;
+        if (window.lucide) lucide.createIcons({ el: selectedDisplay });
+        // Paksa svg tetap inline-flex
+        const svg = selectedDisplay.querySelector('svg');
+        if (svg) svg.style.cssText = 'width:18px;height:18px;flex-shrink:0;display:block;';
+    }
+
+    optionsContainer.innerHTML = '';
+    optionsData.forEach(opt => {
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex; align-items:center; gap:10px; padding:10px 12px; cursor:pointer;';
+        div.innerHTML = `<i data-lucide="${opt.icon}" style="width:18px;height:18px;flex-shrink:0;"></i><span>${opt.label}</span>`;
+        div.setAttribute('data-value', opt.value);
+
+        div.addEventListener('click', function() {
+            hiddenInput.value = opt.value;
+            labelNamaAset.innerText = opt.label;
+            inputNama.placeholder = opt.contoh;
+            setSelected(opt);
+
+            // Show/hide section jenis reksadana
+            const sectionRD = document.getElementById('section-jenis-rd');
+            if (opt.value === 'Reksadana') {
+                sectionRD.style.display = 'block';
+            } else {
+                sectionRD.style.display = 'none';
+                document.getElementById('input-jenis-rd').value = '';
+                document.querySelectorAll('.rd-pill').forEach(p => p.classList.remove('active'));
+            }
+
+            optionsContainer.classList.add('select-hide');
+            container.classList.remove('select-active');
+        });
+        optionsContainer.appendChild(div);
+    });
+
+    if (window.lucide) lucide.createIcons({ el: optionsContainer });
+
+    selectedDisplay.onclick = (e) => {
+        e.stopPropagation();
+        optionsContainer.classList.toggle('select-hide');
     };
 
-    // Bersihkan event listener lama (mencegah klik ganda jika dipanggil berkali-kali)
-    const newSelectedDisplay = selectedDisplay.cloneNode(true);
-    selectedDisplay.parentNode.replaceChild(newSelectedDisplay, selectedDisplay);
-
-    newSelectedDisplay.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const isActive = container.classList.contains('select-active');
-        
-        // Tutup dropdown lain jika ada
-        document.querySelectorAll('.custom-select-container').forEach(c => {
-            if(c !== container) {
-                c.classList.remove('select-active');
-                c.querySelector('.select-items')?.classList.add('select-hide');
-            }
-        });
-        
-        if (!isActive) {
-            container.classList.add('select-active');
-            optionsContainer.classList.remove('select-hide');
-        } else {
-            closeAllSelect();
-        }
-    });
-
-    // Logika saat item di dalam dropdown dipilih
-    options.forEach(option => {
-        const newOption = option.cloneNode(true);
-        option.parentNode.replaceChild(newOption, option);
-
-        newOption.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const nilai = this.getAttribute('data-value');
-            hiddenInput.value = nilai;
-            
-            // Ubah teks UI berdasarkan Kripto atau Saham
-            if(nilai === 'Kripto') {
-                newSelectedDisplay.innerHTML = `<i data-lucide="bitcoin" class="input-icon-left" style="color: #4a5568;"></i><span style="font-family: 'Times New Roman', Times, serif;">kripto</span>`;
-                labelNamaAset.innerText = "Kripto";
-                inputNama.placeholder = "Bitcoin";
-            } else {
-                newSelectedDisplay.innerHTML = `<i data-lucide="bar-chart-2" class="input-icon-left" style="color: #4a5568;"></i><span style="font-family: 'Times New Roman', Times, serif;">saham</span>`;
-                labelNamaAset.innerText = "Saham";
-                inputNama.placeholder = "BBCA";
-            }
-            
-            if (window.lucide) lucide.createIcons();
-            closeAllSelect();
-        });
-    });
-
-    // Tutup dropdown jika user klik area kosong di luar pop-up
-    window.addEventListener('click', function(event) {
-        if (!container.contains(event.target)) {
-            closeAllSelect();
-        }
+    // Setup pill listener jenis reksadana
+    document.querySelectorAll('.rd-pill').forEach(pill => {
+        pill.onclick = () => {
+            document.querySelectorAll('.rd-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            document.getElementById('input-jenis-rd').value = pill.dataset.jenis;
+        };
     });
 }
 function selectTransactionType(type) {
@@ -2626,4 +2829,68 @@ function selectTransactionType(type) {
             tab.classList.remove('active');
         }
     });
+}
+
+// ===== HALAMAN PROFIL/SAYA =====
+
+let kodeAksesVisible = false;
+
+function loadProfilPage() {
+  const username = localStorage.getItem('myUsername') || '—';
+  const kodeAkses = localStorage.getItem('myAccessCode') || '';
+
+  const nameEl = document.getElementById('profil-username-display');
+  if (nameEl) nameEl.textContent = username;
+
+  // profil-username-value removed in new layout, only display exists
+  const valueEl = document.getElementById('profil-username-value');
+  if (valueEl) valueEl.textContent = username;
+
+  kodeAksesVisible = false;
+  updateKodeAksesDisplay(kodeAkses);
+  syncProfilPhoto();
+  if (window.lucide) lucide.createIcons();
+}
+
+function updateKodeAksesDisplay(kode) {
+  const kodeEl = document.getElementById('profil-kode-text');
+  const eyeIcon = document.getElementById('profil-eye-icon');
+  if (!kodeEl) return;
+
+  if (kodeAksesVisible) {
+    kodeEl.textContent = kode || '-';
+    if (eyeIcon) {
+      eyeIcon.setAttribute('data-lucide', 'eye-off');
+      if (window.lucide) lucide.createIcons();
+    }
+  } else {
+    kodeEl.textContent = '••••••';
+    if (eyeIcon) {
+      eyeIcon.setAttribute('data-lucide', 'eye');
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+function toggleKodeAkses() {
+  kodeAksesVisible = !kodeAksesVisible;
+  const kode = localStorage.getItem('myAccessCode') || '';
+  updateKodeAksesDisplay(kode);
+}
+
+function syncProfilPhoto() {
+  const savedPhoto = localStorage.getItem('profilePhoto');
+  const img = document.getElementById('profil-photo-display');
+  const placeholder = document.getElementById('profil-photo-placeholder');
+  if (!img || !placeholder) return;
+
+  if (savedPhoto) {
+    img.src = savedPhoto;
+    img.classList.add('show');
+    placeholder.classList.add('hide');
+  } else {
+    img.src = '';
+    img.classList.remove('show');
+    placeholder.classList.remove('hide');
+  }
 }
