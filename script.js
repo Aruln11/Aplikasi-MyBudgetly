@@ -1883,8 +1883,18 @@ function scrollToForm() {
 
 
 
+// 1. Tambahkan fungsi global ini agar tidak error saat dipanggil
+function closeAllSelect() {
+    document.querySelectorAll('.custom-select-container').forEach(c => {
+        c.classList.remove('select-active');
+        const items = c.querySelector('.select-items');
+        if (items) items.classList.add('select-hide');
+    });
+}
+
+// 2. Ini adalah fungsi initializeMonthFilter yang sudah dirapikan
 function initializeMonthFilter() {
-  const container = document.getElementById('custom-filter-bulan');
+    const container = document.getElementById('custom-filter-bulan');
     if (!container) return;
 
     const selectedDisplay = container.querySelector('.select-selected');
@@ -1892,34 +1902,21 @@ function initializeMonthFilter() {
 
     selectedDisplay.addEventListener('click', function(e) {
         e.stopPropagation();
-        container.classList.toggle('select-active');
-        optionsContainer.classList.toggle('select-hide');
+        const isActive = container.classList.contains('select-active');
         
-        // PANGGIL INI SAAT DROPDOWN DIBUKA
-        if (window.lucide) lucide.createIcons();
-    });
+        closeAllSelect(); // Tutup dropdown lain yang sedang terbuka
 
-  selectedDisplay.addEventListener('click', function(e) {
-    e.stopPropagation();
-    const isActive = container.classList.contains('select-active');
-    document.querySelectorAll('.custom-select-container').forEach(c => {
-        if (c !== container) {
-            c.classList.remove('select-active');
-            c.querySelector('.select-items').classList.add('select-hide');
+        if (!isActive) {
+            container.classList.add('select-active');
+            optionsContainer.classList.remove('select-hide');
+            // Render ulang ikon saat dibuka
+            if (window.lucide) lucide.createIcons();
         }
     });
 
-    if (!isActive) {
-      container.classList.add('select-active');
-      optionsContainer.classList.remove('select-hide');
-    } else {
-      closeAllSelect();
-    }
-  });
-
-  document.addEventListener('click', closeAllSelect);
+    // Event listener global untuk menutup dropdown saat klik di luar
+    document.addEventListener('click', closeAllSelect);
 }
-
 function initializePdfOrientationSelect() {
   const container = document.getElementById('custom-pdf-orientation');
   if (!container) return;
@@ -2111,7 +2108,7 @@ async function startRealtimeSessionListener() {
 
 async function forceLogout(message) {
     if (realtimeChannel) { 
-    await supabaseRealtimeClient.removeChannel(realtimeChannel); 
+   supabaseClient.removeChannel(realtimeChannel);
     realtimeChannel = null; 
 }
 
@@ -2166,8 +2163,10 @@ function updateAuthUI() {
 
     if (localStorage.getItem('isLoggedIn') === 'true') {
         authButtonText.textContent = 'Logout';
+        authButton.onclick = handleLogout;
     } else {
         authButtonText.textContent = 'Login';
+        authButton.onclick = showLoginModal;
     }
 }
 
@@ -2279,31 +2278,51 @@ async function kirimPermintaan() {
         return;
     }
 
-    const { data: settings } = await supabaseClient
-        .from('pengaturan_admin')
-        .select('setting_fitur, status, value')
-        .in('setting_fitur', ['auto acc', 'default device limit']);
+    // Ubah tombol jadi status loading biar user tahu sistem lagi proses
+    const btnSubmit = document.querySelector('#modal-daftar .login-button');
+    const textAwal = btnSubmit.innerText;
+    btnSubmit.innerText = "Memproses...";
+    btnSubmit.disabled = true;
 
-    const configAuto = settings.find(s => s.setting_fitur === 'auto acc');
-    const configLimit = settings.find(s => s.setting_fitur === 'default device limit');
+    try {
+        const { data: settings, error: fetchError } = await supabaseClient
+            .from('pengaturan_admin')
+            .select('setting_fitur, status, value')
+            .in('setting_fitur', ['auto acc', 'default device limit']);
 
-    const statusAwal = (configAuto && configAuto.status) ? 'aktif' : 'pending';
-    
-    const limitDefault = configLimit ? parseInt(configLimit.value) : 3; 
+        if (fetchError) throw fetchError;
 
-    const { error } = await supabaseClient.from('pelanggan').insert({
-        username: user,
-        kode_akses: kode,
-        status: statusAwal,
-        batas_perangkat: limitDefault,
-        dibuat_tanggal: new Date().toLocaleString("sv-SE").replace(' ', 'T')
-    });
+        // --- INI SABUK PENGAMANNYA ---
+        // Jika settings bernilai null, kita ubah otomatis jadi array kosong []
+        const safeSettings = settings || [];
 
-    if (!error) {
+        const configAuto = safeSettings.find(s => s.setting_fitur === 'auto acc');
+        const configLimit = safeSettings.find(s => s.setting_fitur === 'default device limit');
+        // -----------------------------
+
+        const statusAwal = (configAuto && configAuto.status) ? 'aktif' : 'pending';
+        const limitDefault = configLimit ? parseInt(configLimit.value) : 3; 
+
+        const { error: insertError } = await supabaseClient.from('pelanggan').insert({
+            username: user,
+            kode_akses: kode,
+            status: statusAwal,
+            batas_perangkat: limitDefault,
+            dibuat_tanggal: new Date().toLocaleString("sv-SE").replace(' ', 'T')
+        });
+
+        if (insertError) throw insertError;
+
         alert(statusAwal === 'aktif' ? "Akses Aktif! Silakan Login." : "Berhasil! Tunggu persetujuan Admin.");
         tutupModalDaftar();
-    } else {
-        pesan.innerText = "Gagal: " + error.message;
+        
+    } catch (error) {
+        console.error("Error pendaftaran:", error);
+        pesan.innerText = "Gagal: " + (error.message || "Terjadi kesalahan jaringan.");
+    } finally {
+        // Kembalikan tombol ke keadaan semula apa pun yang terjadi
+        btnSubmit.innerText = textAwal;
+        btnSubmit.disabled = false;
     }
 }
 

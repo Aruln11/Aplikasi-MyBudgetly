@@ -17,6 +17,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const closeBtn = document.getElementById("close-admin-login-btn")
   if (closeBtn) closeBtn.addEventListener("click", closeAdminLoginModal)
+    const adminCodeInput = document.getElementById("admin-code-input");
+  if (adminCodeInput) {
+    adminCodeInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        checkAdminLogin(); // Panggil fungsi login saat Enter ditekan
+      }
+    });
+  }
 })
 
 function closeAdminLoginModal() {

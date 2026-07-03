@@ -3764,10 +3764,9 @@ html[data-warna-putih="true"]:not([data-theme="dark"]) h3.section-title svg {
     color: var(--text-muted);
     margin-top: 4px;
     font-style: italic;
+    white-space: nowrap;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
 }
 
 .acd-catatan-empty {
