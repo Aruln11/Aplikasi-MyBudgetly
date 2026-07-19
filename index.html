@@ -829,6 +829,7 @@
                         <div data-value="Kripto">Kripto</div>
                         <div data-value="Emas">Emas</div>
                         <div data-value="Reksadana">Reksadana</div>
+                        <div data-value="EWallet">E-Wallet/Bank</div>
                     </div>
                 </div>
                 <input type="hidden" id="input-kategori" value="Saham">
@@ -850,6 +851,16 @@
                     <button type="button" class="rd-pill" data-jenis="Campuran">Campuran</button>
                 </div>
                 <input type="hidden" id="input-jenis-rd" value="">
+            </div>
+
+            <!-- Jenis E-Wallet/Bank (hanya muncul saat kategori = EWallet) -->
+            <div id="section-jenis-ewallet" class="custom-input-group" style="display:none; margin-bottom: 20px;">
+                <div class="rd-jenis-pills" id="ewallet-jenis-pills">
+                    <button type="button" class="rd-pill" data-jenis="E-Wallet">E-Wallet</button>
+                    <button type="button" class="rd-pill" data-jenis="M-Banking">M-Banking</button>
+                    <button type="button" class="rd-pill" data-jenis="Bank Digital">Bank Digital</button>
+                </div>
+                <input type="hidden" id="input-jenis-ewallet" value="">
             </div>
 
             <div class="custom-input-group" style="margin-bottom: 24px;">
@@ -875,11 +886,18 @@
       <form id="form-transaksi-aset" onsubmit="handleSimpanTransaksiAset(event)">
         <input type="hidden" id="trans-aset-id">
         <input type="hidden" id="trans-aset-jenis" value="beli">
+        <input type="hidden" id="trans-ewallet-mode" value="0">
         
         <div class="toggle-jb-container">
             <button type="button" id="btn-jual" class="btn-jb" onclick="setJenisTransaksiAset('jual')">Jual</button>
             <div class="jb-divider"></div>
             <button type="button" id="btn-beli" class="btn-jb active" onclick="setJenisTransaksiAset('beli')">Beli</button>
+        </div>
+
+        <!-- Deskripsi (khusus EWallet) -->
+        <div class="custom-input-group" id="trans-deskripsi-group" style="display:none; margin-bottom: 15px;">
+          <label class="custom-label">Deskripsi</label>
+          <input type="text" id="trans-deskripsi" class="custom-input" placeholder="Contoh: Gaji, Uang bulanan, Bayar listrik, Top up">
         </div>
 
         <div class="custom-input-group" style="margin-bottom: 15px;">
@@ -890,9 +908,9 @@
           </div>
         </div>
         
-        <div class="custom-input-group" style="margin-bottom: 15px;">
+        <div class="custom-input-group" id="trans-lembar-group" style="margin-bottom: 15px;">
           <label class="custom-label" id="trans-label-satuan">Jumlah (lembar)</label>
-          <input type="number" id="trans-lembar" class="custom-input" style="font-family: monospace;" step="1" placeholder="0" required>
+          <input type="number" id="trans-lembar" class="custom-input" style="font-family: monospace;" step="1" placeholder="0">
           <div id="trans-satuan-preview" style="display:none; margin-top:6px; font-size:13px; color: var(--primary-accent-color); font-family: monospace; font-weight:600;"></div>
         </div>
 
@@ -915,6 +933,20 @@
   </div>
 </div>
 </div>
+<!-- Modal Riwayat Aset -->
+<div id="modal-riwayat-aset" class="modal" style="display:none; z-index:2000; align-items:center; justify-content:center;">
+  <div class="custom-modal-content" style="max-width:480px; padding:0; border-radius:16px; overflow:hidden;">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid #f0f0f0;">
+      <div>
+        <div id="riwayat-aset-nama" style="font-weight:700; font-size:16px; color:#1a1c21;"></div>
+        <div id="riwayat-aset-sub" style="font-size:12px; color:#888; margin-top:2px;"></div>
+      </div>
+      <button onclick="tutupModalRiwayat()" style="background:none;border:none;cursor:pointer;font-size:18px;color:#aaa;">✕</button>
+    </div>
+    <div id="riwayat-list" style="max-height:65vh; overflow-y:auto; padding:0 0 8px 0;"></div>
+  </div>
+</div>
+
   <script src="script.js"></script>
 </body>
 </html>

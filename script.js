@@ -1882,7 +1882,6 @@ function scrollToForm() {
 }
 
 
-
 // 1. Tambahkan fungsi global ini agar tidak error saat dipanggil
 function closeAllSelect() {
     document.querySelectorAll('.custom-select-container').forEach(c => {
@@ -2403,6 +2402,7 @@ function handleSimpanAset(event) {
     const nama = document.getElementById('input-nama').value;
     const catatan = document.getElementById('input-catatan').value;
     const jenisRD = document.getElementById('input-jenis-rd').value;
+    const jenisEW = document.getElementById('input-jenis-ewallet').value;
 
     if (!nama) return;
 
@@ -2412,11 +2412,18 @@ function handleSimpanAset(event) {
         return;
     }
 
+    // Validasi jenis ewallet wajib dipilih
+    if (kategori === 'EWallet' && !jenisEW) {
+        showNotification('Pilih jenis E-Wallet/Bank terlebih dahulu', 'error');
+        return;
+    }
+
     dataAset.push({
         id: 'aset_' + Date.now(),
         nama: nama,
         kategori: kategori,
         jenis_rd: kategori === 'Reksadana' ? jenisRD : '',
+        jenis_ew: kategori === 'EWallet' ? jenisEW : '',
         catatan: catatan,
         transaksi: []
     });
@@ -2473,13 +2480,13 @@ function renderHalamanPorto() {
                 <div class="acd-header">
                     <div>
                         <div class="acd-name">${aset.nama}</div>
-                        <div class="acd-category">${aset.kategori}${aset.jenis_rd ? ' ' + aset.jenis_rd : ''}</div>
+                        <div class="acd-category">${aset.kategori === 'EWallet' ? (aset.jenis_ew || 'E-Wallet/Bank') : aset.kategori}${aset.jenis_rd ? ' ' + aset.jenis_rd : ''}</div>
                     </div>
                 </div>
                 <div class="acd-body">
                     <div style="font-size:12px; color:var(--text-secondary); font-weight:500;">Nilai Aset</div>
                     <div class="acd-value">${formatCurrency(totalNilai)}</div>
-                    <div class="acd-lembar">${formatSatuan(totalSatuan, aset.kategori)}</div>
+                    ${(aset.kategori || '').toLowerCase() !== 'ewallet' ? `<div class="acd-lembar">${formatSatuan(totalSatuan, aset.kategori)}</div>` : ''}
                     ${aset.catatan ? `<div class="acd-catatan" id="catatan-${aset.id}">
                         <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNxdWFyZS1wZW4taWNvbiBsdWNpZGUtc3F1YXJlLXBlbiI+PHBhdGggZD0iTTEyIDNINWEyIDIgMCAwIDAtMiAydjE0YTIgMiAwIDAgMCAyIDJoMTRhMiAyIDAgMCAwIDItMnYtNyIvPjxwYXRoIGQ9Ik0xOC4zNzUgMi42MjVhMSAxIDAgMCAxIDMgM2wtOS4wMTMgOS4wMTRhMiAyIDAgMCAxLS44NTMuNTA1bC0yLjg3My44NGEuNS41IDAgMCAxLS42Mi0uNjJsLjg0LTIuODczYTIgMiAwIDAgMSAuNTA2LS44NTJ6Ii8+PC9zdmc+" 
                              class="acd-catatan-edit-icon" 
@@ -2516,6 +2523,8 @@ function getAsetConfig(kategori) {
             return { satuan: 'BTC', stepSatuan: '0.00000001', presisi: 8, stepHarga: '1', labelHarga: 'Nominal (Rp)', labelSatuan: 'Jumlah' };
         case 'reksadana':
             return { satuan: 'unit', stepSatuan: '0.0001', presisi: 4, stepHarga: '1', labelHarga: 'Nominal (Rp)', labelSatuan: 'Jumlah Unit' };
+        case 'ewallet':
+            return { satuan: 'saldo', stepSatuan: '1', presisi: 0, stepHarga: '1', labelHarga: 'Nominal (Rp)', labelSatuan: 'Jumlah Saldo' };
         default: // Saham
             return { satuan: 'Lembar', stepSatuan: '1', presisi: 0, stepHarga: '1', labelHarga: 'Harga (Rp)', labelSatuan: 'Jumlah Lembar' };
     }
@@ -2536,37 +2545,52 @@ function bukaModalTransaksiAset(idAset) {
     if (!aset) return;
 
     const config = getAsetConfig(aset.kategori);
+    const isEWallet = (aset.kategori || '').toLowerCase() === 'ewallet';
 
     document.getElementById('trans-aset-id').value = idAset;
+    document.getElementById('trans-ewallet-mode').value = isEWallet ? '1' : '0';
     document.getElementById('form-transaksi-aset').reset();
-    setJenisTransaksiAset('beli');
     document.getElementById('trans-tanggal').value = new Date().toISOString().split('T')[0];
-    document.getElementById('trans-total-preview').innerText = "Rp 0";
 
-    // Tampilkan/sembunyikan section total berdasarkan kategori
-    const isSaham = (aset.kategori || '').toLowerCase() === 'saham';
+    // Mode EWallet: ubah toggle, tampilkan deskripsi, sembunyikan lembar
+    const btnJual = document.getElementById('btn-jual');
+    const btnBeli = document.getElementById('btn-beli');
+    const deskripsiGroup = document.getElementById('trans-deskripsi-group');
+    const lembarGroup = document.getElementById('trans-lembar-group');
     const totalSection = document.getElementById('trans-total-section');
-    if (totalSection) totalSection.style.display = isSaham ? 'block' : 'none';
 
-    // Update label dan step input satuan
-    const labelSatuan = document.getElementById('trans-label-satuan');
-    const labelHarga  = document.getElementById('trans-label-harga');
-    const inputLembar = document.getElementById('trans-lembar');
-    const inputHarga  = document.getElementById('trans-harga');
+    if (isEWallet) {
+        btnJual.textContent = 'Keluar';
+        btnBeli.textContent = 'Masuk';
+        if (deskripsiGroup) deskripsiGroup.style.display = 'block';
+        if (lembarGroup) lembarGroup.style.display = 'none';
+        if (totalSection) totalSection.style.display = 'none';
+        document.getElementById('trans-label-harga').textContent = 'Nominal (Rp)';
+    } else {
+        btnJual.textContent = 'Jual';
+        btnBeli.textContent = 'Beli';
+        if (deskripsiGroup) deskripsiGroup.style.display = 'none';
+        if (lembarGroup) lembarGroup.style.display = 'block';
 
-    if (labelSatuan) labelSatuan.textContent = config.labelSatuan;
-    if (labelHarga)  labelHarga.textContent  = config.labelHarga;
+        const isSaham = (aset.kategori || '').toLowerCase() === 'saham';
+        if (totalSection) totalSection.style.display = isSaham ? 'block' : 'none';
 
-    if (inputLembar) {
-        inputLembar.step = config.stepSatuan;
-        inputLembar.placeholder = config.presisi > 0 ? (0).toFixed(config.presisi) : '0';
+        const labelSatuan = document.getElementById('trans-label-satuan');
+        const labelHarga  = document.getElementById('trans-label-harga');
+        const inputLembar = document.getElementById('trans-lembar');
+        const inputHarga  = document.getElementById('trans-harga');
+
+        if (labelSatuan) labelSatuan.textContent = config.labelSatuan;
+        if (labelHarga)  labelHarga.textContent  = config.labelHarga;
+        if (inputLembar) {
+            inputLembar.step = config.stepSatuan;
+            inputLembar.placeholder = config.presisi > 0 ? (0).toFixed(config.presisi) : '0';
+        }
+        if (inputHarga) inputHarga.step = config.stepHarga;
     }
-    if (inputHarga) {
-        inputHarga.step = config.stepHarga;
-        inputHarga.placeholder = '0';
-    }
 
-    // Reset preview satuan
+    setJenisTransaksiAset('beli');
+
     const satuanPreview = document.getElementById('trans-satuan-preview');
     if (satuanPreview) satuanPreview.style.display = 'none';
 
@@ -2640,35 +2664,63 @@ function handleSimpanTransaksiAset(event) {
     const idAset = document.getElementById('trans-aset-id').value;
     const jenis = document.getElementById('trans-aset-jenis').value;
     const harga = parseFloat(document.getElementById('trans-harga').value);
-    const lembar = parseFloat(document.getElementById('trans-lembar').value);
     const tanggal = document.getElementById('trans-tanggal').value;
+    const isEWallet = document.getElementById('trans-ewallet-mode').value === '1';
 
-    if (!harga || harga <= 0 || !lembar || lembar <= 0) {
-        showNotification('Harga dan jumlah harus lebih dari 0', 'error');
+    if (!harga || harga <= 0) {
+        showNotification('Nominal harus lebih dari 0', 'error');
         return;
+    }
+
+    let lembar = 0;
+    let deskripsi = '';
+
+    if (isEWallet) {
+        deskripsi = document.getElementById('trans-deskripsi').value.trim();
+        lembar = harga; // untuk EWallet, lembar = nominal (dipakai kalkulasi saldo)
+    } else {
+        lembar = parseFloat(document.getElementById('trans-lembar').value);
+        if (!lembar || lembar <= 0) {
+            showNotification('Jumlah harus lebih dari 0', 'error');
+            return;
+        }
     }
 
     const targetAsetIndex = dataAset.findIndex(a => a.id === idAset);
     if (targetAsetIndex !== -1) {
         if (!dataAset[targetAsetIndex].transaksi) dataAset[targetAsetIndex].transaksi = [];
 
-        const isSaham = (dataAset[targetAsetIndex].kategori || '').toLowerCase() === 'saham';
-        // Saham: simpan harga per lembar, nilai dihitung harga × lembar
-        // Lainnya: simpan total bayar langsung sebagai harga
-        const hargaSimpan = isSaham ? harga : harga;
+        const editTrxId = document.getElementById('trans-aset-id').dataset.editTrxId;
 
-        dataAset[targetAsetIndex].transaksi.push({
-            jenis: jenis,
-            harga: hargaSimpan,
-            lembar: lembar,
-            tanggal: tanggal,
-            id_transaksi: Date.now()
-        });
+        if (editTrxId) {
+            // Mode edit: update transaksi yang ada
+            const trxIdx = dataAset[targetAsetIndex].transaksi.findIndex(t => String(t.id_transaksi) === String(editTrxId));
+            if (trxIdx !== -1) {
+                dataAset[targetAsetIndex].transaksi[trxIdx] = {
+                    ...dataAset[targetAsetIndex].transaksi[trxIdx],
+                    jenis, harga, lembar, deskripsi, tanggal
+                };
+            }
+            delete document.getElementById('trans-aset-id').dataset.editTrxId;
+            showNotification('Transaksi berhasil diupdate!', 'success');
+        } else {
+            // Mode tambah baru
+            dataAset[targetAsetIndex].transaksi.push({
+                jenis, harga, lembar, deskripsi, tanggal,
+                id_transaksi: Date.now()
+            });
+            showNotification('Transaksi aset berhasil dicatat!', 'success');
+        }
 
         localStorage.setItem('myBudgetly_assets', JSON.stringify(dataAset));
         renderHalamanPorto();
         tutupModalTransaksiAset();
-        showNotification('Transaksi aset berhasil dicatat!', 'success');
+
+        // Realtime: refresh modal riwayat jika sedang terbuka
+        const modalRiwayat = document.getElementById('modal-riwayat-aset');
+        if (modalRiwayat && modalRiwayat.style.display === 'flex') {
+            lihatRiwayat(idAset);
+        }
     }
 }
 
@@ -2720,6 +2772,113 @@ function simpanCatatanInline(idAset) {
     }
 }
 
+function tutupModalRiwayat() {
+    document.getElementById('modal-riwayat-aset').style.display = 'none';
+}
+
+function hapusTrxAset(idAset, idTrx) {
+    if (!confirm('Hapus transaksi ini?')) return;
+    const idx = dataAset.findIndex(a => a.id === idAset);
+    if (idx === -1) return;
+    dataAset[idx].transaksi = dataAset[idx].transaksi.filter(t => String(t.id_transaksi) !== String(idTrx));
+    localStorage.setItem('myBudgetly_assets', JSON.stringify(dataAset));
+    renderHalamanPorto();
+    lihatRiwayat(idAset);
+}
+
+function editTrxAset(idAset, idTrx) {
+    const aset = dataAset.find(a => a.id === idAset);
+    if (!aset) return;
+    const trx = aset.transaksi.find(t => String(t.id_transaksi) === String(idTrx));
+    if (!trx) return;
+
+    // Tutup modal riwayat dulu, baru buka modal transaksi
+    tutupModalRiwayat();
+
+    setTimeout(() => {
+        bukaModalTransaksiAset(idAset);
+        setTimeout(() => {
+            document.getElementById('trans-harga').value = trx.harga;
+            document.getElementById('trans-tanggal').value = trx.tanggal;
+            setJenisTransaksiAset(trx.jenis);
+            const isEWallet = (aset.kategori || '').toLowerCase() === 'ewallet';
+            if (isEWallet && trx.deskripsi) {
+                document.getElementById('trans-deskripsi').value = trx.deskripsi;
+            } else if (!isEWallet && trx.lembar) {
+                document.getElementById('trans-lembar').value = trx.lembar;
+            }
+            document.getElementById('trans-aset-id').dataset.editTrxId = idTrx;
+        }, 50);
+    }, 150);
+}
+
+function lihatRiwayat(idAset) {
+    const aset = dataAset.find(a => a.id === idAset);
+    if (!aset) return;
+
+    const isEWallet = (aset.kategori || '').toLowerCase() === 'ewallet';
+    const config = getAsetConfig(aset.kategori);
+    const kategoriLabel = aset.kategori === 'EWallet'
+        ? (aset.jenis_ew || 'E-Wallet/Bank')
+        : `${aset.kategori}${aset.jenis_rd ? ' · ' + aset.jenis_rd : ''}`;
+
+    document.getElementById('riwayat-aset-nama').textContent = aset.nama;
+    document.getElementById('riwayat-aset-sub').textContent = kategoriLabel;
+
+    const list = document.getElementById('riwayat-list');
+    list.innerHTML = '';
+
+    const transaksi = aset.transaksi || [];
+    if (transaksi.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#aaa;font-size:14px;">Belum ada riwayat transaksi</div>`;
+    } else {
+        // Sort terbaru di atas
+        const sorted = [...transaksi].sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+
+        sorted.forEach(trx => {
+            const isMasuk = trx.jenis === 'beli' || trx.jenis === 'masuk';
+            const warna = isMasuk ? '#10b981' : '#ef4444';
+            const bgIcon = isMasuk ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)';
+            const labelJenis = isEWallet
+                ? (isMasuk ? 'Masuk' : 'Keluar')
+                : (isMasuk ? 'Beli' : 'Jual');
+            const arrow = isMasuk ? '↓' : '↑';
+
+            let baris2 = '';
+            if (isEWallet) {
+                baris2 = trx.deskripsi || '';
+            } else {
+                baris2 = `${Number(trx.lembar).toFixed(config.presisi)} ${config.satuan}`;
+            }
+
+            const item = document.createElement('div');
+            item.style.cssText = 'display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid #f5f5f5;';
+            item.innerHTML = `
+                <div style="width:38px;height:38px;border-radius:50%;background:${bgIcon};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;color:${warna};font-weight:700;">${arrow}</div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:600;font-size:14px;color:#1a1c21;">${labelJenis}</div>
+                    <div style="font-size:12px;color:#888;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${baris2 || formatDate(trx.tanggal)}</div>
+                    ${baris2 ? `<div style="font-size:11px;color:#bbb;margin-top:1px;">${formatDate(trx.tanggal)}</div>` : ''}
+                </div>
+                <div style="text-align:right;flex-shrink:0;">
+                    <div style="font-weight:700;font-size:14px;color:${warna};">${formatCurrency(trx.harga)}</div>
+                    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">
+                        <button onclick="editTrxAset('${aset.id}','${trx.id_transaksi}')" style="background:none;border:none;cursor:pointer;padding:2px;color:#94a3b8;" title="Edit">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button onclick="hapusTrxAset('${aset.id}','${trx.id_transaksi}')" style="background:none;border:none;cursor:pointer;padding:2px;color:#fca5a5;" title="Hapus">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    document.getElementById('modal-riwayat-aset').style.display = 'flex';
+}
+
 // Hapus Aset (Menggunakan ID)
 function hapusAset(idAset) {
     if(confirm('Yakin ingin menghapus seluruh aset ini beserta riwayat transaksinya?')) {
@@ -2751,6 +2910,10 @@ function bukaModalAset() {
     document.getElementById('input-jenis-rd').value = '';
     document.getElementById('section-jenis-rd').style.display = 'none';
     document.querySelectorAll('.rd-pill').forEach(p => p.classList.remove('active'));
+    // Reset jenis ewallet
+    document.getElementById('input-jenis-ewallet').value = '';
+    document.getElementById('section-jenis-ewallet').style.display = 'none';
+    document.querySelectorAll('#ewallet-jenis-pills .rd-pill').forEach(p => p.classList.remove('active'));
     // Reset counter catatan
     const catatanEl = document.getElementById('input-catatan');
     const counterEl = document.getElementById('catatan-counter');
@@ -2770,10 +2933,11 @@ function initializeAssetCategorySelect() {
     const inputNama = document.getElementById('input-nama');
 
     const optionsData = [
-        { value: 'Saham',     icon: 'bar-chart-2', label: 'Saham',     contoh: 'BBCA, BMRI, BBRI, BBNI' },
-        { value: 'Kripto',    icon: 'bitcoin',      label: 'Kripto',    contoh: 'BITCOIN, ETH, SOL' },
-        { value: 'Emas',      icon: 'cuboid',       label: 'Emas',      contoh: 'Antam, UBS' },
-        { value: 'Reksadana', icon: 'sprout',       label: 'Reksadana', contoh: 'Bahana liquid plus, Schroder dana prestasi, Sucorinvest bond fund' }
+        { value: 'Saham',     icon: 'bar-chart-2', label: 'Saham',        contoh: 'BBCA, BMRI, BBRI, BBNI' },
+        { value: 'Kripto',    icon: 'bitcoin',      label: 'Kripto',       contoh: 'BITCOIN, ETH, SOL' },
+        { value: 'Emas',      icon: 'cuboid',       label: 'Emas',         contoh: 'Antam, UBS' },
+        { value: 'Reksadana', icon: 'sprout',       label: 'Reksadana',    contoh: 'Bahana liquid plus, Schroder dana prestasi, Sucorinvest bond fund' },
+        { value: 'EWallet',   icon: 'landmark',     label: 'E-Wallet/Bank', contoh: 'GoPay, OVO, BCA, Mandiri' }
     ];
 
     function setSelected(opt) {
@@ -2801,11 +2965,22 @@ function initializeAssetCategorySelect() {
 
             // Show/hide section jenis reksadana
             const sectionRD = document.getElementById('section-jenis-rd');
+            const sectionEW = document.getElementById('section-jenis-ewallet');
             if (opt.value === 'Reksadana') {
                 sectionRD.style.display = 'block';
-            } else {
+                sectionEW.style.display = 'none';
+                document.getElementById('input-jenis-ewallet').value = '';
+                document.querySelectorAll('#ewallet-jenis-pills .rd-pill').forEach(p => p.classList.remove('active'));
+            } else if (opt.value === 'EWallet') {
+                sectionEW.style.display = 'block';
                 sectionRD.style.display = 'none';
                 document.getElementById('input-jenis-rd').value = '';
+                document.querySelectorAll('#rd-jenis-pills .rd-pill').forEach(p => p.classList.remove('active'));
+            } else {
+                sectionRD.style.display = 'none';
+                sectionEW.style.display = 'none';
+                document.getElementById('input-jenis-rd').value = '';
+                document.getElementById('input-jenis-ewallet').value = '';
                 document.querySelectorAll('.rd-pill').forEach(p => p.classList.remove('active'));
             }
 
@@ -2823,11 +2998,20 @@ function initializeAssetCategorySelect() {
     };
 
     // Setup pill listener jenis reksadana
-    document.querySelectorAll('.rd-pill').forEach(pill => {
+    document.querySelectorAll('#rd-jenis-pills .rd-pill').forEach(pill => {
         pill.onclick = () => {
-            document.querySelectorAll('.rd-pill').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('#rd-jenis-pills .rd-pill').forEach(p => p.classList.remove('active'));
             pill.classList.add('active');
             document.getElementById('input-jenis-rd').value = pill.dataset.jenis;
+        };
+    });
+
+    // Setup pill listener jenis ewallet
+    document.querySelectorAll('#ewallet-jenis-pills .rd-pill').forEach(pill => {
+        pill.onclick = () => {
+            document.querySelectorAll('#ewallet-jenis-pills .rd-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            document.getElementById('input-jenis-ewallet').value = pill.dataset.jenis;
         };
     });
 }
