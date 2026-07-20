@@ -405,7 +405,219 @@
         </div>
 </div>
 
-  <div id="page-ruang" class="app-page" style="display: none;"><div class="empty-state"><h3>Ruang</h3><p>Segera Hadir</p></div></div>
+  <div id="page-ruang" class="app-page" style="display: none;">
+    <div class="ruang-wrapper">
+
+      <!-- Tab Navigasi -->
+      <div class="ruang-tabs">
+        <button class="ruang-tab active" onclick="switchRuangTab('jadwal', this)">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNhbGVuZGFyLWRheXMtaWNvbiBsdWNpZGUtY2FsZW5kYXItZGF5cyI+PHBhdGggZD0iTTggMnY0Ii8+PHBhdGggZD0iTTE2IDJ2NCIvPjxyZWN0IHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgeD0iMyIgeT0iNCIgcng9IjIiLz48cGF0aCBkPSJNMyAxMGgxOCIvPjxwYXRoIGQ9Ik04IDE0aC4wMSIvPjxwYXRoIGQ9Ik0xMiAxNGguMDEiLz48cGF0aCBkPSJNMTYgMTRoLjAxIi8+PHBhdGggZD0iTTggMThoLjAxIi8+PHBhdGggZD0iTTEyIDE4aC4wMSIvPjxwYXRoIGQ9Ik0xNiAxOGguMDEiLz48L3N2Zz4=" class="ruang-tab-icon"> Jadwal Kelas
+        </button>
+        <button class="ruang-tab" onclick="switchRuangTab('tugas', this)">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNsaXBib2FyZC1saXN0LWljb24gbHVjaWRlLWNsaXBib2FyZC1saXN0Ij48cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI0IiB4PSI4IiB5PSIyIiByeD0iMSIgcnk9IjEiLz48cGF0aCBkPSJNMTYgNGgyYTIgMiAwIDAgMSAyIDJ2MTRhMiAyIDAgMCAxLTIgMkg2YTIgMiAwIDAgMS0yLTJWNmEyIDIgMCAwIDEgMi0yaDIiLz48cGF0aCBkPSJNMTIgMTFoNCIvPjxwYXRoIGQ9Ik0xMiAxNmg0Ii8+PHBhdGggZD0iTTggMTFoLjAxIi8+PHBhdGggZD0iTTggMTZoLjAxIi8+PC9zdmc+" class="ruang-tab-icon"> Tugas
+        </button>
+        <button class="ruang-tab" onclick="switchRuangTab('todo', this)">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWxpc3QtdG9kby1pY29uIGx1Y2lkZS1saXN0LXRvZG8iPjxwYXRoIGQ9Ik0xMyA1aDgiLz48cGF0aCBkPSJNMTMgMTJoOCIvPjxwYXRoIGQ9Ik0xMyAxOWg4Ii8+PHBhdGggZD0ibTMgMTcgMiAyIDQtNCIvPjxyZWN0IHg9IjMiIHk9IjQiIHdpZHRoPSI2IiBoZWlnaHQ9IjYiIHJ4PSIxIi8+PC9zdmc+" class="ruang-tab-icon"> To-Do
+        </button>
+        <button class="ruang-tab" onclick="switchRuangTab('catatan', this)">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLW5vdGVib29rLXRleHQtaWNvbiBsdWNpZGUtbm90ZWJvb2stdGV4dCI+PHBhdGggZD0iTTIgNmg0Ii8+PHBhdGggZD0iTTIgMTBoNCIvPjxwYXRoIGQ9Ik0yIDE0aDQiLz48cGF0aCBkPSJNMiAxOGg0Ii8+PHJlY3Qgd2lkdGg9IjE2IiBoZWlnaHQ9IjIwIiB4PSI0IiB5PSIyIiByeD0iMiIvPjxwYXRoIGQ9Ik05LjUgOGg1Ii8+PHBhdGggZD0iTTkuNSAxMkgxNiIvPjxwYXRoIGQ9Ik05LjUgMTZIMTQiLz48L3N2Zz4=" class="ruang-tab-icon"> Catatan
+        </button>
+      </div>
+
+      <!-- TAB: JADWAL KELAS -->
+      <div id="ruang-jadwal" class="ruang-content active">
+        <div class="ruang-jadwal-kelas-header">
+          <button class="ruang-add-btn" onclick="bukaModalJadwal()">
+            <i data-lucide="plus" style="width:14px;height:14px;"></i> Tambah Kelas
+          </button>
+        </div>
+        <div class="ruang-jadwal-kelas-wrap">
+          <div id="ruang-jadwal-kelas-grid" class="ruang-jadwal-kelas-grid"></div>
+        </div>
+      </div>
+
+      <!-- TAB: TUGAS -->
+      <div id="ruang-tugas" class="ruang-content" style="display:none;">
+        <div class="ruang-tugas-header">
+          <div class="ruang-cal-nav">
+            <button onclick="ruangPrevMonth()">&#8249;</button>
+            <span id="ruang-cal-title"></span>
+            <button onclick="ruangNextMonth()">&#8250;</button>
+          </div>
+          <button class="ruang-add-btn" onclick="bukaModalTugas()">
+            <i data-lucide="plus" style="width:16px;height:16px;"></i> Tugas
+          </button>
+        </div>
+
+        <!-- Kalender -->
+        <div class="ruang-calendar">
+          <div class="ruang-cal-days-header">
+            <span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span>
+          </div>
+          <div id="ruang-cal-grid" class="ruang-cal-grid"></div>
+        </div>
+
+        <!-- List tugas bulan ini -->
+        <div class="ruang-tugas-list-section">
+          <h4 class="ruang-section-title">Semua Tugas</h4>
+          <div id="ruang-tugas-list"></div>
+        </div>
+
+      </div>
+
+      <!-- TAB: TO-DO -->
+      <div id="ruang-todo" class="ruang-content" style="display:none;">
+        <div class="ruang-todo-input-row">
+          <input type="text" id="todo-input" class="ruang-input" placeholder="Tambah to-do baru..." onkeydown="if(event.key==='Enter') tambahTodo()">
+          <button class="ruang-add-btn" onclick="tambahTodo()"><i data-lucide="plus" style="width:16px;height:16px;"></i></button>
+        </div>
+        <div class="ruang-todo-filters">
+          <button class="todo-filter-btn active" onclick="filterTodo('semua',this)">Semua</button>
+          <button class="todo-filter-btn" onclick="filterTodo('belum',this)">Belum</button>
+          <button class="todo-filter-btn" onclick="filterTodo('selesai',this)">Selesai</button>
+        </div>
+        <div id="ruang-todo-list"></div>
+      </div>
+
+      <!-- TAB: CATATAN -->
+      <div id="ruang-catatan" class="ruang-content" style="display:none;">
+        <div class="ruang-catatan-header">
+          <button class="ruang-add-btn" onclick="bukaModalCatatan()">
+            <i data-lucide="plus" style="width:16px;height:16px;"></i> Catatan
+          </button>
+        </div>
+        <div id="ruang-catatan-grid" class="ruang-catatan-grid"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal Tambah/Edit Tugas -->
+  <div id="modal-tugas" class="modal" style="display:none; z-index:2001;">
+    <div class="ruang-modal-content">
+      <div class="ruang-modal-header">
+        <h3 id="modal-tugas-title">Tambah Tugas</h3>
+        <button onclick="tutupModalTugas()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#aaa;">✕</button>
+      </div>
+      <div class="ruang-modal-body">
+        <input type="hidden" id="tugas-edit-id">
+        <div class="ruang-field">
+          <label>Judul Tugas <span style="color:#ef4444">*</span></label>
+          <input type="text" id="tugas-judul" class="ruang-input" placeholder="Contoh: Kerjakan soal halaman 45">
+        </div>
+        <div class="ruang-field">
+          <label>Label / Mata Pelajaran</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="tugas-label" class="ruang-input" placeholder="Contoh: Matematika, Proyek A" list="label-suggestions">
+            <datalist id="label-suggestions"></datalist>
+          </div>
+        </div>
+        <div class="ruang-field-row">
+          <div class="ruang-field">
+            <label>Deadline</label>
+            <input type="date" id="tugas-tanggal" class="ruang-input">
+          </div>
+          <div class="ruang-field">
+            <label>Jam</label>
+            <input type="time" id="tugas-jam" class="ruang-input">
+          </div>
+        </div>
+        <div class="ruang-field">
+          <label>Status</label>
+          <div class="ruang-status-pills">
+            <button type="button" class="ruang-status-pill active" data-status="belum" onclick="pilihStatusTugas(this)">Belum</button>
+            <button type="button" class="ruang-status-pill" data-status="proses" onclick="pilihStatusTugas(this)">Proses</button>
+            <button type="button" class="ruang-status-pill" data-status="selesai" onclick="pilihStatusTugas(this)">Selesai</button>
+          </div>
+          <input type="hidden" id="tugas-status" value="belum">
+        </div>
+        <div class="ruang-field">
+          <label>Deskripsi (opsional)</label>
+          <textarea id="tugas-deskripsi" class="ruang-input" rows="3" placeholder="Tambahkan detail tugas..."></textarea>
+        </div>
+      </div>
+      <div class="ruang-modal-footer">
+        <button class="ruang-btn-primary" onclick="simpanTugas()">Simpan</button>
+        <button class="ruang-btn-secondary" onclick="tutupModalTugas()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Jadwal -->
+  <div id="modal-jadwal" class="modal" style="display:none; z-index:2001;">
+    <div class="ruang-modal-content">
+      <div class="ruang-modal-header">
+        <h3 id="modal-jadwal-title">Tambah Jadwal</h3>
+        <button onclick="tutupModalJadwal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#aaa;">✕</button>
+      </div>
+      <div class="ruang-modal-body">
+        <input type="hidden" id="jadwal-edit-id">
+        <div class="ruang-field">
+          <label>Mata Kuliah / Mata Pelajaran <span style="color:#ef4444">*</span></label>
+          <input type="text" id="jadwal-nama" class="ruang-input" placeholder="Contoh: Matematika, Basis Data">
+        </div>
+        <div class="ruang-field-row">
+          <div class="ruang-field">
+            <label>Hari</label>
+            <select id="jadwal-hari" class="ruang-input">
+              <option value="Senin">Senin</option>
+              <option value="Selasa">Selasa</option>
+              <option value="Rabu">Rabu</option>
+              <option value="Kamis">Kamis</option>
+              <option value="Jumat">Jumat</option>
+              <option value="Sabtu">Sabtu</option>
+              <option value="Minggu">Minggu</option>
+            </select>
+          </div>
+          <div class="ruang-field">
+            <label>Jam</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="time" id="jadwal-jam-mulai" class="ruang-input" style="flex:1;">
+              <span style="color:var(--text-muted);font-weight:600;">–</span>
+              <input type="time" id="jadwal-jam-selesai" class="ruang-input" style="flex:1;">
+            </div>
+          </div>
+        </div>
+        <div class="ruang-field">
+          <label>Guru / Dosen</label>
+          <input type="text" id="jadwal-dosen" class="ruang-input" placeholder="Nama pengajar">
+        </div>
+        <div class="ruang-field">
+          <label>Ruang / Lokasi</label>
+          <input type="text" id="jadwal-ruang" class="ruang-input" placeholder="Contoh: Lab A, Zoom">
+        </div>
+      </div>
+      <div class="ruang-modal-footer">
+        <button class="ruang-btn-primary" onclick="simpanJadwal()">Simpan</button>
+        <button class="ruang-btn-secondary" onclick="tutupModalJadwal()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Catatan -->
+  <div id="modal-catatan-ruang" class="modal" style="display:none; z-index:2001;">
+    <div class="ruang-modal-content">
+      <div class="ruang-modal-header">
+        <h3 id="modal-catatan-title">Catatan Baru</h3>
+        <button onclick="tutupModalCatatan()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#aaa;">✕</button>
+      </div>
+      <div class="ruang-modal-body">
+        <input type="hidden" id="catatan-edit-id">
+        <div class="ruang-field">
+          <label>Judul</label>
+          <input type="text" id="catatan-judul" class="ruang-input" placeholder="Judul catatan...">
+        </div>
+        <div class="ruang-field">
+          <label>Isi Catatan</label>
+          <textarea id="catatan-isi" class="ruang-input" rows="6" placeholder="Tulis catatanmu di sini..."></textarea>
+        </div>
+      </div>
+      <div class="ruang-modal-footer">
+        <button class="ruang-btn-primary" onclick="simpanCatatanRuang()">Simpan</button>
+        <button class="ruang-btn-secondary" onclick="tutupModalCatatan()">Batal</button>
+      </div>
+    </div>
+  </div>
   <div id="page-forum" class="app-page" style="display: none;"><div class="empty-state"><h3>Forum</h3><p>Segera Hadir</p></div></div>
   <div id="page-saya" class="app-page" style="display: none;">
     <div class="profil-page">
@@ -944,6 +1156,20 @@
       <button onclick="tutupModalRiwayat()" style="background:none;border:none;cursor:pointer;font-size:18px;color:#aaa;">✕</button>
     </div>
     <div id="riwayat-list" style="max-height:65vh; overflow-y:auto; padding:0 0 8px 0;"></div>
+  </div>
+</div>
+
+<!-- Modal Detail Tugas per Tanggal -->
+<div id="modal-tugas-tanggal" class="modal" style="display:none; z-index:2001;">
+  <div class="ruang-modal-content" style="max-width:420px;">
+    <div class="ruang-modal-header">
+      <h3 id="modal-tugas-tanggal-title" style="font-size:15px;"></h3>
+      <button onclick="document.getElementById('modal-tugas-tanggal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#aaa;">✕</button>
+    </div>
+    <div id="modal-tugas-tanggal-list" style="padding:16px; max-height:60vh; overflow-y:auto;"></div>
+    <div style="padding:12px 16px; border-top:1px solid var(--border); text-align:right;">
+      <button class="ruang-btn-primary" style="font-size:13px;padding:8px 16px;" onclick="document.getElementById('modal-tugas-tanggal').style.display='none'; bukaModalTugas(window._selectedTanggal)">+ Tambah Tugas</button>
+    </div>
   </div>
 </div>
 

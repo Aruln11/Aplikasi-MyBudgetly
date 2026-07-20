@@ -717,40 +717,93 @@ async function processCroppedImage() {
 }
 
 function parseOCRText(text) {
-  let cleanedText = text
-    .replace(/(\d)[.,](\d{3})/g, '$1$2')
-    .replace(/,00/g, '')
-    .replace(/Rp\s?/gi, '')
-    .replace(/[^\w\s.,-]/g, '');
-
-  const lines = cleanedText.split('\n');
+  // Step 1: Normalisasi teks mentah dari OCR
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const items = [];
-  const itemRegex = /^(.+?)\s+(?:x\s?)?\d{1,2}\s+(\d{4,})$/;
-  const simpleItemRegex = /^(.*?)\s+(\d{4,})$/;
-  const junkRegex = /(Total|Subtotal|Tunai|Kembali|PPN|Diskon|Kasir|Indomaret|Alfamart|Alfamidi|Member|Poin|Tgl|Wkt|Struk|Telp)/i;
 
-  lines.forEach(line => {
-    line = line.trim();
-    if (line.length < 5 || junkRegex.test(line)) {
-      return;
-    }
+  // Kata-kata yang pasti bukan item belanja
+  const junkRegex = /^(total|subtotal|tunai|kembali|ppn|tax|diskon|discount|kasir|indomaret|alfamart|alfamidi|member|poin|tgl|wkt|struk|telp|no\.|nota|terima kasih|thank|change|cash|debit|kredit|grand|bayar|kembalian|waktu|tanggal|jam|shift|no\.transaksi|receipt|invoice|alamat|jl\.|npwp|bon)/i;
 
-    let match = line.match(itemRegex) || line.match(simpleItemRegex);
+  // Fungsi bersihkan angka: hapus separator ribuan, simpan nilai asli
+  const cleanNumber = (str) => {
+    return parseInt(str.replace(/[.,\s]/g, ''), 10);
+  };
 
-    if (match) {
-      let name = match[1].replace(/\d+$/, '').trim();
-      let price = parseInt(match[match.length - 1], 10);
+  // Fungsi cek apakah string adalah angka harga yang valid (min Rp500)
+  const isValidPrice = (n) => !isNaN(n) && n >= 500 && n <= 100000000;
 
-      if (name.length > 2 && /[a-zA-Z]{2,}/.test(name) && !isNaN(price) && price > 0) {
-        items.push({
-          name,
-          price
-        });
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+
+    // Skip baris junk
+    if (junkRegex.test(line)) continue;
+    // Skip baris yang hanya angka atau terlalu pendek
+    if (/^\d+$/.test(line) || line.length < 3) continue;
+
+    // Bersihkan prefix Rp
+    line = line.replace(/Rp\.?\s*/gi, '').trim();
+
+    // POLA 1: "Nama Item    Qty x Harga    Total"
+    // contoh: "Indomie Goreng  2 x 3.500  7.000"
+    const qtyPattern = /^(.+?)\s+(\d{1,3})\s*[xX]\s*([\d.,]+)\s+([\d.,]+)$/;
+    let m = line.match(qtyPattern);
+    if (m) {
+      const name = m[1].trim();
+      const qty = parseInt(m[2]);
+      const total = cleanNumber(m[4]);
+      if (name.length >= 2 && /[a-zA-Z]/.test(name) && isValidPrice(total)) {
+        items.push({ name, price: total });
+        continue;
       }
     }
-  });
 
-  displayScannedItems(items);
+    // POLA 2: "Nama Item    Total" (paling umum di struk minimarket)
+    // contoh: "AQUA 600ML    5000"
+    const simplePattern = /^(.+?)\s{2,}([\d.,]{4,})$/;
+    m = line.match(simplePattern);
+    if (m) {
+      const name = m[1].trim();
+      const price = cleanNumber(m[2]);
+      if (name.length >= 2 && /[a-zA-Z]/.test(name) && isValidPrice(price) && !junkRegex.test(name)) {
+        items.push({ name, price });
+        continue;
+      }
+    }
+
+    // POLA 3: Nama di satu baris, harga di baris berikutnya
+    // contoh: "Chitato BBQ\n12.500"
+    if (/[a-zA-Z]{2,}/.test(line) && !junkRegex.test(line) && !/[\d.,]{5,}/.test(line)) {
+      const nextLine = lines[i + 1] ? lines[i + 1].replace(/Rp\.?\s*/gi, '').trim() : '';
+      const priceOnly = /^[\d.,]+$/.test(nextLine) || /^[\d.,]+\s*$/.test(nextLine);
+      if (priceOnly) {
+        const price = cleanNumber(nextLine);
+        if (isValidPrice(price)) {
+          items.push({ name: line, price });
+          i++; // skip baris harga
+          continue;
+        }
+      }
+    }
+
+    // POLA 4: Nama + harga di akhir baris (1 spasi)
+    // contoh: "Teh Botol Sosro 5000"
+    const endPricePattern = /^(.+?)\s+([\d.,]{4,})$/;
+    m = line.match(endPricePattern);
+    if (m) {
+      const name = m[1].replace(/\d+$/, '').trim();
+      const price = cleanNumber(m[2]);
+      if (name.length >= 3 && /[a-zA-Z]{2,}/.test(name) && isValidPrice(price) && !junkRegex.test(name)) {
+        items.push({ name, price });
+      }
+    }
+  }
+
+  // Hapus duplikat berdasarkan nama + harga
+  const unique = items.filter((item, idx, self) =>
+    idx === self.findIndex(t => t.name === item.name && t.price === item.price)
+  );
+
+  displayScannedItems(unique);
 }
 
 function displayScannedItems(items) {
@@ -2341,6 +2394,610 @@ document.addEventListener('DOMContentLoaded', () => {
 
 let dataAset = JSON.parse(localStorage.getItem('myBudgetly_assets')) || [];
 
+// ===== RUANG DATA =====
+let dataTugas  = JSON.parse(localStorage.getItem('myBudgetly_tugas'))  || [];
+let dataTodo   = JSON.parse(localStorage.getItem('myBudgetly_todo'))   || [];
+let dataCatatanRuang = JSON.parse(localStorage.getItem('myBudgetly_catatan')) || [];
+let ruangCalDate = new Date();
+
+function saveTugas()  { localStorage.setItem('myBudgetly_tugas',   JSON.stringify(dataTugas)); }
+function saveTodo()   { localStorage.setItem('myBudgetly_todo',    JSON.stringify(dataTodo)); }
+function saveCatatanRuang() { localStorage.setItem('myBudgetly_catatan', JSON.stringify(dataCatatanRuang)); }
+
+// ===== SWITCH TAB RUANG =====
+function switchRuangTab(tab, el) {
+    document.querySelectorAll('.ruang-content').forEach(c => c.style.display = 'none');
+    document.querySelectorAll('.ruang-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(`ruang-${tab}`).style.display = 'block';
+    if (el) el.classList.add('active');
+    if (tab === 'jadwal')  renderJadwal();
+    if (tab === 'tugas')   { renderRuangKalender(); }
+    if (tab === 'todo')    renderTodo();
+    if (tab === 'catatan') renderCatatanRuang();
+}
+
+// ===== KALENDER TUGAS =====
+function renderRuangKalender() {
+    const year  = ruangCalDate.getFullYear();
+    const month = ruangCalDate.getMonth();
+    document.getElementById('ruang-cal-title').textContent =
+        new Date(year, month, 1).toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+
+    const grid = document.getElementById('ruang-cal-grid');
+    grid.innerHTML = '';
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrev  = new Date(year, month, 0).getDate();
+    const today = new Date();
+
+    // Sel kosong sebelum hari pertama
+    for (let i = 0; i < firstDay; i++) {
+        const d = daysInPrev - firstDay + 1 + i;
+        grid.appendChild(buildCalCell(d, year, month - 1, true));
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+        const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+        grid.appendChild(buildCalCell(d, year, month, false, isToday));
+    }
+    // Sisa sel setelah akhir bulan
+    const totalCells = firstDay + daysInMonth;
+    const remaining  = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+    for (let d = 1; d <= remaining; d++) {
+        grid.appendChild(buildCalCell(d, year, month + 1, true));
+    }
+
+    renderTugasList();
+    if (window.lucide) lucide.createIcons();
+}
+
+function buildCalCell(d, year, month, otherMonth, isToday) {
+    const cell = document.createElement('div');
+    cell.className = 'ruang-cal-cell' + (otherMonth ? ' other-month' : '') + (isToday ? ' today' : '');
+
+    const dateEl = document.createElement('div');
+    dateEl.className = 'ruang-cal-date';
+    dateEl.textContent = d;
+    cell.appendChild(dateEl);
+
+    if (!otherMonth) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const tugasHariIni = dataTugas.filter(t => t.tanggal === dateStr);
+        tugasHariIni.slice(0, 2).forEach(t => {
+            const ev = document.createElement('div');
+            ev.className = `ruang-cal-event ${t.status}`;
+            ev.textContent = t.judul;
+            cell.appendChild(ev);
+        });
+        if (tugasHariIni.length > 2) {
+            const more = document.createElement('div');
+            more.className = 'ruang-cal-event belum';
+            more.textContent = `+${tugasHariIni.length - 2} lagi`;
+            cell.appendChild(more);
+        }
+        cell.onclick = () => lihatTugasTanggal(dateStr);
+    }
+    return cell;
+}
+
+function ruangPrevMonth() { ruangCalDate.setMonth(ruangCalDate.getMonth() - 1); renderRuangKalender(); }
+function ruangNextMonth() { ruangCalDate.setMonth(ruangCalDate.getMonth() + 1); renderRuangKalender(); }
+
+function lihatTugasTanggal(dateStr) {
+    window._selectedTanggal = dateStr;
+    const tugasHariIni = dataTugas.filter(t => t.tanggal === dateStr);
+
+    const date = new Date(dateStr + 'T00:00:00');
+    const label = date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById('modal-tugas-tanggal-title').textContent = label;
+
+    const list = document.getElementById('modal-tugas-tanggal-list');
+
+    if (tugasHariIni.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:14px;">Tidak ada tugas di tanggal ini</div>`;
+    } else {
+        list.innerHTML = '';
+        tugasHariIni.forEach(t => {
+            const div = document.createElement('div');
+            div.style.cssText = 'padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;';
+            div.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                    <div style="flex:1;">
+                        <div style="font-weight:700;font-size:14px;color:var(--text-primary);margin-bottom:4px;">${t.judul}</div>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                            ${t.label ? `<span class="ruang-tugas-label">${t.label}</span>` : ''}
+                            <span class="ruang-status-badge ${t.status}">${t.status.charAt(0).toUpperCase()+t.status.slice(1)}</span>
+                            ${t.jam ? `<span style="font-size:11px;color:var(--text-muted);">🕐 ${t.jam}</span>` : ''}
+                        </div>
+                        ${t.deskripsi ? `<div style="font-size:12px;color:var(--text-muted);margin-top:6px;">${t.deskripsi}</div>` : ''}
+                    </div>
+                    <div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px;">
+                        <button class="ruang-icon-btn" onclick="document.getElementById('modal-tugas-tanggal').style.display='none';bukaModalTugas('','${t.id}')" title="Edit">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                        </button>
+                        <button class="ruang-icon-btn" style="color:#fca5a5;" onclick="hapusTugasDariModal('${t.id}','${dateStr}')" title="Hapus">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        </button>
+                    </div>
+                </div>`;
+            list.appendChild(div);
+        });
+    }
+
+    document.getElementById('modal-tugas-tanggal').style.display = 'flex';
+}
+
+function hapusTugasDariModal(idTugas, dateStr) {
+    if (!confirm('Hapus tugas ini?')) return;
+    dataTugas = dataTugas.filter(t => t.id !== idTugas);
+    saveTugas();
+    renderRuangKalender();
+    lihatTugasTanggal(dateStr); // refresh modal
+}
+
+// ===== TUGAS CRUD =====
+function bukaModalTugas(tanggal, idEdit) {
+    document.getElementById('modal-tugas').style.display = 'flex';
+    document.getElementById('tugas-edit-id').value = idEdit || '';
+    document.getElementById('modal-tugas-title').textContent = idEdit ? 'Edit Tugas' : 'Tambah Tugas';
+
+    if (idEdit) {
+        const t = dataTugas.find(t => t.id === idEdit);
+        if (t) {
+            document.getElementById('tugas-judul').value    = t.judul;
+            document.getElementById('tugas-label').value    = t.label || '';
+            document.getElementById('tugas-tanggal').value  = t.tanggal || '';
+            document.getElementById('tugas-jam').value      = t.jam || '';
+            document.getElementById('tugas-deskripsi').value = t.deskripsi || '';
+            pilihStatusTugas(null, t.status);
+        }
+    } else {
+        document.getElementById('form-tugas-reset') && document.getElementById('form-tugas-reset').reset();
+        document.getElementById('tugas-judul').value    = '';
+        document.getElementById('tugas-label').value    = '';
+        document.getElementById('tugas-tanggal').value  = tanggal || '';
+        document.getElementById('tugas-jam').value      = '';
+        document.getElementById('tugas-deskripsi').value = '';
+        pilihStatusTugas(null, 'belum');
+    }
+
+    // Update datalist label
+    const labels = [...new Set(dataTugas.map(t => t.label).filter(Boolean))];
+    const dl = document.getElementById('label-suggestions');
+    dl.innerHTML = labels.map(l => `<option value="${l}">`).join('');
+}
+
+function tutupModalTugas() { document.getElementById('modal-tugas').style.display = 'none'; }
+
+function pilihStatusTugas(el, forcedStatus) {
+    const status = forcedStatus || (el && el.dataset.status);
+    document.querySelectorAll('.ruang-status-pill').forEach(p => p.classList.remove('active'));
+    const target = el || document.querySelector(`.ruang-status-pill[data-status="${status}"]`);
+    if (target) target.classList.add('active');
+    document.getElementById('tugas-status').value = status;
+}
+
+function simpanTugas() {
+    const judul = document.getElementById('tugas-judul').value.trim();
+    if (!judul) { showNotification('Judul tugas wajib diisi', 'error'); return; }
+
+    const id    = document.getElementById('tugas-edit-id').value;
+    const data  = {
+        id:       id || 'tugas_' + Date.now(),
+        judul,
+        label:     document.getElementById('tugas-label').value.trim(),
+        tanggal:   document.getElementById('tugas-tanggal').value,
+        jam:       document.getElementById('tugas-jam').value,
+        status:    document.getElementById('tugas-status').value,
+        deskripsi: document.getElementById('tugas-deskripsi').value.trim(),
+    };
+
+    if (id) {
+        const idx = dataTugas.findIndex(t => t.id === id);
+        if (idx !== -1) dataTugas[idx] = data;
+    } else {
+        dataTugas.push(data);
+    }
+    saveTugas();
+    tutupModalTugas();
+    renderRuangKalender();
+    showNotification('Tugas disimpan!', 'success');
+}
+
+function hapusTugas(id) {
+    if (!confirm('Hapus tugas ini?')) return;
+    dataTugas = dataTugas.filter(t => t.id !== id);
+    saveTugas();
+    renderRuangKalender();
+}
+
+function renderTugasList() {
+    const list = document.getElementById('ruang-tugas-list');
+    list.innerHTML = '';
+    const sorted = [...dataTugas].sort((a, b) => {
+        if (!a.tanggal) return 1;
+        if (!b.tanggal) return -1;
+        return new Date(a.tanggal + 'T' + (a.jam || '23:59')) - new Date(b.tanggal + 'T' + (b.jam || '23:59'));
+    });
+    if (sorted.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-muted);font-size:14px;">Belum ada tugas</div>`;
+        return;
+    }
+    sorted.forEach(t => {
+        const countdown = getCountdown(t.tanggal, t.jam);
+        const card = document.createElement('div');
+        card.className = 'ruang-tugas-card';
+        card.innerHTML = `
+            <div class="ruang-tugas-card-left">
+                <div class="ruang-tugas-judul">${t.judul}</div>
+                <div class="ruang-tugas-meta">
+                    ${t.label ? `<span class="ruang-tugas-label">${t.label}</span>` : ''}
+                    <span class="ruang-status-badge ${t.status}">${t.status.charAt(0).toUpperCase()+t.status.slice(1)}</span>
+                    ${t.tanggal ? `<span class="ruang-deadline-countdown ${countdown.kelas}">${countdown.teks}</span>` : ''}
+                </div>
+                ${t.deskripsi ? `<div style="font-size:12px;color:var(--text-muted);margin-top:6px;">${t.deskripsi}</div>` : ''}
+            </div>
+            <div class="ruang-tugas-actions">
+                <button class="ruang-icon-btn" onclick="bukaModalTugas('','${t.id}')" title="Edit">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                </button>
+                <button class="ruang-icon-btn" onclick="hapusTugas('${t.id}')" title="Hapus" style="color:#fca5a5;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+            </div>`;
+        list.appendChild(card);
+    });
+}
+
+function getCountdown(tanggal, jam) {
+    if (!tanggal) return { teks: '', kelas: 'ok' };
+    const deadline = new Date(tanggal + 'T' + (jam || '23:59'));
+    const now = new Date();
+    const diff = deadline - now;
+    if (diff < 0) return { teks: 'Terlambat!', kelas: 'late' };
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    if (days === 0 && hours < 24) return { teks: `${hours}j lagi`, kelas: 'soon' };
+    if (days <= 3) return { teks: `${days}h lagi`, kelas: 'soon' };
+    return { teks: `${days}h lagi`, kelas: 'ok' };
+}
+
+function getCountdown(tanggal, jam) {
+    if (!tanggal) return { teks: '', kelas: 'ok' };
+    const deadline = new Date(tanggal + 'T' + (jam || '23:59'));
+    const now = new Date();
+    const diff = deadline - now;
+    if (diff < 0) return { teks: 'Terlambat!', kelas: 'late' };
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    if (days === 0 && hours < 24) return { teks: `${hours}j lagi`, kelas: 'soon' };
+    if (days <= 3) return { teks: `${days}h lagi`, kelas: 'soon' };
+    return { teks: `${days}h lagi`, kelas: 'ok' };
+}
+
+// ===== JADWAL KELAS =====
+let dataJadwal = JSON.parse(localStorage.getItem('myBudgetly_jadwal')) || [];
+
+const hariOrder = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
+const hariColor = {
+    'Senin': '#6366f1', 'Selasa': '#10b981', 'Rabu': '#f59e0b',
+    'Kamis': '#3b82f6', 'Jumat': '#ec4899', 'Sabtu': '#8b5cf6', 'Minggu': '#ef4444'
+};
+
+function saveJadwal() { localStorage.setItem('myBudgetly_jadwal', JSON.stringify(dataJadwal)); }
+
+
+function bukaModalJadwal(id) {
+    const modal = document.getElementById('modal-jadwal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    document.getElementById('jadwal-edit-id').value = id || '';
+    document.getElementById('modal-jadwal-title').textContent = id ? 'Edit Jadwal' : 'Tambah Jadwal';
+    if (id) {
+        const j = dataJadwal.find(j => j.id === id);
+        if (j) {
+            document.getElementById('jadwal-nama').value        = j.nama;
+            document.getElementById('jadwal-hari').value        = j.hari;
+            document.getElementById('jadwal-jam-mulai').value   = j.jamMulai;
+            document.getElementById('jadwal-jam-selesai').value = j.jamSelesai;
+            document.getElementById('jadwal-ruang').value       = j.ruang || '';
+            document.getElementById('jadwal-dosen').value       = j.dosen || '';
+            document.getElementById('jadwal-ket').value         = j.ket || '';
+        }
+    } else {
+        ['jadwal-nama','jadwal-jam-mulai','jadwal-jam-selesai','jadwal-ruang','jadwal-dosen']
+            .forEach(elId => { const el = document.getElementById(elId); if(el) el.value = ''; });
+        document.getElementById('jadwal-hari').value = 'Senin';
+    }
+    setTimeout(() => { document.getElementById('jadwal-nama').focus(); }, 100);
+}
+
+function tutupModalJadwal() { document.getElementById('modal-jadwal').style.display = 'none'; }
+
+function simpanJadwal() {
+    const nama = document.getElementById('jadwal-nama').value.trim();
+    if (!nama) { showNotification('Nama mata kuliah/pelajaran wajib diisi', 'error'); return; }
+
+    const id = document.getElementById('jadwal-edit-id').value;
+    const data = {
+        id:         id || 'jadwal_' + Date.now(),
+        nama,
+        hari:       document.getElementById('jadwal-hari').value,
+        jamMulai:   document.getElementById('jadwal-jam-mulai').value,
+        jamSelesai: document.getElementById('jadwal-jam-selesai').value,
+        ruang:      document.getElementById('jadwal-ruang').value.trim(),
+        dosen:      document.getElementById('jadwal-dosen').value.trim(),
+    };
+
+    if (id) {
+        const idx = dataJadwal.findIndex(j => j.id === id);
+        if (idx !== -1) dataJadwal[idx] = data;
+    } else {
+        dataJadwal.push(data);
+    }
+    saveJadwal();
+    tutupModalJadwal();
+    renderJadwal();
+    showNotification('Jadwal disimpan!', 'success');
+}
+
+function hapusJadwal(id) {
+    if (!confirm('Hapus jadwal ini?')) return;
+    dataJadwal = dataJadwal.filter(j => j.id !== id);
+    saveJadwal();
+    renderJadwal();
+}
+
+function parseJamToMenit(jamStr) {
+    if (!jamStr) return 0;
+    const [h, m] = jamStr.split(':').map(Number);
+    return h * 60 + (m || 0);
+}
+
+function renderJadwal() {
+    const grid = document.getElementById('ruang-jadwal-kelas-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const hariTampil = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    const jamMin = 7;
+    const jamMax = 17;
+    const totalJam = jamMax - jamMin;
+    const slotH = 64; // px per jam
+
+    const palet = [
+        { bg: 'rgba(99,102,241,0.12)',  text: '#4338ca', border: '#6366f1' },
+        { bg: 'rgba(16,185,129,0.12)',  text: '#065f46', border: '#10b981' },
+        { bg: 'rgba(245,158,11,0.12)',  text: '#92400e', border: '#f59e0b' },
+        { bg: 'rgba(59,130,246,0.12)',  text: '#1e40af', border: '#3b82f6' },
+        { bg: 'rgba(236,72,153,0.12)',  text: '#9d174d', border: '#ec4899' },
+        { bg: 'rgba(139,92,246,0.12)',  text: '#5b21b6', border: '#8b5cf6' },
+        { bg: 'rgba(239,68,68,0.12)',   text: '#991b1b', border: '#ef4444' },
+        { bg: 'rgba(20,184,166,0.12)',  text: '#134e4a', border: '#14b8a6' },
+    ];
+    const namaList = [...new Set(dataJadwal.map(j => j.nama))];
+    const warnaMap = {};
+    namaList.forEach((n, i) => { warnaMap[n] = palet[i % palet.length]; });
+
+    // ===== HEADER ROW =====
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;border-bottom:2px solid var(--border);background:var(--card-bg);position:sticky;top:0;z-index:3;';
+
+    // Header "Waktu"
+    const hWaktu = document.createElement('div');
+    hWaktu.style.cssText = 'width:64px;flex-shrink:0;padding:14px 8px;font-size:12px;font-weight:700;color:var(--text-primary);border-right:1px solid var(--border);text-align:center;';
+    hWaktu.textContent = 'Waktu';
+    header.appendChild(hWaktu);
+
+    hariTampil.forEach(h => {
+        const cell = document.createElement('div');
+        cell.style.cssText = 'flex:1;min-width:90px;padding:12px 8px;text-align:center;border-right:1px solid var(--border-light);';
+        cell.innerHTML = `<div style="font-size:13px;font-weight:700;color:var(--text-primary);">${h}</div>`;
+        header.appendChild(cell);
+    });
+    grid.appendChild(header);
+
+    // ===== BODY =====
+    const body = document.createElement('div');
+    body.style.cssText = 'display:flex;';
+
+    // Kolom waktu
+    const colWaktu = document.createElement('div');
+    colWaktu.style.cssText = `width:64px;flex-shrink:0;border-right:1px solid var(--border);`;
+    for (let h = jamMin; h <= jamMax; h++) {
+        const slot = document.createElement('div');
+        slot.style.cssText = `height:${slotH}px;border-bottom:1px solid var(--border-light);display:flex;align-items:flex-start;justify-content:center;padding-top:8px;`;
+        slot.innerHTML = `<span style="font-size:12px;font-weight:600;color:var(--text-muted);">${String(h).padStart(2,'0')}:00</span>`;
+        colWaktu.appendChild(slot);
+    }
+    body.appendChild(colWaktu);
+
+    // Kolom per hari
+    hariTampil.forEach(hari => {
+        const col = document.createElement('div');
+        col.style.cssText = 'flex:1;min-width:90px;border-right:1px solid var(--border-light);position:relative;';
+
+        // Grid lines per jam
+        const linesWrap = document.createElement('div');
+        linesWrap.style.cssText = `height:${(totalJam + 1) * slotH}px;position:relative;`;
+        for (let h = 0; h <= totalJam; h++) {
+            const line = document.createElement('div');
+            line.style.cssText = `position:absolute;top:${h * slotH}px;left:0;right:0;border-top:1px solid var(--border-light);`;
+            linesWrap.appendChild(line);
+        }
+
+        // Card kelas
+        const kelasHari = dataJadwal.filter(j => j.hari === hari && j.jamMulai);
+        kelasHari.forEach(j => {
+            const mulai   = parseJamToMenit(j.jamMulai);
+            const selesai = j.jamSelesai ? parseJamToMenit(j.jamSelesai) : mulai + 60;
+            const durasi  = Math.max(selesai - mulai, 30);
+            const topPx   = ((mulai / 60) - jamMin) * slotH;
+            const hPx     = (durasi / 60) * slotH - 6;
+            const w       = warnaMap[j.nama] || palet[0];
+
+            if (topPx < 0 || topPx > totalJam * slotH) return;
+
+            const card = document.createElement('div');
+            card.style.cssText = `
+                position:absolute;
+                top:${topPx + 3}px;
+                left:4px;right:4px;
+                height:${hPx}px;
+                background:${w.bg};
+                border-radius:8px;
+                padding:8px 10px;
+                overflow:hidden;
+                cursor:pointer;
+                z-index:1;
+                box-shadow:0 1px 3px rgba(0,0,0,0.06);
+            `;
+            card.innerHTML = `
+                <div style="font-size:11px;font-weight:600;color:${w.text};opacity:0.85;margin-bottom:2px;">${j.jamMulai}${j.jamSelesai?' - '+j.jamSelesai:''}</div>
+                <div style="font-size:12px;font-weight:700;color:${w.text};margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${j.nama}</div>
+                ${j.dosen && hPx > 55 ? `<div style="font-size:11px;color:${w.text};opacity:0.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${j.dosen}</div>` : ''}
+                ${j.ruang && hPx > 75 ? `<div style="font-size:10px;color:${w.text};opacity:0.65;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📍 ${j.ruang}</div>` : ''}
+                <button onclick="event.stopPropagation();hapusJadwal('${j.id}')"
+                    style="position:absolute;top:4px;right:4px;background:none;border:none;cursor:pointer;color:${w.text};opacity:0;font-size:12px;line-height:1;padding:2px;"
+                    class="jk-class-del">✕</button>
+            `;
+            card.onclick = () => bukaModalJadwal(j.id);
+            card.onmouseenter = () => { const d = card.querySelector('.jk-class-del'); if(d) d.style.opacity='0.7'; };
+            card.onmouseleave = () => { const d = card.querySelector('.jk-class-del'); if(d) d.style.opacity='0'; };
+            linesWrap.appendChild(card);
+        });
+
+        // Double click tambah
+        linesWrap.ondblclick = (e) => {
+            const rect = linesWrap.getBoundingClientRect();
+            const y = e.clientY - rect.top;
+            const jamKlik = jamMin + Math.floor(y / slotH);
+            bukaModalJadwal();
+            setTimeout(() => {
+                document.getElementById('jadwal-hari').value = hari;
+                document.getElementById('jadwal-jam-mulai').value = `${String(Math.min(jamKlik,23)).padStart(2,'0')}:00`;
+            }, 50);
+        };
+
+        col.appendChild(linesWrap);
+        body.appendChild(col);
+    });
+
+    grid.appendChild(body);
+}
+
+
+// ===== TO-DO =====
+let todoFilter = 'semua';
+function tambahTodo() {
+    const input = document.getElementById('todo-input');
+    const teks = input.value.trim();
+    if (!teks) return;
+    dataTodo.push({ id: 'todo_' + Date.now(), teks, selesai: false });
+    saveTodo();
+    input.value = '';
+    renderTodo();
+}
+function toggleTodo(id) {
+    const t = dataTodo.find(t => t.id === id);
+    if (t) { t.selesai = !t.selesai; saveTodo(); renderTodo(); }
+}
+function hapusTodo(id) {
+    dataTodo = dataTodo.filter(t => t.id !== id);
+    saveTodo();
+    renderTodo();
+}
+function filterTodo(f, el) {
+    todoFilter = f;
+    document.querySelectorAll('.todo-filter-btn').forEach(b => b.classList.remove('active'));
+    if (el) el.classList.add('active');
+    renderTodo();
+}
+function renderTodo() {
+    const list = document.getElementById('ruang-todo-list');
+    list.innerHTML = '';
+    let filtered = dataTodo;
+    if (todoFilter === 'belum')   filtered = dataTodo.filter(t => !t.selesai);
+    if (todoFilter === 'selesai') filtered = dataTodo.filter(t => t.selesai);
+    if (filtered.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-muted);font-size:14px;">Tidak ada item</div>`;
+        return;
+    }
+    filtered.forEach(t => {
+        const item = document.createElement('div');
+        item.className = 'ruang-todo-item';
+        item.innerHTML = `
+            <input type="checkbox" ${t.selesai ? 'checked' : ''} onchange="toggleTodo('${t.id}')">
+            <span class="ruang-todo-text ${t.selesai ? 'done' : ''}">${t.teks}</span>
+            <button class="ruang-icon-btn" onclick="hapusTodo('${t.id}')" style="color:#fca5a5;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>`;
+        list.appendChild(item);
+    });
+}
+
+// ===== CATATAN RUANG =====
+function bukaModalCatatan(id) {
+    document.getElementById('modal-catatan-ruang').style.display = 'flex';
+    document.getElementById('catatan-edit-id').value = id || '';
+    document.getElementById('modal-catatan-title').textContent = id ? 'Edit Catatan' : 'Catatan Baru';
+    if (id) {
+        const c = dataCatatanRuang.find(c => c.id === id);
+        if (c) { document.getElementById('catatan-judul').value = c.judul; document.getElementById('catatan-isi').value = c.isi; }
+    } else {
+        document.getElementById('catatan-judul').value = '';
+        document.getElementById('catatan-isi').value = '';
+    }
+}
+function tutupModalCatatan() { document.getElementById('modal-catatan-ruang').style.display = 'none'; }
+function simpanCatatanRuang() {
+    const judul = document.getElementById('catatan-judul').value.trim();
+    const isi   = document.getElementById('catatan-isi').value.trim();
+    if (!judul && !isi) { showNotification('Tulis catatan terlebih dahulu', 'error'); return; }
+    const id  = document.getElementById('catatan-edit-id').value;
+    const data = { id: id || 'cat_' + Date.now(), judul: judul || 'Tanpa Judul', isi, waktu: new Date().toISOString() };
+    if (id) {
+        const idx = dataCatatanRuang.findIndex(c => c.id === id);
+        if (idx !== -1) dataCatatanRuang[idx] = data;
+    } else {
+        dataCatatanRuang.unshift(data);
+    }
+    saveCatatanRuang();
+    tutupModalCatatan();
+    renderCatatanRuang();
+    showNotification('Catatan disimpan!', 'success');
+}
+function hapusCatatanRuang(id) {
+    if (!confirm('Hapus catatan ini?')) return;
+    dataCatatanRuang = dataCatatanRuang.filter(c => c.id !== id);
+    saveCatatanRuang();
+    renderCatatanRuang();
+}
+function renderCatatanRuang() {
+    const grid = document.getElementById('ruang-catatan-grid');
+    grid.innerHTML = '';
+    if (dataCatatanRuang.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);font-size:14px;">Belum ada catatan</div>`;
+        return;
+    }
+    dataCatatanRuang.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'ruang-catatan-card';
+        card.innerHTML = `
+            <div class="ruang-catatan-card-judul">${c.judul}</div>
+            <div class="ruang-catatan-card-isi">${c.isi}</div>
+            <div class="ruang-catatan-card-footer">
+                <button class="ruang-icon-btn" onclick="event.stopPropagation();bukaModalCatatan('${c.id}')" title="Edit">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                </button>
+                <button class="ruang-icon-btn" onclick="event.stopPropagation();hapusCatatanRuang('${c.id}')" title="Hapus" style="color:#fca5a5;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+            </div>`;
+        grid.appendChild(card);
+    });
+}
+
 function switchTab(pageId, element) {
   // 1. Sembunyikan SEMUA halaman utama (.app-page)
   document.querySelectorAll('.app-page').forEach(page => {
@@ -2380,6 +3037,12 @@ function switchTab(pageId, element) {
   // Khusus Porto, jalankan render data
   if (pageId === 'portofolio') {
       renderHalamanPorto();
+  }
+
+  // Khusus Ruang, render kalender
+  if (pageId === 'ruang') {
+      renderJadwal();
+      if (window.lucide) lucide.createIcons();
   }
 
   // Khusus Saya, muat data profil
@@ -2861,7 +3524,15 @@ function lihatRiwayat(idAset) {
                     ${baris2 ? `<div style="font-size:11px;color:#bbb;margin-top:1px;">${formatDate(trx.tanggal)}</div>` : ''}
                 </div>
                 <div style="text-align:right;flex-shrink:0;">
-                    <div style="font-weight:700;font-size:14px;color:${warna};">${formatCurrency(trx.harga)}</div>
+                    <div style="font-weight:700;font-size:14px;color:${warna};">${
+                        (aset.kategori || '').toLowerCase() === 'saham'
+                            ? formatCurrency(trx.harga * (trx.lembar || 1))
+                            : formatCurrency(trx.harga)
+                    }</div>
+                    ${(aset.kategori || '').toLowerCase() === 'saham'
+                        ? `<div style="font-size:11px;color:#bbb;margin-top:2px;">${formatCurrency(trx.harga)}/lembar</div>`
+                        : ''
+                    }
                     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">
                         <button onclick="editTrxAset('${aset.id}','${trx.id_transaksi}')" style="background:none;border:none;cursor:pointer;padding:2px;color:#94a3b8;" title="Edit">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
