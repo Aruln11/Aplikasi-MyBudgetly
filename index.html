@@ -543,7 +543,34 @@
     </div>
   </div>
 
-  <!-- Modal Jadwal -->
+  <!-- Modal Detail Jadwal -->
+<div id="modal-detail-jadwal" class="modal" style="display:none; z-index:2001;">
+  <div class="ruang-modal-content" style="max-width:300px; border-radius:16px;">
+    <div style="padding:16px 18px 12px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="detail-jadwal-nama" style="font-size:16px; font-weight:700; color:var(--text-primary); margin:0;"></h3>
+      <button onclick="document.getElementById('modal-detail-jadwal').style.display='none'"
+        style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:0;">✕</button>
+    </div>
+    <div style="padding:14px 18px; display:flex; flex-direction:column; gap:6px;">
+      <div id="detail-jadwal-jam" style="font-size:13px;font-weight:600;color:var(--primary-accent-color);"></div>
+      <div id="detail-jadwal-hari" style="font-size:13px;color:var(--text-secondary);"></div>
+      <div id="detail-jadwal-dosen-wrap" style="display:none;">
+        <span id="detail-jadwal-dosen" style="font-size:13px;color:var(--text-primary);"></span>
+      </div>
+      <div id="detail-jadwal-ruang-wrap" style="display:none;">
+        <span id="detail-jadwal-ruang" style="font-size:13px;color:var(--text-muted);"></span>
+      </div>
+    </div>
+    <div style="padding:10px 18px 14px;display:flex;gap:8px;justify-content:flex-end;">
+      <button onclick="hapusJadwalDariDetail()"
+        style="padding:7px 16px;border:1.5px solid #fecaca;background:none;border-radius:8px;font-size:13px;font-weight:600;color:#ef4444;cursor:pointer;font-family:inherit;">Hapus</button>
+      <button onclick="editJadwalDariDetail()"
+        style="padding:7px 16px;background:var(--primary-gradient);border:none;border-radius:8px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit;">Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Jadwal -->
   <div id="modal-jadwal" class="modal" style="display:none; z-index:2001;">
     <div class="ruang-modal-content">
       <div class="ruang-modal-header">

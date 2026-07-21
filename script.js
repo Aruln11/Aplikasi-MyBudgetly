@@ -2714,6 +2714,46 @@ function bukaModalJadwal(id) {
 
 function tutupModalJadwal() { document.getElementById('modal-jadwal').style.display = 'none'; }
 
+function lihatDetailJadwal(id) {
+    const j = dataJadwal.find(j => j.id === id);
+    if (!j) return;
+
+    document.getElementById('detail-jadwal-nama').textContent = j.nama;
+    document.getElementById('detail-jadwal-jam').textContent  =
+        j.jamMulai ? `${j.jamMulai}${j.jamSelesai ? ' – ' + j.jamSelesai : ''}` : 'Jam belum diatur';
+    document.getElementById('detail-jadwal-hari').textContent = j.hari;
+
+    const dosenWrap = document.getElementById('detail-jadwal-dosen-wrap');
+    const ruangWrap = document.getElementById('detail-jadwal-ruang-wrap');
+    if (j.dosen) {
+        document.getElementById('detail-jadwal-dosen').textContent = j.dosen;
+        dosenWrap.style.display = 'flex';
+    } else { dosenWrap.style.display = 'none'; }
+    if (j.ruang) {
+        document.getElementById('detail-jadwal-ruang').textContent = j.ruang;
+        ruangWrap.style.display = 'flex';
+    } else { ruangWrap.style.display = 'none'; }
+
+    document.getElementById('modal-detail-jadwal').dataset.currentId = id;
+    document.getElementById('modal-detail-jadwal').style.display = 'flex';
+}
+
+function hapusJadwalDariDetail() {
+    const id = document.getElementById('modal-detail-jadwal').dataset.currentId;
+    if (!id) return;
+    if (!confirm('Hapus jadwal ini?')) return;
+    document.getElementById('modal-detail-jadwal').style.display = 'none';
+    dataJadwal = dataJadwal.filter(j => j.id !== id);
+    saveJadwal();
+    renderJadwal();
+}
+
+function editJadwalDariDetail() {
+    const id = document.getElementById('modal-detail-jadwal').dataset.currentId;
+    document.getElementById('modal-detail-jadwal').style.display = 'none';
+    bukaModalJadwal(id);
+}
+
 function simpanJadwal() {
     const nama = document.getElementById('jadwal-nama').value.trim();
     if (!nama) { showNotification('Nama mata kuliah/pelajaran wajib diisi', 'error'); return; }
@@ -2760,10 +2800,23 @@ function renderJadwal() {
     grid.innerHTML = '';
 
     const hariTampil = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-    const jamMin = 7;
-    const jamMax = 17;
+
+    // Range jam dinamis dari data, default 07-17
+    let jamMin = 7, jamMax = 17;
+    if (dataJadwal.length > 0) {
+        dataJadwal.forEach(j => {
+            if (j.jamMulai)   jamMin = Math.min(jamMin,   parseInt(j.jamMulai.split(':')[0]));
+            if (j.jamSelesai) jamMax = Math.max(jamMax,   parseInt(j.jamSelesai.split(':')[0]));
+            else if (j.jamMulai) jamMax = Math.max(jamMax, parseInt(j.jamMulai.split(':')[0]) + 1);
+        });
+        jamMin = Math.max(0, jamMin);
+        jamMax = Math.min(23, jamMax);
+    }
+    // Pastikan selalu ada minimal 1 jam buffer bawah
+    if (jamMax <= jamMin) jamMax = jamMin + 1;
+
     const totalJam = jamMax - jamMin;
-    const slotH = 64; // px per jam
+    const slotH = 60; // px per jam
 
     const palet = [
         { bg: 'rgba(99,102,241,0.12)',  text: '#4338ca', border: '#6366f1' },
@@ -2801,14 +2854,17 @@ function renderJadwal() {
     const body = document.createElement('div');
     body.style.cssText = 'display:flex;';
 
-    // Kolom waktu
+    // Kolom waktu — label jam di garis, bukan di dalam slot
     const colWaktu = document.createElement('div');
-    colWaktu.style.cssText = `width:64px;flex-shrink:0;border-right:1px solid var(--border);`;
+    colWaktu.style.cssText = `width:64px;flex-shrink:0;border-right:1px solid var(--border);position:relative;height:${totalJam * slotH}px;`;
     for (let h = jamMin; h <= jamMax; h++) {
-        const slot = document.createElement('div');
-        slot.style.cssText = `height:${slotH}px;border-bottom:1px solid var(--border-light);display:flex;align-items:flex-start;justify-content:center;padding-top:8px;`;
-        slot.innerHTML = `<span style="font-size:12px;font-weight:600;color:var(--text-muted);">${String(h).padStart(2,'0')}:00</span>`;
-        colWaktu.appendChild(slot);
+        const lbl = document.createElement('div');
+        const topPos = (h - jamMin) * slotH;
+        lbl.style.cssText = `position:absolute;top:${topPos}px;left:0;right:0;text-align:center;font-size:11px;font-weight:600;color:var(--text-muted);transform:translateY(-50%);line-height:1;`;
+        // Jam pertama jangan translateY agar tidak ketutup header
+        if (h === jamMin) lbl.style.transform = 'none';
+        lbl.textContent = `${String(h).padStart(2,'0')}:00`;
+        colWaktu.appendChild(lbl);
     }
     body.appendChild(colWaktu);
 
@@ -2817,9 +2873,9 @@ function renderJadwal() {
         const col = document.createElement('div');
         col.style.cssText = 'flex:1;min-width:90px;border-right:1px solid var(--border-light);position:relative;';
 
-        // Grid lines per jam
+        // Grid lines per jam — di garis, bukan di dalam slot
         const linesWrap = document.createElement('div');
-        linesWrap.style.cssText = `height:${(totalJam + 1) * slotH}px;position:relative;`;
+        linesWrap.style.cssText = `height:${totalJam * slotH}px;position:relative;`;
         for (let h = 0; h <= totalJam; h++) {
             const line = document.createElement('div');
             line.style.cssText = `position:absolute;top:${h * slotH}px;left:0;right:0;border-top:1px solid var(--border-light);`;
@@ -2833,17 +2889,17 @@ function renderJadwal() {
             const selesai = j.jamSelesai ? parseJamToMenit(j.jamSelesai) : mulai + 60;
             const durasi  = Math.max(selesai - mulai, 30);
             const topPx   = ((mulai / 60) - jamMin) * slotH;
-            const hPx     = (durasi / 60) * slotH - 6;
+            const hPx     = (durasi / 60) * slotH;
             const w       = warnaMap[j.nama] || palet[0];
 
-            if (topPx < 0 || topPx > totalJam * slotH) return;
+            if (topPx < 0 || topPx >= totalJam * slotH) return;
 
             const card = document.createElement('div');
             card.style.cssText = `
                 position:absolute;
-                top:${topPx + 3}px;
+                top:${topPx}px;
                 left:4px;right:4px;
-                height:${hPx}px;
+                height:${hPx - 2}px;
                 background:${w.bg};
                 border-radius:8px;
                 padding:8px 10px;
@@ -2853,15 +2909,15 @@ function renderJadwal() {
                 box-shadow:0 1px 3px rgba(0,0,0,0.06);
             `;
             card.innerHTML = `
-                <div style="font-size:11px;font-weight:600;color:${w.text};opacity:0.85;margin-bottom:2px;">${j.jamMulai}${j.jamSelesai?' - '+j.jamSelesai:''}</div>
+                <div style="font-size:10px;font-weight:600;color:${w.text};opacity:0.85;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${j.jamMulai}${j.jamSelesai?' – '+j.jamSelesai:''}</div>
                 <div style="font-size:12px;font-weight:700;color:${w.text};margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${j.nama}</div>
-                ${j.dosen && hPx > 55 ? `<div style="font-size:11px;color:${w.text};opacity:0.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${j.dosen}</div>` : ''}
-                ${j.ruang && hPx > 75 ? `<div style="font-size:10px;color:${w.text};opacity:0.65;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📍 ${j.ruang}</div>` : ''}
+                ${j.dosen && hPx > 50 ? `<div style="font-size:10px;color:${w.text};opacity:0.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${j.dosen}</div>` : ''}
+                ${j.ruang && hPx > 70 ? `<div style="font-size:10px;color:${w.text};opacity:0.65;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📍 ${j.ruang}</div>` : ''}
                 <button onclick="event.stopPropagation();hapusJadwal('${j.id}')"
                     style="position:absolute;top:4px;right:4px;background:none;border:none;cursor:pointer;color:${w.text};opacity:0;font-size:12px;line-height:1;padding:2px;"
                     class="jk-class-del">✕</button>
             `;
-            card.onclick = () => bukaModalJadwal(j.id);
+            card.onclick = () => lihatDetailJadwal(j.id);
             card.onmouseenter = () => { const d = card.querySelector('.jk-class-del'); if(d) d.style.opacity='0.7'; };
             card.onmouseleave = () => { const d = card.querySelector('.jk-class-del'); if(d) d.style.opacity='0'; };
             linesWrap.appendChild(card);
