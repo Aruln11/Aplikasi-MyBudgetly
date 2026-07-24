@@ -3788,13 +3788,14 @@ html[data-warna-putih="true"]:not([data-theme="dark"]) h3.section-title svg {
 /* ===== RUANG ===== */
 .ruang-wrapper { padding: 16px 16px 120px; max-width: 700px; margin: 0 auto; }
 
-.ruang-tabs { display: flex; gap: 8px; margin-bottom: 20px; background: var(--background-secondary); padding: 4px; border-radius: 12px; }
-.ruang-tab { flex: 1; padding: 8px 4px; border: none; background: none; border-radius: 9px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.ruang-tabs { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 20px; background: var(--background-secondary); padding: 4px; border-radius: 12px; }
+.ruang-tab { padding: 8px 4px; border: none; background: none; border-radius: 9px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ruang-tab.active { background: var(--card-bg); color: var(--primary-accent-color); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 .ruang-tab-icon { width: 15px; height: 15px; opacity: 0.6; flex-shrink: 0; }
 .ruang-tab.active .ruang-tab-icon { opacity: 1; filter: none; }
 [data-theme="dark"] .ruang-tab-icon { filter: brightness(0) invert(1); opacity: 0.5; }
 [data-theme="dark"] .ruang-tab.active .ruang-tab-icon { filter: brightness(0) invert(1); opacity: 1; }
+
 
 .ruang-content { display: none; }
 .ruang-content.active { display: block; }
@@ -3809,10 +3810,12 @@ html[data-warna-putih="true"]:not([data-theme="dark"]) h3.section-title svg {
 
 /* Kalender */
 .ruang-calendar { background: var(--card-bg); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 24px; }
-.ruang-cal-days-header { display: grid; grid-template-columns: repeat(7,1fr); background: var(--background-secondary); }
+.ruang-cal-days-header { display: grid; grid-template-columns: repeat(7,1fr); background: transparent; border-bottom: 1px solid var(--border-light); }
 .ruang-cal-days-header span { text-align: center; padding: 8px 0; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
-.ruang-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); }
-.ruang-cal-cell { min-height: 64px; padding: 4px; border-right: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); cursor: pointer; position: relative; overflow: hidden; min-width: 0; max-width: 100%; }
+.ruang-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); grid-auto-rows: minmax(80px, auto); }
+.ruang-cal-cell { min-height: 80px; padding: 6px; border-right: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); cursor: pointer; position: relative; overflow: hidden; min-width: 0; max-width: 100%; }
+.ruang-cal-cell:nth-child(7n) { border-right: none; }
+.ruang-cal-cell:nth-last-child(-n+7) { border-bottom: none; }
 .ruang-cal-cell:hover { background: var(--primary-accent-color-glow); }
 .ruang-cal-cell.other-month { opacity: 0.35; }
 .ruang-cal-cell.today .ruang-cal-date { background: var(--primary-accent-color); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
@@ -3856,16 +3859,362 @@ textarea.ruang-input { resize: vertical; }
 
 /* Catatan */
 .ruang-catatan-header { display: flex; justify-content: flex-end; margin-bottom: 16px; }
-.ruang-catatan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
-.ruang-catatan-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; cursor: pointer; transition: all 0.2s; min-height: 100px; display: flex; flex-direction: column; }
+
+/* Sub-toggle Jadwal Kelas / Jadwal Rutin */
+.jadwal-sub-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.jadwal-sub-btn {
+  padding: 6px 18px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.jadwal-sub-btn.active {
+  background: var(--primary-gradient);
+  color: #fff;
+  border-color: transparent;
+}
+.jadwal-sub-btn:hover:not(.active) {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Dropdown menu Jadwal */
+.jadwal-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  z-index: 500;
+  min-width: 160px;
+  overflow: hidden;
+  animation: fadeInUp 0.15s ease;
+}
+.jadwal-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.jadwal-dropdown-item:hover {
+  background: var(--primary-accent-color-glow);
+}
+.jadwal-dropdown-item.active {
+  color: var(--primary-accent-color);
+  font-weight: 600;
+}
+
+/* Chip event di kalender rutin — tampilkan jam */
+.ruang-cal-event.rutin {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+  border-left: 2px solid #10b981;
+}
+
+/* Rutin Day View */
+.rutin-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0 14px;
+  gap: 8px;
+}
+.rutin-day-back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary-accent-color);
+  padding: 6px 10px 6px 6px;
+  border-radius: 8px;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+.rutin-day-back:hover { background: var(--primary-accent-color-glow); }
+
+.rutin-day-grid-wrap {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.rutin-day-grid {
+  display: flex;
+  overflow-x: hidden;
+}
+.rutin-day-time-col {
+  width: 56px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+.rutin-day-time-label {
+  position: absolute;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transform: translateY(-50%);
+  line-height: 1;
+  pointer-events: none;
+}
+.rutin-day-events-col {
+  flex: 1;
+  position: relative;
+}
+.rutin-day-line {
+  position: absolute;
+  left: 0; right: 0;
+  border-top: 1px solid var(--border-light);
+  pointer-events: none;
+}
+.rutin-day-card {
+  position: absolute;
+  left: 8px; right: 8px;
+  border-radius: 10px;
+  padding: 8px 12px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+.rutin-day-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  transform: translateY(-1px);
+}
+.rutin-day-empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: normal;
+  width: 100%;
+}
+
+/* Hari pills untuk form pengulangan mingguan */
+.rutin-hari-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.rutin-hari-pill {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--background-secondary);
+  color: var(--text-secondary);
+  font-size: 11px; font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+  font-family: inherit;
+}
+.rutin-hari-pill:hover { border-color: var(--primary-accent-color); color: var(--primary-accent-color); }
+.rutin-hari-pill.active { background: var(--primary-accent-color); border-color: var(--primary-accent-color); color: #fff; }
+
+.ruang-catatan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.ruang-catatan-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; cursor: pointer; transition: all 0.2s; min-height: 100px; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
 .ruang-catatan-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
-.ruang-catatan-card-judul { font-weight: 700; font-size: 13px; color: var(--text-primary); margin-bottom: 6px; }
-.ruang-catatan-card-isi { font-size: 12px; color: var(--text-muted); flex: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; line-clamp: 4; -webkit-box-orient: vertical; }
-.ruang-catatan-card-footer { display: flex; justify-content: flex-end; gap: 4px; margin-top: 8px; }
+.ruang-catatan-card-judul { font-weight: 700; font-size: 13px; color: var(--text-primary); margin-bottom: 6px; word-break: break-word; overflow-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; }
+.ruang-catatan-card-isi { font-size: 12px; color: var(--text-muted); flex: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; line-clamp: 4; -webkit-box-orient: vertical; word-break: break-word; overflow-wrap: break-word; }
+.ruang-catatan-card-footer { display: flex; justify-content: flex-end; gap: 4px; margin-top: 8px; flex-shrink: 0; }
 
 /* Modal Ruang */
 .ruang-modal-content { background: var(--card-bg); width: 90%; max-width: 480px; border-radius: 16px; max-height: 90vh; overflow-y: auto; }
 .ruang-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+
+/* MIUI Notes Style Modal */
+.miui-notes-modal {
+  background: var(--card-bg);
+  width: 100%;
+  max-width: 600px;
+  height: 90vh;
+  max-height: 800px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.miui-notes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.miui-back-btn, .miui-done-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: var(--text-secondary);
+}
+
+.miui-back-btn:hover, .miui-done-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.miui-done-btn {
+  color: var(--primary-accent-color);
+}
+
+.miui-edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: var(--text-secondary);
+}
+
+.miui-edit-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.miui-notes-timestamp {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.miui-notes-title-display {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+  margin-bottom: 0;
+  word-wrap: break-word;
+}
+
+.miui-notes-body-display {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-y: auto;
+  max-height: calc(90vh - 200px);
+}
+
+.miui-notes-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 20px;
+  gap: 0;
+}
+
+.miui-notes-title {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  resize: none;
+  overflow: hidden;
+  min-height: 32px;
+  max-height: 120px;
+  padding: 0;
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.3;
+}
+
+.miui-notes-title::placeholder {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.miui-notes-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 0;
+}
+
+.miui-notes-body {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-primary);
+  resize: none;
+  flex: 1;
+  min-height: 200px;
+  padding: 0;
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.6;
+}
+
+.miui-notes-body::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .miui-notes-modal {
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  
+  .miui-notes-content {
+    padding: 16px;
+  }
+  
+  .miui-notes-title {
+    font-size: 22px;
+  }
+  
+  .miui-notes-body {
+    font-size: 15px;
+  }
+}
 .ruang-modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0; }
 .ruang-modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
 .ruang-modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
@@ -3881,7 +4230,7 @@ textarea.ruang-input { resize: vertical; }
 .ruang-btn-secondary { padding: 10px 20px; background: var(--background-secondary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
 
 @media (max-width: 480px) {
-  .ruang-cal-cell { min-height: 48px; }
+  .ruang-cal-cell { min-height: 52px; }
   .ruang-catatan-grid { grid-template-columns: repeat(2, 1fr); }
 }
 

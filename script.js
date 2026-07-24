@@ -388,6 +388,19 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   updateAuthUI();
   updateUI();
+
+  // Restore halaman terakhir yang dibuka
+  const savedPage = localStorage.getItem('activePageId');
+  if (savedPage && savedPage !== 'home') {
+    const navBtn = document.querySelector(`.nav-item[onclick*="'${savedPage}'"]`);
+    switchTab(savedPage, navBtn);
+  }
+
+  // Auto-refresh countdown tugas setiap 60 detik
+  setInterval(() => {
+    if (typeof renderTugasList === 'function') renderTugasList();
+    if (typeof renderRutinList === 'function') renderRutinList();
+  }, 60000);
 });
 
 function setupEventListeners() {
@@ -2408,6 +2421,12 @@ function saveCatatanRuang() { localStorage.setItem('myBudgetly_catatan', JSON.st
 function switchRuangTab(tab, el) {
     document.querySelectorAll('.ruang-content').forEach(c => c.style.display = 'none');
     document.querySelectorAll('.ruang-tab').forEach(t => t.classList.remove('active'));
+    // Tutup dropdown jadwal jika ada
+    const ddMenu = document.getElementById('jadwal-dropdown-menu');
+    if (ddMenu) ddMenu.style.display = 'none';
+    const jadwalBtn = document.getElementById('jadwal-tab-btn');
+    if (jadwalBtn) jadwalBtn.classList.remove('active');
+    // Tampilkan konten yang dipilih
     document.getElementById(`ruang-${tab}`).style.display = 'block';
     if (el) el.classList.add('active');
     if (tab === 'jadwal')  renderJadwal();
@@ -2415,6 +2434,86 @@ function switchRuangTab(tab, el) {
     if (tab === 'todo')    renderTodo();
     if (tab === 'catatan') renderCatatanRuang();
 }
+
+// ===== DROPDOWN JADWAL KELAS / JADWAL RUTIN =====
+function toggleJadwalDropdown(e) {
+    e.stopPropagation();
+    const menu = document.getElementById('jadwal-dropdown-menu');
+    const isOpen = menu.style.display === 'block';
+
+    // Tutup semua tab lain dulu, aktifkan tab jadwal
+    document.querySelectorAll('.ruang-content').forEach(c => c.style.display = 'none');
+    document.querySelectorAll('.ruang-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('jadwal-tab-btn').classList.add('active');
+    document.getElementById('ruang-jadwal').style.display = 'block';
+
+    if (isOpen) {
+        // Tutup dropdown
+        menu.style.display = 'none';
+        const arrow = document.getElementById('jadwal-arrow');
+        if (arrow) arrow.style.transform = '';
+    } else {
+        // Buka dropdown
+        menu.style.display = 'block';
+        const arrow = document.getElementById('jadwal-arrow');
+        if (arrow) arrow.style.transform = 'rotate(180deg)';
+        // Pastikan sub yang aktif ter-render
+        const activeLabel = document.getElementById('jadwal-tab-label').textContent;
+        const currentSub = activeLabel === 'Jadwal Rutin' ? 'rutin' : 'kelas';
+        switchSubJadwal(currentSub);
+    }
+
+    if (window.lucide) lucide.createIcons();
+}
+
+function pilihJadwalTab(sub, e) {
+    if (e) e.stopPropagation();
+    // Tutup dropdown
+    const menu = document.getElementById('jadwal-dropdown-menu');
+    menu.style.display = 'none';
+    const arrow = document.getElementById('jadwal-arrow');
+    if (arrow) arrow.style.transform = '';
+    // Update label tab
+    const labelMap = { kelas: 'Jadwal Kelas', rutin: 'Jadwal Rutin' };
+    document.getElementById('jadwal-tab-label').textContent = labelMap[sub];
+    // Update active item di dropdown
+    document.querySelectorAll('.jadwal-dropdown-item').forEach(i => i.classList.remove('active'));
+    if (e && e.currentTarget) e.currentTarget.classList.add('active');
+    // Switch konten
+    switchSubJadwal(sub);
+}
+
+function switchSubJadwal(sub) {
+    document.getElementById('sub-jadwal-kelas').style.display = sub === 'kelas' ? 'block' : 'none';
+    document.getElementById('sub-jadwal-rutin').style.display = sub === 'rutin'  ? 'block' : 'none';
+    const ruangJadwal = document.getElementById('ruang-jadwal');
+    if (ruangJadwal) ruangJadwal.style.display = 'block';
+    if (sub === 'kelas') renderJadwal();
+    if (sub === 'rutin') {
+        // Beri browser 1 frame untuk layout sebelum render
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                renderRutinKalender();
+                if (window.lucide) lucide.createIcons();
+            });
+        });
+        return;
+    }
+    if (window.lucide) lucide.createIcons();
+}
+
+// Tutup dropdown kalau klik di luar
+document.addEventListener('click', function(e) {
+    const menu = document.getElementById('jadwal-dropdown-menu');
+    const btn  = document.getElementById('jadwal-tab-btn');
+    if (menu && menu.style.display === 'block') {
+        if (!menu.contains(e.target) && !btn.contains(e.target)) {
+            menu.style.display = 'none';
+            const arrow = document.getElementById('jadwal-arrow');
+            if (arrow) arrow.style.transform = '';
+        }
+    }
+});
 
 // ===== KALENDER TUGAS =====
 function renderRuangKalender() {
@@ -2463,16 +2562,27 @@ function buildCalCell(d, year, month, otherMonth, isToday) {
     if (!otherMonth) {
         const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         const tugasHariIni = dataTugas.filter(t => t.tanggal === dateStr);
-        tugasHariIni.slice(0, 2).forEach(t => {
+
+        // Urutkan: belum/proses (sorted deadline terdekat) dulu, selesai di bawah
+        const belum = tugasHariIni
+            .filter(t => t.status !== 'selesai')
+            .sort((a, b) => new Date(a.tanggal + 'T' + (a.jam || '23:59')) - new Date(b.tanggal + 'T' + (b.jam || '23:59')));
+        const selesai = tugasHariIni.filter(t => t.status === 'selesai');
+        const sorted = [...belum, ...selesai];
+
+        sorted.slice(0, 2).forEach(t => {
             const ev = document.createElement('div');
             ev.className = `ruang-cal-event ${t.status}`;
             ev.textContent = t.judul;
             cell.appendChild(ev);
         });
-        if (tugasHariIni.length > 2) {
+
+        if (sorted.length > 2) {
+            const sisanya = sorted.slice(2);
+            const sisaBelum = sisanya.filter(t => t.status !== 'selesai').length;
             const more = document.createElement('div');
-            more.className = 'ruang-cal-event belum';
-            more.textContent = `+${tugasHariIni.length - 2} lagi`;
+            more.className = `ruang-cal-event ${sisaBelum === 0 ? 'selesai' : 'belum'}`;
+            more.textContent = `+${sisaBelum === 0 ? sisanya.length : sisaBelum} lagi`;
             cell.appendChild(more);
         }
         cell.onclick = () => lihatTugasTanggal(dateStr);
@@ -2614,15 +2724,32 @@ function hapusTugas(id) {
 function renderTugasList() {
     const list = document.getElementById('ruang-tugas-list');
     list.innerHTML = '';
-    const sorted = [...dataTugas].sort((a, b) => {
-        if (!a.tanggal) return 1;
-        if (!b.tanggal) return -1;
-        return new Date(a.tanggal + 'T' + (a.jam || '23:59')) - new Date(b.tanggal + 'T' + (b.jam || '23:59'));
-    });
-    if (sorted.length === 0) {
+
+    if (dataTugas.length === 0) {
         list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-muted);font-size:14px;">Belum ada tugas</div>`;
         return;
     }
+
+    // Belum/proses: urutkan deadline terdekat di atas
+    const belumSelesai = [...dataTugas]
+        .filter(t => t.status !== 'selesai')
+        .sort((a, b) => {
+            if (!a.tanggal) return 1;
+            if (!b.tanggal) return -1;
+            return new Date(a.tanggal + 'T' + (a.jam || '23:59')) - new Date(b.tanggal + 'T' + (b.jam || '23:59'));
+        });
+
+    // Selesai: taruh di bawah
+    const sudahSelesai = [...dataTugas]
+        .filter(t => t.status === 'selesai')
+        .sort((a, b) => {
+            if (!a.tanggal) return 1;
+            if (!b.tanggal) return -1;
+            return new Date(b.tanggal + 'T' + (b.jam || '23:59')) - new Date(a.tanggal + 'T' + (a.jam || '23:59'));
+        });
+
+    const sorted = [...belumSelesai, ...sudahSelesai];
+
     sorted.forEach(t => {
         const countdown = getCountdown(t.tanggal, t.jam);
         const card = document.createElement('div');
@@ -2633,7 +2760,7 @@ function renderTugasList() {
                 <div class="ruang-tugas-meta">
                     ${t.label ? `<span class="ruang-tugas-label">${t.label}</span>` : ''}
                     <span class="ruang-status-badge ${t.status}">${t.status.charAt(0).toUpperCase()+t.status.slice(1)}</span>
-                    ${t.tanggal ? `<span class="ruang-deadline-countdown ${countdown.kelas}">${countdown.teks}</span>` : ''}
+                    ${t.tanggal && t.status !== 'selesai' ? `<span class="ruang-deadline-countdown ${countdown.kelas}">${countdown.teks}</span>` : (!t.tanggal && t.status !== 'selesai' ? '<span style="font-size:11px;color:var(--text-muted);">Tanpa deadline</span>' : '')}
                 </div>
                 ${t.deskripsi ? `<div style="font-size:12px;color:var(--text-muted);margin-top:6px;">${t.deskripsi}</div>` : ''}
             </div>
@@ -2655,22 +2782,16 @@ function getCountdown(tanggal, jam) {
     const now = new Date();
     const diff = deadline - now;
     if (diff < 0) return { teks: 'Terlambat!', kelas: 'late' };
-    const days = Math.floor(diff / 86400000);
+    const days  = Math.floor(diff / 86400000);
     const hours = Math.floor((diff % 86400000) / 3600000);
-    if (days === 0 && hours < 24) return { teks: `${hours}j lagi`, kelas: 'soon' };
-    if (days <= 3) return { teks: `${days}h lagi`, kelas: 'soon' };
-    return { teks: `${days}h lagi`, kelas: 'ok' };
-}
-
-function getCountdown(tanggal, jam) {
-    if (!tanggal) return { teks: '', kelas: 'ok' };
-    const deadline = new Date(tanggal + 'T' + (jam || '23:59'));
-    const now = new Date();
-    const diff = deadline - now;
-    if (diff < 0) return { teks: 'Terlambat!', kelas: 'late' };
-    const days = Math.floor(diff / 86400000);
-    const hours = Math.floor((diff % 86400000) / 3600000);
-    if (days === 0 && hours < 24) return { teks: `${hours}j lagi`, kelas: 'soon' };
+    const mins  = Math.floor((diff % 3600000) / 60000);
+    if (days === 0 && hours === 0) {
+        if (mins <= 0) return { teks: 'Sekarang!', kelas: 'late' };
+        return { teks: `${mins} menit lagi`, kelas: 'late' };
+    }
+    if (days === 0) {
+        return { teks: mins > 0 ? `${hours}j ${mins}m lagi` : `${hours}j lagi`, kelas: 'soon' };
+    }
     if (days <= 3) return { teks: `${days}h lagi`, kelas: 'soon' };
     return { teks: `${days}h lagi`, kelas: 'ok' };
 }
@@ -2799,7 +2920,7 @@ function renderJadwal() {
     if (!grid) return;
     grid.innerHTML = '';
 
-    const hariTampil = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    const hariTampil = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
 
     // Range jam dinamis dari data, default 07-17
     let jamMin = 7, jamMax = 17;
@@ -2996,28 +3117,127 @@ function renderTodo() {
 function bukaModalCatatan(id) {
     document.getElementById('modal-catatan-ruang').style.display = 'flex';
     document.getElementById('catatan-edit-id').value = id || '';
-    document.getElementById('modal-catatan-title').textContent = id ? 'Edit Catatan' : 'Catatan Baru';
+    
+    const judulEl = document.getElementById('catatan-judul');
+    const isiEl = document.getElementById('catatan-isi');
+    
     if (id) {
         const c = dataCatatanRuang.find(c => c.id === id);
-        if (c) { document.getElementById('catatan-judul').value = c.judul; document.getElementById('catatan-isi').value = c.isi; }
+        if (c) { 
+          judulEl.value = c.judul; 
+          isiEl.value = c.isi;
+        }
     } else {
-        document.getElementById('catatan-judul').value = '';
-        document.getElementById('catatan-isi').value = '';
+        judulEl.value = '';
+        isiEl.value = '';
     }
+    
+    // Auto-resize dan update counter
+    setTimeout(() => {
+      autoResizeTitle(judulEl);
+      updateCharCount();
+      judulEl.focus();
+    }, 100);
 }
-function tutupModalCatatan() { document.getElementById('modal-catatan-ruang').style.display = 'none'; }
+function tutupModalCatatan() { 
+  document.getElementById('modal-catatan-ruang').style.display = 'none';
+  // Reset textarea height
+  document.getElementById('catatan-judul').style.height = 'auto';
+  document.getElementById('catatan-isi').style.height = 'auto';
+}
+
+// Auto-resize textarea untuk judul
+function autoResizeTitle(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+}
+
+// Auto-resize textarea untuk isi
+function autoResizeBody(textarea) {
+  // body tidak perlu resize, flex:1 sudah menangani
+}
+
+// Fungsi untuk melihat detail catatan (read-only)
+function lihatDetailCatatan(id) {
+    const catatan = dataCatatanRuang.find(c => c.id === id);
+    if (!catatan) return;
+    
+    // Format waktu
+    const waktu = new Date(catatan.waktu);
+    const sekarang = new Date();
+    let waktuText = '';
+    
+    // Cek apakah hari ini
+    if (waktu.toDateString() === sekarang.toDateString()) {
+        waktuText = waktu.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    } 
+    // Cek apakah kemarin
+    else if (new Date(sekarang - 86400000).toDateString() === waktu.toDateString()) {
+        waktuText = 'Kemarin ' + waktu.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    }
+    // Cek apakah tahun ini
+    else if (waktu.getFullYear() === sekarang.getFullYear()) {
+        waktuText = waktu.toLocaleDateString('id-ID', { day: 'numeric', month: 'long' }) + ' ' + 
+                    waktu.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    }
+    // Tahun berbeda
+    else {
+        waktuText = waktu.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) + ' ' + 
+                    waktu.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    document.getElementById('detail-catatan-waktu').textContent = 'Diedit ' + waktuText;
+    document.getElementById('detail-catatan-judul').textContent = catatan.judul || 'Tanpa Judul';
+    document.getElementById('detail-catatan-isi').textContent = catatan.isi || '(kosong)';
+    document.getElementById('modal-detail-catatan').setAttribute('data-catatan-id', id);
+    document.getElementById('modal-detail-catatan').style.display = 'flex';
+}
+
+function tutupModalDetailCatatan() {
+    document.getElementById('modal-detail-catatan').style.display = 'none';
+}
+
+function editDariDetail() {
+    const id = document.getElementById('modal-detail-catatan').getAttribute('data-catatan-id');
+    tutupModalDetailCatatan();
+    bukaModalCatatan(id);
+}
 function simpanCatatanRuang() {
     const judul = document.getElementById('catatan-judul').value.trim();
     const isi   = document.getElementById('catatan-isi').value.trim();
-    if (!judul && !isi) { showNotification('Tulis catatan terlebih dahulu', 'error'); return; }
+    
+    // Jika keduanya kosong, tidak simpan
+    if (!judul && !isi) { 
+      tutupModalCatatan(); 
+      return; 
+    }
+    
     const id  = document.getElementById('catatan-edit-id').value;
-    const data = { id: id || 'cat_' + Date.now(), judul: judul || 'Tanpa Judul', isi, waktu: new Date().toISOString() };
+    
+    // Jika judul kosong tapi isi ada, ambil baris pertama isi sebagai judul
+    let finalJudul = judul;
+    let finalIsi = isi;
+    
+    if (!judul && isi) {
+      const lines = isi.split('\n');
+      finalJudul = lines[0].substring(0, 50) || 'Tanpa Judul'; // Max 50 karakter untuk judul
+      finalIsi = lines.slice(1).join('\n').trim() || isi; // Sisanya jadi isi
+    }
+    
+    const data = { 
+      id: id || 'cat_' + Date.now(), 
+      judul: finalJudul || 'Tanpa Judul', 
+      isi: finalIsi, 
+      waktu: new Date().toISOString() // Selalu update waktu
+    };
+    
     if (id) {
         const idx = dataCatatanRuang.findIndex(c => c.id === id);
         if (idx !== -1) dataCatatanRuang[idx] = data;
     } else {
         dataCatatanRuang.unshift(data);
     }
+    
     saveCatatanRuang();
     tutupModalCatatan();
     renderCatatanRuang();
@@ -3039,6 +3259,8 @@ function renderCatatanRuang() {
     dataCatatanRuang.forEach(c => {
         const card = document.createElement('div');
         card.className = 'ruang-catatan-card';
+        card.style.cursor = 'pointer';
+        card.onclick = () => lihatDetailCatatan(c.id);
         card.innerHTML = `
             <div class="ruang-catatan-card-judul">${c.judul}</div>
             <div class="ruang-catatan-card-isi">${c.isi}</div>
@@ -3054,7 +3276,460 @@ function renderCatatanRuang() {
     });
 }
 
+// ===== JADWAL RUTIN =====
+let dataRutin = JSON.parse(localStorage.getItem('myBudgetly_rutin')) || [];
+function saveRutin() { localStorage.setItem('myBudgetly_rutin', JSON.stringify(dataRutin)); }
+
+let rutinCalDate = new Date();
+
+function rutinPrevMonth() { rutinCalDate.setMonth(rutinCalDate.getMonth() - 1); renderRutinKalender(); }
+function rutinNextMonth() { rutinCalDate.setMonth(rutinCalDate.getMonth() + 1); renderRutinKalender(); }
+
+// Cek apakah item rutin muncul di tanggal tertentu
+function rutinMunculDiTanggal(r, dateStr) {
+    const date = new Date(dateStr + 'T00:00:00');
+    const tipe = r.pengulangan || 'none';
+
+    if (tipe === 'none') {
+        return r.tanggal === dateStr;
+    }
+
+    // Cek range tanggal
+    if (r.tanggal && date < new Date(r.tanggal + 'T00:00:00')) return false;
+    if (r.tanggalSelesai && date > new Date(r.tanggalSelesai + 'T00:00:00')) return false;
+
+    if (tipe === 'daily') return true;
+    if (tipe === 'weekly') {
+        const hariDipilih = r.hariHari || [];
+        return hariDipilih.includes(date.getDay());
+    }
+    if (tipe === 'monthly') {
+        return date.getDate() === (r.tanggalBulan || new Date(r.tanggal + 'T00:00:00').getDate());
+    }
+    return false;
+}
+
+// Ambil semua item rutin yang muncul di tanggal tertentu
+function getRutinUntukTanggal(dateStr) {
+    return dataRutin.filter(r => rutinMunculDiTanggal(r, dateStr));
+}
+
+// Cek status centang per hari
+function getRutinStatus(rutinId, dateStr) {
+    const key = `rutin_status_${rutinId}_${dateStr}`;
+    return localStorage.getItem(key) === 'selesai';
+}
+
+function setRutinStatus(rutinId, dateStr, selesai) {
+    const key = `rutin_status_${rutinId}_${dateStr}`;
+    if (selesai) localStorage.setItem(key, 'selesai');
+    else localStorage.removeItem(key);
+}
+
+function toggleRutinStatus(rutinId, dateStr) {
+    const current = getRutinStatus(rutinId, dateStr);
+    setRutinStatus(rutinId, dateStr, !current);
+    renderRutinDayView(dateStr);
+    renderRutinKalender();
+}
+
+// Toggle UI pengulangan di form
+function toggleRutinPengulanganUI() {
+    const tipe = document.getElementById('rutin-pengulangan').value;
+    const isRepeat = tipe !== 'none';
+
+    document.getElementById('rutin-tanggal-selesai-wrap').style.display = isRepeat ? 'block' : 'none';
+    document.getElementById('rutin-hari-wrap').style.display = tipe === 'weekly' ? 'block' : 'none';
+
+    const label = document.getElementById('rutin-tanggal-label');
+    if (label) label.innerHTML = isRepeat
+        ? 'Mulai Tanggal <span style="color:#ef4444">*</span>'
+        : 'Tanggal <span style="color:#ef4444">*</span>';
+}
+
+function renderRutinKalender() {
+    const year  = rutinCalDate.getFullYear();
+    const month = rutinCalDate.getMonth();
+    const titleEl = document.getElementById('rutin-cal-title');
+    if (titleEl) titleEl.textContent = new Date(year, month, 1).toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+
+    const grid = document.getElementById('rutin-cal-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const firstDay    = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrev  = new Date(year, month, 0).getDate();
+    const today       = new Date();
+
+    for (let i = 0; i < firstDay; i++) {
+        const d = daysInPrev - firstDay + 1 + i;
+        grid.appendChild(buildRutinCell(d, year, month - 1, true));
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+        const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+        grid.appendChild(buildRutinCell(d, year, month, false, isToday));
+    }
+    const totalCells = firstDay + daysInMonth;
+    const remaining  = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+    for (let d = 1; d <= remaining; d++) {
+        grid.appendChild(buildRutinCell(d, year, month + 1, true));
+    }
+
+    renderRutinList();
+    if (window.lucide) lucide.createIcons();
+}
+
+function buildRutinCell(d, year, month, otherMonth, isToday) {
+    const cell = document.createElement('div');
+    cell.className = 'ruang-cal-cell' + (otherMonth ? ' other-month' : '') + (isToday ? ' today' : '');
+    const dateEl = document.createElement('div');
+    dateEl.className = 'ruang-cal-date';
+    dateEl.textContent = d;
+    cell.appendChild(dateEl);
+
+    if (!otherMonth) {
+        const realDate = new Date(year, month, d);
+        const dateStr = `${realDate.getFullYear()}-${String(realDate.getMonth()+1).padStart(2,'0')}-${String(realDate.getDate()).padStart(2,'0')}`;
+        const items = getRutinUntukTanggal(dateStr);
+
+        items.slice(0, 2).forEach(r => {
+            const selesai = getRutinStatus(r.id, dateStr);
+            const ev = document.createElement('div');
+            ev.className = 'ruang-cal-event rutin' + (selesai ? ' selesai' : '');
+            ev.textContent = (r.jamMulai ? r.jamMulai + ' ' : '') + r.nama;
+            cell.appendChild(ev);
+        });
+        if (items.length > 2) {
+            const sisanya = items.slice(2);
+            const sisaBelum = sisanya.filter(r => !getRutinStatus(r.id, dateStr)).length;
+            const more = document.createElement('div');
+            more.className = `ruang-cal-event rutin${sisaBelum === 0 ? ' selesai' : ''}`;
+            more.textContent = `+${sisaBelum === 0 ? sisanya.length : sisaBelum} lagi`;
+            cell.appendChild(more);
+        }
+        cell.onclick = () => bukaRutinDayView(dateStr);
+    }
+    return cell;
+}
+
+function bukaRutinDayView(dateStr) {
+    window._rutinSelectedDate = dateStr;
+    // Sembunyikan kalender, tampilkan day view
+    document.querySelector('#sub-jadwal-rutin .ruang-calendar').style.display = 'none';
+    document.querySelector('#sub-jadwal-rutin .ruang-tugas-header').style.display = 'none';
+    document.getElementById('rutin-day-view').style.display = 'block';
+
+    const date = new Date(dateStr + 'T00:00:00');
+    const label = date.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    document.getElementById('rutin-day-title').textContent = label;
+
+    renderRutinDayView(dateStr);
+    if (window.lucide) lucide.createIcons();
+}
+
+function tutupRutinDayView() {
+    document.querySelector('#sub-jadwal-rutin .ruang-calendar').style.display = 'block';
+    document.querySelector('#sub-jadwal-rutin .ruang-tugas-header').style.display = 'flex';
+    document.getElementById('rutin-day-view').style.display = 'none';
+    window._rutinSelectedDate = null;
+}
+
+function renderRutinDayView(dateStr) {
+    const grid = document.getElementById('rutin-day-grid');
+    grid.innerHTML = '';
+
+    const allItems = getRutinUntukTanggal(dateStr);
+    const items = allItems.filter(r => r.jamMulai);
+    const itemsTanpaJam = allItems.filter(r => !r.jamMulai);
+
+    if (items.length === 0 && itemsTanpaJam.length === 0) {
+        grid.style.display = 'block';
+        grid.style.fontStyle = 'normal';
+        grid.innerHTML = `<div class="rutin-day-empty">Tidak ada kegiatan di hari ini.<br><span style="color:var(--primary-accent-color);cursor:pointer;font-style:normal;" onclick="bukaModalRutin('${dateStr}')">+ Tambah kegiatan</span></div>`;
+        return;
+    }
+
+    // Hitung range jam
+    let jamMin = 6, jamMax = 20;
+    items.forEach(r => {
+        const h = parseInt(r.jamMulai.split(':')[0]);
+        jamMin = Math.min(jamMin, h);
+        const hEnd = r.jamSelesai ? parseInt(r.jamSelesai.split(':')[0]) + 1 : h + 2;
+        jamMax = Math.max(jamMax, hEnd);
+    });
+    jamMin = Math.max(0, jamMin - 1);
+    jamMax = Math.min(23, jamMax);
+    const totalJam = jamMax - jamMin;
+    const slotH = 64; // px per jam
+
+    const palet = [
+        { bg: 'rgba(99,102,241,0.13)',  text: '#4338ca', border: '#6366f1' },
+        { bg: 'rgba(16,185,129,0.13)',  text: '#065f46', border: '#10b981' },
+        { bg: 'rgba(245,158,11,0.13)',  text: '#92400e', border: '#f59e0b' },
+        { bg: 'rgba(59,130,246,0.13)',  text: '#1e40af', border: '#3b82f6' },
+        { bg: 'rgba(236,72,153,0.13)',  text: '#9d174d', border: '#ec4899' },
+        { bg: 'rgba(139,92,246,0.13)',  text: '#5b21b6', border: '#8b5cf6' },
+    ];
+    const namaList = [...new Set(dataRutin.map(r => r.nama))];
+    const warnaMap = {};
+    namaList.forEach((n, i) => warnaMap[n] = palet[i % palet.length]);
+
+    // Kolom waktu
+    const timeCol = document.createElement('div');
+    timeCol.className = 'rutin-day-time-col';
+    timeCol.style.height = `${totalJam * slotH}px`;
+
+    for (let h = jamMin; h <= jamMax; h++) {
+        const lbl = document.createElement('div');
+        lbl.className = 'rutin-day-time-label';
+        lbl.style.top = `${(h - jamMin) * slotH}px`;
+        if (h === jamMin) lbl.style.transform = 'none';
+        lbl.textContent = `${String(h).padStart(2,'0')}:00`;
+        timeCol.appendChild(lbl);
+    }
+    grid.appendChild(timeCol);
+
+    // Kolom events
+    const evCol = document.createElement('div');
+    evCol.className = 'rutin-day-events-col';
+    evCol.style.height = `${totalJam * slotH}px`;
+
+    // Grid lines
+    for (let h = 0; h <= totalJam; h++) {
+        const line = document.createElement('div');
+        line.className = 'rutin-day-line';
+        line.style.top = `${h * slotH}px`;
+        evCol.appendChild(line);
+    }
+
+    // Cards
+    items.sort((a,b) => a.jamMulai.localeCompare(b.jamMulai)).forEach(r => {
+        const mulai   = parseJamToMenit(r.jamMulai);
+        const selesai = r.jamSelesai ? parseJamToMenit(r.jamSelesai) : mulai + 60;
+        const durasi  = Math.max(selesai - mulai, 45);
+        const topPx   = ((mulai / 60) - jamMin) * slotH;
+        const hPx     = (durasi / 60) * slotH - 4;
+        const sudahSelesai = getRutinStatus(r.id, dateStr);
+        const w       = sudahSelesai
+            ? { bg: 'rgba(16,185,129,0.13)', text: '#065f46', border: '#10b981' }
+            : (warnaMap[r.nama] || palet[0]);
+
+        const card = document.createElement('div');
+        card.className = 'rutin-day-card';
+        card.style.cssText = `top:${topPx}px;height:${hPx}px;background:${w.bg};border-left:4px solid ${w.border};${sudahSelesai ? 'opacity:0.75;' : ''}`;
+        card.innerHTML = `
+            <div style="font-size:11px;font-weight:600;color:${w.text};opacity:0.85;margin-bottom:3px;">
+                ${r.jamMulai}${r.jamSelesai ? ' – ' + r.jamSelesai : ''}
+            </div>
+            <div style="font-size:14px;font-weight:700;color:${w.text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${sudahSelesai ? 'text-decoration:line-through;' : ''}">${r.nama}</div>
+            <div style="position:absolute;top:6px;right:8px;display:flex;gap:4px;align-items:center;">
+                <button onclick="event.stopPropagation();toggleRutinStatus('${r.id}','${dateStr}')"
+                    style="background:${sudahSelesai ? '#10b981' : 'rgba(0,0,0,0.06)'};border:none;cursor:pointer;color:${sudahSelesai ? '#fff' : 'var(--text-muted)'};padding:3px 6px;border-radius:6px;font-size:11px;font-weight:600;" title="${sudahSelesai ? 'Tandai belum' : 'Tandai selesai'}">
+                    ${sudahSelesai ? '✓ Selesai' : '○ Belum'}
+                </button>
+                <button onclick="event.stopPropagation();bukaModalRutin('','${r.id}')" 
+                    style="background:none;border:none;cursor:pointer;color:${w.text};opacity:0.6;padding:2px;" title="Edit">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                </button>
+                <button onclick="event.stopPropagation();hapusRutinDayView('${r.id}','${dateStr}')"
+                    style="background:none;border:none;cursor:pointer;color:#ef4444;opacity:0.6;padding:2px;" title="Hapus">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+            </div>`;
+        evCol.appendChild(card);
+    });
+
+    grid.appendChild(evCol);
+
+    // Item tanpa jam di bawah (all-day)
+    if (itemsTanpaJam.length > 0) {
+        const allDay = document.createElement('div');
+        allDay.style.cssText = 'padding:10px 12px;border-top:1px solid var(--border-light);';
+        allDay.innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Sepanjang Hari</div>`;
+        itemsTanpaJam.forEach(r => {
+            const sudahSelesai = getRutinStatus(r.id, dateStr);
+            const item = document.createElement('div');
+            item.style.cssText = `display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:${sudahSelesai ? 'rgba(16,185,129,0.1)' : 'var(--background-secondary)'};border-radius:8px;margin-bottom:4px;${sudahSelesai ? 'opacity:0.75;' : ''}`;
+            item.innerHTML = `
+                <span style="font-size:13px;font-weight:600;color:var(--text-primary);${sudahSelesai ? 'text-decoration:line-through;color:var(--text-muted);' : ''}">${r.nama}</span>
+                <div style="display:flex;gap:4px;align-items:center;">
+                    <button onclick="toggleRutinStatus('${r.id}','${dateStr}')"
+                        style="background:${sudahSelesai ? '#10b981' : 'rgba(0,0,0,0.06)'};border:none;cursor:pointer;color:${sudahSelesai ? '#fff' : 'var(--text-muted)'};padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;">
+                        ${sudahSelesai ? '✓ Selesai' : '○ Belum'}
+                    </button>
+                    <button onclick="bukaModalRutin('','${r.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:2px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                    </button>
+                    <button onclick="hapusRutinDayView('${r.id}','${dateStr}')" style="background:none;border:none;cursor:pointer;color:#ef4444;padding:2px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                </div>`;
+            allDay.appendChild(item);
+        });
+        grid.insertBefore(allDay, grid.firstChild);
+    }
+}
+
+function hapusRutinDayView(id, dateStr) {
+    if (!confirm('Hapus kegiatan ini?')) return;
+    dataRutin = dataRutin.filter(r => r.id !== id);
+    saveRutin();
+    renderRutinKalender();
+    renderRutinDayView(dateStr);
+}
+
+function renderRutinList() {
+    const list = document.getElementById('rutin-jadwal-list');
+    if (!list) return;
+    list.innerHTML = '';
+    const sorted = [...dataRutin].sort((a, b) => {
+        if (!a.tanggal) return 1;
+        if (!b.tanggal) return -1;
+        return new Date(a.tanggal + 'T' + (a.jamMulai||'23:59')) - new Date(b.tanggal + 'T' + (b.jamMulai||'23:59'));
+    });
+    if (sorted.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-muted);font-size:14px;">Belum ada jadwal rutin</div>`;
+        return;
+    }
+    sorted.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'ruang-tugas-card';
+        const tgl = r.tanggal ? new Date(r.tanggal + 'T00:00:00').toLocaleDateString('id-ID', { weekday:'short', day:'numeric', month:'short', year:'numeric' }) : '';
+        card.innerHTML = `
+            <div class="ruang-tugas-card-left">
+                <div class="ruang-tugas-judul">${r.nama}</div>
+                <div class="ruang-tugas-meta">
+                    ${tgl ? `<span style="font-size:11px;color:var(--text-muted);">📅 ${tgl}</span>` : ''}
+                    ${r.jamMulai ? `<span style="font-size:11px;color:var(--text-muted);">🕐 ${r.jamMulai}${r.jamSelesai ? ' – '+r.jamSelesai : ''}</span>` : ''}
+                </div>
+            </div>
+            <div class="ruang-tugas-actions">
+                <button class="ruang-icon-btn" onclick="bukaModalRutin('','${r.id}')" title="Edit">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                </button>
+                <button class="ruang-icon-btn" onclick="hapusRutin('${r.id}')" title="Hapus" style="color:#fca5a5;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+            </div>`;
+        list.appendChild(card);
+    });
+}
+
+function bukaModalRutin(tanggal, idEdit) {
+    document.getElementById('modal-rutin').style.display = 'flex';
+    document.getElementById('rutin-edit-id').value = idEdit || '';
+    document.getElementById('modal-rutin-title').textContent = idEdit ? 'Edit Jadwal Rutin' : 'Tambah Jadwal Rutin';
+
+    // Reset hari pills
+    document.querySelectorAll('.rutin-hari-pill').forEach(p => p.classList.remove('active'));
+
+    if (idEdit) {
+        const r = dataRutin.find(r => r.id === idEdit);
+        if (r) {
+            document.getElementById('rutin-nama').value          = r.nama;
+            document.getElementById('rutin-tanggal').value       = r.tanggal || '';
+            document.getElementById('rutin-jam-mulai').value     = r.jamMulai || '';
+            document.getElementById('rutin-jam-selesai').value   = r.jamSelesai || '';
+            document.getElementById('rutin-pengulangan').value   = r.pengulangan || 'none';
+            document.getElementById('rutin-tanggal-selesai').value = r.tanggalSelesai || '';
+            document.getElementById('rutin-tanggal-bulan').value = r.tanggalBulan || '';
+            // Restore hari pills
+            (r.hariHari || []).forEach(h => {
+                const pill = document.querySelector(`.rutin-hari-pill[data-hari="${h}"]`);
+                if (pill) pill.classList.add('active');
+            });
+        }
+    } else {
+        document.getElementById('rutin-nama').value          = '';
+        document.getElementById('rutin-tanggal').value       = tanggal || '';
+        document.getElementById('rutin-jam-mulai').value     = '';
+        document.getElementById('rutin-jam-selesai').value   = '';
+        document.getElementById('rutin-pengulangan').value   = 'none';
+        document.getElementById('rutin-tanggal-selesai').value = '';
+        document.getElementById('rutin-tanggal-bulan').value = '';
+    }
+
+    toggleRutinPengulanganUI();
+
+    // Event listener hari pills
+    document.querySelectorAll('.rutin-hari-pill').forEach(p => {
+        p.onclick = () => p.classList.toggle('active');
+    });
+
+    setTimeout(() => document.getElementById('rutin-nama').focus(), 100);
+}
+
+function tutupModalRutin() { document.getElementById('modal-rutin').style.display = 'none'; }
+
+function simpanRutin() {
+    const nama = document.getElementById('rutin-nama').value.trim();
+    if (!nama) { showNotification('Nama kegiatan wajib diisi', 'error'); return; }
+    const tanggal = document.getElementById('rutin-tanggal').value;
+    if (!tanggal) { showNotification('Tanggal wajib diisi', 'error'); return; }
+
+    const pengulangan = document.getElementById('rutin-pengulangan').value;
+
+    // Validasi weekly: harus pilih minimal 1 hari
+    let hariHari = [];
+    if (pengulangan === 'weekly') {
+        document.querySelectorAll('.rutin-hari-pill.active').forEach(p => {
+            hariHari.push(parseInt(p.dataset.hari));
+        });
+        if (hariHari.length === 0) {
+            showNotification('Pilih minimal satu hari untuk pengulangan mingguan', 'error');
+            return;
+        }
+    }
+
+    const id = document.getElementById('rutin-edit-id').value;
+    const data = {
+        id:             id || 'rutin_' + Date.now(),
+        nama,
+        tanggal,
+        jamMulai:       document.getElementById('rutin-jam-mulai').value,
+        jamSelesai:     document.getElementById('rutin-jam-selesai').value,
+        pengulangan,
+        tanggalSelesai: document.getElementById('rutin-tanggal-selesai').value,
+        hariHari,
+        tanggalBulan:   pengulangan === 'monthly'
+            ? parseInt(document.getElementById('rutin-tanggal-bulan').value) || new Date(tanggal + 'T00:00:00').getDate()
+            : null,
+    };
+    if (id) {
+        const idx = dataRutin.findIndex(r => r.id === id);
+        if (idx !== -1) dataRutin[idx] = data;
+    } else {
+        dataRutin.push(data);
+    }
+    saveRutin();
+    tutupModalRutin();
+    // Arahkan kalender ke bulan tanggal yang disimpan
+    rutinCalDate = new Date(tanggal + 'T00:00:00');
+    renderRutinKalender();
+    // Kalau day view sedang terbuka untuk tanggal yang sama, refresh
+    if (window._rutinSelectedDate === tanggal) {
+        renderRutinDayView(tanggal);
+    }
+    showNotification('Jadwal disimpan!', 'success');
+}
+
+function hapusRutin(id) {
+    if (!confirm('Hapus jadwal ini?')) return;
+    dataRutin = dataRutin.filter(r => r.id !== id);
+    saveRutin();
+    renderRutinKalender();
+}
+
+// stub fungsi lama agar tidak error
+function getMondayOfWeek(d) { return d; }
+function rutinPrevWeek() { rutinPrevMonth(); }
+function rutinNextWeek() { rutinNextMonth(); }
+
 function switchTab(pageId, element) {
+  // Simpan halaman aktif ke localStorage
+  localStorage.setItem('activePageId', pageId);
+
   // 1. Sembunyikan SEMUA halaman utama (.app-page)
   document.querySelectorAll('.app-page').forEach(page => {
     page.style.display = 'none';
