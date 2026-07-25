@@ -4550,6 +4550,10 @@ async function initForum() {
     const isAdmin = userData?.is_admin || false;
     const isVerified = userData?.forum_verified || isAdmin;
 
+    // Tampilkan tombol polling hanya untuk admin
+    const pollBtn = document.getElementById('forum-poll-btn');
+    if (pollBtn) pollBtn.style.display = isAdmin ? 'flex' : 'none';
+
     if (!isVerified) {
         document.getElementById('forum-loading').style.display = 'none';
         document.getElementById('forum-unverified-banner').style.display = 'flex';
@@ -4739,14 +4743,27 @@ async function kirimPesanForum() {
 
     if (!teks && !forumPendingPhoto) return;
 
+    // Disable button sementara
+    const sendBtn = document.querySelector('.forum-send-btn');
+    if (sendBtn) sendBtn.disabled = true;
+
     let foto_url = null;
     if (forumPendingPhoto) {
-        const ext = forumPendingPhoto.file.name.split('.').pop();
-        const path = `forum/${Date.now()}.${ext}`;
-        const { error: upErr } = await supabaseClient.storage.from('forum-photos').upload(path, forumPendingPhoto.file);
-        if (!upErr) {
-            const { data } = supabaseClient.storage.from('forum-photos').getPublicUrl(path);
-            foto_url = data.publicUrl;
+        try {
+            const ext = forumPendingPhoto.file.name.split('.').pop();
+            const path = `forum/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+            const { data: upData, error: upErr } = await supabaseClient.storage
+                .from('forum-photos')
+                .upload(path, forumPendingPhoto.file, { upsert: false });
+            if (upErr) {
+                console.error('Upload error:', upErr);
+                showNotification('Gagal upload foto: ' + upErr.message, 'error');
+            } else {
+                const { data: urlData } = supabaseClient.storage.from('forum-photos').getPublicUrl(path);
+                foto_url = urlData.publicUrl;
+            }
+        } catch(e) {
+            console.error('Upload exception:', e);
         }
     }
 
@@ -4762,10 +4779,19 @@ async function kirimPesanForum() {
         reply_to_user: forumReplyTo?.username || null,
     };
 
-    await supabaseClient.from('forum_messages').insert(payload);
-    input.value = '';
-    cancelReply();
-    cancelForumPhoto();
+    const { error: insertError } = await supabaseClient.from('forum_messages').insert(payload);
+    if (insertError) {
+        showNotification('Gagal kirim pesan: ' + insertError.message, 'error');
+    } else {
+        input.value = '';
+        cancelReply();
+        cancelForumPhoto();
+        // Manual reload karena realtime mungkin delay
+        const isAdmin = userData?.is_admin || false;
+        await loadForumMessages(isAdmin, username);
+    }
+
+    if (sendBtn) sendBtn.disabled = false;
 }
 
 async function votePoll(pollId, pilihanIdx) {
@@ -4834,16 +4860,48 @@ async function buatPollingForum() {
     const { data: userData } = await supabaseClient.from('pelanggan').select('is_admin').eq('kode_akses', kode).maybeSingle();
     if (!userData?.is_admin) { showNotification('Hanya admin yang bisa membuat polling', 'error'); return; }
 
-    const pertanyaan = prompt('Pertanyaan polling:');
-    if (!pertanyaan) return;
-    const op1 = prompt('Pilihan 1:');
-    const op2 = prompt('Pilihan 2:');
-    if (!op1 || !op2) return;
-    const op3 = prompt('Pilihan 3 (kosongkan jika tidak ada):');
+    // Buat modal polling sederhana
+    const existing = document.getElementById('forum-poll-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'forum-poll-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML = `
+        <div style="background:var(--card-bg);border-radius:16px;padding:20px;width:100%;max-width:380px;">
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;color:var(--text-primary);">📊 Buat Polling</h3>
+            <input id="poll-q" class="ruang-input" placeholder="Pertanyaan..." style="width:100%;margin-bottom:8px;">
+            <input id="poll-o1" class="ruang-input" placeholder="Pilihan 1..." style="width:100%;margin-bottom:8px;">
+            <input id="poll-o2" class="ruang-input" placeholder="Pilihan 2..." style="width:100%;margin-bottom:8px;">
+            <input id="poll-o3" class="ruang-input" placeholder="Pilihan 3 (opsional)..." style="width:100%;margin-bottom:16px;">
+            <div style="display:flex;gap:8px;">
+                <button class="ruang-btn-primary" style="flex:1;" onclick="simpanPollingForum('${username}')">Buat Polling</button>
+                <button class="ruang-btn-secondary" style="flex:1;" onclick="document.getElementById('forum-poll-modal').remove()">Batal</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    document.getElementById('poll-q').focus();
+}
+
+async function simpanPollingForum(username) {
+    const pertanyaan = document.getElementById('poll-q').value.trim();
+    const op1 = document.getElementById('poll-o1').value.trim();
+    const op2 = document.getElementById('poll-o2').value.trim();
+    const op3 = document.getElementById('poll-o3').value.trim();
+
+    if (!pertanyaan || !op1 || !op2) {
+        showNotification('Pertanyaan dan minimal 2 pilihan wajib diisi', 'error');
+        return;
+    }
 
     const pilihan = [op1, op2];
     if (op3) pilihan.push(op3);
 
-    await supabaseClient.from('forum_polls').insert({ pertanyaan, pilihan, created_by: username });
+    const { error } = await supabaseClient.from('forum_polls').insert({ pertanyaan, pilihan, created_by: username });
+    if (error) { showNotification('Gagal buat polling: ' + error.message, 'error'); return; }
+
+    document.getElementById('forum-poll-modal').remove();
     showNotification('Polling berhasil dibuat', 'success');
+    const isAdmin = true;
+    await loadForumMessages(isAdmin, username);
 }
