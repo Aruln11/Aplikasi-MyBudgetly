@@ -3788,8 +3788,8 @@ html[data-warna-putih="true"]:not([data-theme="dark"]) h3.section-title svg {
 /* ===== RUANG ===== */
 .ruang-wrapper { padding: 16px 16px 120px; max-width: 700px; margin: 0 auto; }
 
-.ruang-tabs { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 20px; background: var(--background-secondary); padding: 4px; border-radius: 12px; }
-.ruang-tab { padding: 8px 4px; border: none; background: none; border-radius: 9px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ruang-tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--background-secondary); padding: 4px; border-radius: 12px; overflow: hidden; }
+.ruang-tab { flex: 1; padding: 8px 4px; border: none; background: none; border-radius: 9px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; min-width: 0; }
 .ruang-tab.active { background: var(--card-bg); color: var(--primary-accent-color); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 .ruang-tab-icon { width: 15px; height: 15px; opacity: 0.6; flex-shrink: 0; }
 .ruang-tab.active .ruang-tab-icon { opacity: 1; filter: none; }
