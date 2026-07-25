@@ -410,7 +410,7 @@
 
       <!-- Tab Navigasi -->
       <div class="ruang-tabs">
-        <div style="position:relative;flex:1;display:flex;">
+        <div style="position:relative;flex:1;">
         <button class="ruang-tab active" id="jadwal-tab-btn" onclick="toggleJadwalDropdown(event)" style="width:100%">
           <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNhbGVuZGFyLWRheXMtaWNvbiBsdWNpZGUtY2FsZW5kYXItZGF5cyI+PHBhdGggZD0iTTggMnY0Ii8+PHBhdGggZD0iTTE2IDJ2NCIvPjxyZWN0IHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgeD0iMyIgeT0iNCIgcng9IjIiLz48cGF0aCBkPSJNMyAxMGgxOCIvPjxwYXRoIGQ9Ik04IDE0aC4wMSIvPjxwYXRoIGQ9Ik0xMiAxNGguMDEiLz48cGF0aCBkPSJNMTYgMTRoLjAxIi8+PHBhdGggZD0iTTggMThoLjAxIi8+PHBhdGggZD0iTTEyIDE4aC4wMSIvPjxwYXRoIGQ9Ik0xNiAxOGguMDEiLz48L3N2Zz4=" class="ruang-tab-icon">
           <span id="jadwal-tab-label">Jadwal Kelas</span>
@@ -818,7 +818,75 @@
       </div>
     </div>
   </div>
-  <div id="page-forum" class="app-page" style="display: none;"><div class="empty-state"><h3>Forum</h3><p>Segera Hadir</p></div></div>
+  <div id="page-forum" class="app-page" style="display: none;">
+    <div class="forum-wrapper">
+
+      <!-- Header Forum -->
+      <div class="forum-header">
+        <div class="forum-header-info">
+          <div class="forum-avatar">💬</div>
+          <div>
+            <div class="forum-title">MyBudgetly Community</div>
+            <div class="forum-subtitle" id="forum-member-count">Memuat anggota...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pinned Message Area -->
+      <div id="forum-pinned-area" style="display:none;">
+        <div class="forum-pinned-bar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span id="forum-pinned-preview"></span>
+        </div>
+      </div>
+
+      <!-- Chat Messages -->
+      <div class="forum-messages" id="forum-messages">
+        <div class="forum-loading" id="forum-loading">
+          <div class="forum-loading-dot"></div>
+          <div class="forum-loading-dot"></div>
+          <div class="forum-loading-dot"></div>
+        </div>
+      </div>
+
+      <!-- Unverified Banner -->
+      <div id="forum-unverified-banner" class="forum-unverified-banner" style="display:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Akun kamu belum diverifikasi untuk forum. Tunggu persetujuan admin.
+      </div>
+
+      <!-- Input Area -->
+      <div class="forum-input-area" id="forum-input-area" style="display:none;">
+        <!-- Reply preview -->
+        <div id="forum-reply-preview" style="display:none;" class="forum-reply-preview">
+          <div class="forum-reply-preview-inner">
+            <span id="forum-reply-text"></span>
+          </div>
+          <button onclick="cancelReply()" class="forum-reply-cancel">✕</button>
+        </div>
+        <div class="forum-input-row">
+          <label class="forum-attach-btn" for="forum-photo-input" title="Kirim foto">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <input type="file" id="forum-photo-input" accept="image/*" style="display:none;" onchange="handleForumPhoto(event)">
+          </label>
+          <div class="forum-photo-preview-wrap" id="forum-photo-preview-wrap" style="display:none;">
+            <img id="forum-photo-preview" src="" style="height:48px;border-radius:6px;object-fit:cover;">
+            <button onclick="cancelForumPhoto()" class="forum-photo-cancel">✕</button>
+          </div>
+          <input type="text" id="forum-input" class="forum-input-field" placeholder="Tulis pesan..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();kirimPesanForum();}">
+          <button class="forum-send-btn" onclick="kirimPesanForum()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Login needed -->
+      <div id="forum-login-needed" class="forum-login-needed" style="display:none;">
+        Login untuk bergabung di forum komunitas.
+      </div>
+
+    </div>
+  </div>
   <div id="page-saya" class="app-page" style="display: none;">
     <div class="profil-page">
 

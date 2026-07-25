@@ -2490,6 +2490,14 @@ function switchSubJadwal(sub) {
     if (ruangJadwal) ruangJadwal.style.display = 'block';
     if (sub === 'kelas') renderJadwal();
     if (sub === 'rutin') {
+        // Selalu reset day view ke kalender saat switch ke rutin
+        const cal = document.querySelector('#sub-jadwal-rutin .ruang-calendar');
+        const hdr = document.querySelector('#sub-jadwal-rutin .ruang-tugas-header');
+        const dv  = document.getElementById('rutin-day-view');
+        if (cal) cal.style.display = 'block';
+        if (hdr) hdr.style.display = 'flex';
+        if (dv)  dv.style.display  = 'none';
+        window._rutinSelectedDate = null;
         // Beri browser 1 frame untuk layout sebelum render
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
@@ -3633,7 +3641,6 @@ function bukaModalRutin(tanggal, idEdit) {
             document.getElementById('rutin-jam-selesai').value   = r.jamSelesai || '';
             document.getElementById('rutin-pengulangan').value   = r.pengulangan || 'none';
             document.getElementById('rutin-tanggal-selesai').value = r.tanggalSelesai || '';
-            document.getElementById('rutin-tanggal-bulan').value = r.tanggalBulan || '';
             // Restore hari pills
             (r.hariHari || []).forEach(h => {
                 const pill = document.querySelector(`.rutin-hari-pill[data-hari="${h}"]`);
@@ -3647,7 +3654,6 @@ function bukaModalRutin(tanggal, idEdit) {
         document.getElementById('rutin-jam-selesai').value   = '';
         document.getElementById('rutin-pengulangan').value   = 'none';
         document.getElementById('rutin-tanggal-selesai').value = '';
-        document.getElementById('rutin-tanggal-bulan').value = '';
     }
 
     toggleRutinPengulanganUI();
@@ -3692,9 +3698,7 @@ function simpanRutin() {
         pengulangan,
         tanggalSelesai: document.getElementById('rutin-tanggal-selesai').value,
         hariHari,
-        tanggalBulan:   pengulangan === 'monthly'
-            ? parseInt(document.getElementById('rutin-tanggal-bulan').value) || new Date(tanggal + 'T00:00:00').getDate()
-            : null,
+        tanggalBulan: null,
     };
     if (id) {
         const idx = dataRutin.findIndex(r => r.id === id);
@@ -3779,6 +3783,17 @@ function switchTab(pageId, element) {
   // Khusus Saya, muat data profil
   if (pageId === 'saya') {
       loadProfilPage();
+  }
+
+  // Khusus Forum, init forum
+  if (pageId === 'forum') {
+      initForum();
+  } else {
+      // Stop polling forum kalau pindah tab
+      if (window._forumPollInterval) {
+          clearInterval(window._forumPollInterval);
+          window._forumPollInterval = null;
+      }
   }
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -4498,4 +4513,337 @@ function syncProfilPhoto() {
     img.classList.remove('show');
     placeholder.classList.remove('hide');
   }
+}
+
+
+// ===== FORUM =====
+let forumMessages = [];
+let forumPinnedMsg = null;
+let forumReplyTo = null;
+let forumPendingPhoto = null; // { file, url }
+let forumRealtimeChannel = null;
+let forumVotedPolls = JSON.parse(localStorage.getItem('myBudgetly_voted_polls') || '{}');
+
+function saveVotedPolls() { localStorage.setItem('myBudgetly_voted_polls', JSON.stringify(forumVotedPolls)); }
+
+async function initForum() {
+    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const username = localStorage.getItem('myUsername');
+    const kode = localStorage.getItem('myAccessCode');
+
+    document.getElementById('forum-loading').style.display = 'flex';
+    document.getElementById('forum-messages').innerHTML = '';
+
+    if (!loggedIn) {
+        document.getElementById('forum-loading').style.display = 'none';
+        document.getElementById('forum-login-needed').style.display = 'flex';
+        return;
+    }
+
+    // Cek status verifikasi forum user
+    const { data: userData } = await supabaseClient
+        .from('pelanggan')
+        .select('forum_verified, username, is_admin')
+        .eq('kode_akses', kode)
+        .maybeSingle();
+
+    const isAdmin = userData?.is_admin || false;
+    const isVerified = userData?.forum_verified || isAdmin;
+
+    if (!isVerified) {
+        document.getElementById('forum-loading').style.display = 'none';
+        document.getElementById('forum-unverified-banner').style.display = 'flex';
+    } else {
+        document.getElementById('forum-unverified-banner').style.display = 'none';
+        document.getElementById('forum-input-area').style.display = 'block';
+    }
+
+    // Load member count
+    const { count } = await supabaseClient
+        .from('pelanggan')
+        .select('*', { count: 'exact', head: true })
+        .eq('forum_verified', true);
+    document.getElementById('forum-member-count').textContent = `${(count || 0)} anggota aktif`;
+
+    // Load messages
+    await loadForumMessages(isAdmin, username);
+
+    // Realtime
+    if (forumRealtimeChannel) supabaseClient.removeChannel(forumRealtimeChannel);
+    forumRealtimeChannel = supabaseClient
+        .channel('forum-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'forum_messages' }, () => {
+            loadForumMessages(isAdmin, username);
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'forum_polls' }, () => {
+            loadForumMessages(isAdmin, username);
+        })
+        .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+                console.log('Forum realtime connected');
+            }
+        });
+
+    // Fallback polling setiap 5 detik kalau realtime belum aktif
+    if (window._forumPollInterval) clearInterval(window._forumPollInterval);
+    window._forumPollInterval = setInterval(() => {
+        loadForumMessages(isAdmin, username);
+    }, 5000);
+}
+
+async function loadForumMessages(isAdmin, username) {
+    const { data: msgs, error: msgsError } = await supabaseClient
+        .from('forum_messages')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+    if (msgsError) {
+        console.error('Forum load error:', msgsError);
+        return;
+    }
+
+    const { data: polls } = await supabaseClient
+        .from('forum_polls')
+        .select('*, forum_poll_votes(*)');
+
+    const loadingEl = document.getElementById('forum-loading');
+    const container = document.getElementById('forum-messages');
+    if (!container) return;
+
+    if (loadingEl) loadingEl.style.display = 'none';
+    container.innerHTML = '';
+
+    // Combine and sort
+    const allItems = [
+        ...(msgs || []).map(m => ({ ...m, _type: 'msg' })),
+        ...(polls || []).map(p => ({ ...p, _type: 'poll' }))
+    ].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    // Find pinned
+    forumPinnedMsg = allItems.find(m => m._type === 'msg' && m.is_pinned);
+    if (forumPinnedMsg) {
+        document.getElementById('forum-pinned-area').style.display = 'block';
+        document.getElementById('forum-pinned-preview').textContent = `📌 ${forumPinnedMsg.username}: ${forumPinnedMsg.teks || '[Foto]'}`;
+    } else {
+        document.getElementById('forum-pinned-area').style.display = 'none';
+    }
+
+    let lastDate = '';
+    allItems.forEach(item => {
+        const d = new Date(item.created_at);
+        const dateStr = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        if (dateStr !== lastDate) {
+            const divider = document.createElement('div');
+            divider.className = 'forum-date-divider';
+            divider.textContent = dateStr;
+            container.appendChild(divider);
+            lastDate = dateStr;
+        }
+        if (item._type === 'poll') {
+            container.appendChild(buildForumPoll(item, username));
+        } else {
+            container.appendChild(buildForumBubble(item, isAdmin, username));
+        }
+    });
+
+    container.scrollTop = container.scrollHeight;
+}
+
+function buildForumBubble(msg, isAdmin, myUsername) {
+    const isMine = msg.username === myUsername;
+    const wrap = document.createElement('div');
+    wrap.className = `forum-msg ${isMine ? 'mine' : 'other'}`;
+
+    const time = new Date(msg.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+    let inner = '';
+    if (!isMine) inner += `<div class="forum-msg-sender">${msg.username}${msg.is_admin ? ' 👑' : ''}</div>`;
+    if (msg.is_pinned) inner += `<div class="forum-msg-pin-badge">📌 Disematkan</div>`;
+    if (msg.reply_to_text) inner += `<div class="forum-reply-quote">${msg.reply_to_user ? '<b>' + msg.reply_to_user + '</b>: ' : ''}${msg.reply_to_text}</div>`;
+    if (msg.foto_url) inner += `<img src="${msg.foto_url}" class="forum-msg-photo" onclick="window.open('${msg.foto_url}')">`;
+    if (msg.teks) inner += `<div>${msg.teks}</div>`;
+    inner += `<div class="forum-msg-time">${time}${msg.is_pinned ? ' · 📌' : ''}</div>`;
+
+    if (!isMine) {
+        const av = document.createElement('div');
+        av.className = 'forum-msg-avatar';
+        av.textContent = (msg.username || '?')[0].toUpperCase();
+        wrap.appendChild(av);
+    }
+
+    const bubble = document.createElement('div');
+    bubble.className = `forum-msg-bubble ${msg.is_pinned ? 'forum-msg-pinned' : ''}`;
+    bubble.innerHTML = inner;
+
+    // Long press / right click context menu
+    const showCtx = (e) => {
+        e.preventDefault();
+        showForumContextMenu(e, msg, isAdmin, myUsername);
+    };
+    bubble.addEventListener('contextmenu', showCtx);
+    bubble.addEventListener('touchstart', (() => {
+        let t;
+        return (e) => {
+            t = setTimeout(() => showCtx(e.touches[0]), 600);
+            bubble.addEventListener('touchend', () => clearTimeout(t), { once: true });
+        };
+    })());
+
+    wrap.appendChild(bubble);
+    return wrap;
+}
+
+function buildForumPoll(poll, myUsername) {
+    const wrap = document.createElement('div');
+    wrap.className = 'forum-msg other';
+
+    const av = document.createElement('div');
+    av.className = 'forum-msg-avatar';
+    av.textContent = (poll.created_by || 'A')[0].toUpperCase();
+
+    const card = document.createElement('div');
+    card.className = 'forum-poll-card';
+
+    const myVote = forumVotedPolls[poll.id];
+    const votes = poll.forum_poll_votes || [];
+    const totalVotes = votes.length;
+
+    let optionsHTML = '';
+    (poll.pilihan || []).forEach((opt, i) => {
+        const cnt = votes.filter(v => v.pilihan === i).length;
+        const pct = totalVotes > 0 ? Math.round((cnt / totalVotes) * 100) : 0;
+        const isVoted = myVote === i;
+        optionsHTML += `
+            <div class="forum-poll-option ${isVoted ? 'voted' : ''}" onclick="votePoll('${poll.id}', ${i})">
+                <div class="forum-poll-bar" style="width:${myVote !== undefined ? pct : 0}%"></div>
+                <span class="forum-poll-label">${opt}</span>
+                ${myVote !== undefined ? `<span class="forum-poll-pct">${pct}%</span>` : ''}
+            </div>`;
+    });
+
+    card.innerHTML = `
+        <div class="forum-poll-question">📊 ${poll.pertanyaan}</div>
+        ${optionsHTML}
+        <div class="forum-poll-total">${totalVotes} suara · oleh ${poll.created_by}</div>`;
+
+    wrap.appendChild(av);
+    wrap.appendChild(card);
+    return wrap;
+}
+
+async function kirimPesanForum() {
+    const input = document.getElementById('forum-input');
+    const teks = input.value.trim();
+    const kode = localStorage.getItem('myAccessCode');
+    const username = localStorage.getItem('myUsername');
+
+    if (!teks && !forumPendingPhoto) return;
+
+    let foto_url = null;
+    if (forumPendingPhoto) {
+        const ext = forumPendingPhoto.file.name.split('.').pop();
+        const path = `forum/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabaseClient.storage.from('forum-photos').upload(path, forumPendingPhoto.file);
+        if (!upErr) {
+            const { data } = supabaseClient.storage.from('forum-photos').getPublicUrl(path);
+            foto_url = data.publicUrl;
+        }
+    }
+
+    const { data: userData } = await supabaseClient.from('pelanggan').select('is_admin').eq('kode_akses', kode).maybeSingle();
+
+    const payload = {
+        username,
+        teks: teks || null,
+        foto_url,
+        is_pinned: false,
+        is_admin: userData?.is_admin || false,
+        reply_to_text: forumReplyTo?.teks || null,
+        reply_to_user: forumReplyTo?.username || null,
+    };
+
+    await supabaseClient.from('forum_messages').insert(payload);
+    input.value = '';
+    cancelReply();
+    cancelForumPhoto();
+}
+
+async function votePoll(pollId, pilihanIdx) {
+    if (forumVotedPolls[pollId] !== undefined) return;
+    const username = localStorage.getItem('myUsername');
+    await supabaseClient.from('forum_poll_votes').insert({ poll_id: pollId, username, pilihan: pilihanIdx });
+    forumVotedPolls[pollId] = pilihanIdx;
+    saveVotedPolls();
+}
+
+function handleForumPhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    forumPendingPhoto = { file, url };
+    document.getElementById('forum-photo-preview').src = url;
+    document.getElementById('forum-photo-preview-wrap').style.display = 'flex';
+}
+
+function cancelForumPhoto() {
+    forumPendingPhoto = null;
+    document.getElementById('forum-photo-preview-wrap').style.display = 'none';
+    document.getElementById('forum-photo-input').value = '';
+}
+
+function cancelReply() {
+    forumReplyTo = null;
+    document.getElementById('forum-reply-preview').style.display = 'none';
+}
+
+function showForumContextMenu(e, msg, isAdmin, myUsername) {
+    document.getElementById('forum-ctx-menu-el')?.remove();
+    const menu = document.createElement('div');
+    menu.className = 'forum-ctx-menu';
+    menu.id = 'forum-ctx-menu-el';
+
+    const isMine = msg.username === myUsername;
+    const items = [];
+
+    items.push({ icon: '↩️', label: 'Balas', fn: () => { forumReplyTo = msg; document.getElementById('forum-reply-text').textContent = `${msg.username}: ${msg.teks || '[Foto]'}`; document.getElementById('forum-reply-preview').style.display = 'flex'; document.getElementById('forum-input').focus(); } });
+
+    if (isAdmin) {
+        items.push({ icon: msg.is_pinned ? '📌 Lepas Pin' : '📌 Sematkan', label: msg.is_pinned ? 'Lepas Pin' : 'Sematkan', fn: async () => { await supabaseClient.from('forum_messages').update({ is_pinned: !msg.is_pinned }).eq('id', msg.id); } });
+        items.push({ icon: '🗑️', label: 'Hapus', danger: true, fn: async () => { if (confirm('Hapus pesan ini?')) await supabaseClient.from('forum_messages').delete().eq('id', msg.id); } });
+    } else if (isMine) {
+        items.push({ icon: '🗑️', label: 'Hapus', danger: true, fn: async () => { if (confirm('Hapus pesan ini?')) await supabaseClient.from('forum_messages').delete().eq('id', msg.id); } });
+    }
+
+    items.forEach(item => {
+        const el = document.createElement('div');
+        el.className = `forum-ctx-item${item.danger ? ' danger' : ''}`;
+        el.innerHTML = `<span>${item.icon}</span> ${item.label}`;
+        el.onclick = () => { item.fn(); menu.remove(); };
+        menu.appendChild(el);
+    });
+
+    menu.style.left = Math.min(e.clientX, window.innerWidth - 170) + 'px';
+    menu.style.top = Math.min(e.clientY, window.innerHeight - items.length * 44 - 20) + 'px';
+    document.body.appendChild(menu);
+    setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 50);
+}
+
+async function buatPollingForum() {
+    const kode = localStorage.getItem('myAccessCode');
+    const username = localStorage.getItem('myUsername');
+    const { data: userData } = await supabaseClient.from('pelanggan').select('is_admin').eq('kode_akses', kode).maybeSingle();
+    if (!userData?.is_admin) { showNotification('Hanya admin yang bisa membuat polling', 'error'); return; }
+
+    const pertanyaan = prompt('Pertanyaan polling:');
+    if (!pertanyaan) return;
+    const op1 = prompt('Pilihan 1:');
+    const op2 = prompt('Pilihan 2:');
+    if (!op1 || !op2) return;
+    const op3 = prompt('Pilihan 3 (kosongkan jika tidak ada):');
+
+    const pilihan = [op1, op2];
+    if (op3) pilihan.push(op3);
+
+    await supabaseClient.from('forum_polls').insert({ pertanyaan, pilihan, created_by: username });
+    showNotification('Polling berhasil dibuat', 'success');
 }

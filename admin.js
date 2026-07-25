@@ -384,6 +384,9 @@ async function loadDataPelanggan() {
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         Hapus
                     </button>
+                    <button class="btn-outline-black" style="background:${pelanggan.forum_verified ? '#10b981' : '#f59e0b'};color:#fff;border:none;" onclick="toggleForumVerified('${pelanggan.kode_akses}', ${pelanggan.forum_verified})">
+                        💬 Forum: ${pelanggan.forum_verified ? 'Aktif' : 'Nonaktif'}
+                    </button>
                 </div>
             </td>
         </tr>`;
@@ -489,6 +492,16 @@ async function blockUser(kode) {
   if (!confirm("Blokir user ini? User tidak akan bisa login.")) return
   await supabaseClient.from("pelanggan").update({ status: "diblokir" }).eq("kode_akses", kode)
   loadDataPelanggan()
+}
+
+async function toggleForumVerified(kode, currentStatus) {
+  const newStatus = !currentStatus;
+  const label = newStatus ? 'mengaktifkan akses forum' : 'menonaktifkan akses forum';
+  if (!confirm(`${label.charAt(0).toUpperCase() + label.slice(1)} untuk user ini?`)) return;
+  const { error } = await supabaseClient.from("pelanggan").update({ forum_verified: newStatus }).eq("kode_akses", kode);
+  if (error) { alert("Gagal: " + error.message); return; }
+  alert(`Berhasil ${label}!`);
+  loadDataPelanggan();
 }
 
 function filterTable(type) {
