@@ -429,13 +429,16 @@ function setupEventListeners() {
 
   document.querySelectorAll('.quick-amount-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-      document.getElementById('jumlah').value = this.dataset.amount;
+      document.getElementById('jumlah').value = formatRibuan(this.dataset.amount);
       this.style.background = 'var(--border)';
       setTimeout(() => {
         this.style.background = 'var(--background-secondary)';
       }, 200);
     });
   });
+
+  // Format ribuan otomatis pada input jumlah
+  applyFormatRibuan(document.getElementById('jumlah'));
 
   dataActionsToggleBtn.addEventListener('click', () => {
     dataActionsDropdown.classList.toggle('open');
@@ -975,7 +978,7 @@ function handleFormSubmit(e) {
     }
 
   const deskripsi = document.getElementById('deskripsi').value.trim();
-  const jumlah = parseFloat(document.getElementById('jumlah').value);
+  const jumlah = parseFloat(String(document.getElementById('jumlah').value).replace(/\./g, ''));
   const tanggal = document.getElementById('tanggal').value;
   const jenis = document.getElementById('jenis').value;
 
@@ -1348,7 +1351,7 @@ function editTransaksi(index) {
   const t = transaksi[index];
 
   document.getElementById('deskripsi').value = t.deskripsi;
-  document.getElementById('jumlah').value = t.jumlah;
+  document.getElementById('jumlah').value = formatRibuan(t.jumlah);
   document.getElementById('tanggal').value = t.tanggal;
   document.getElementById('jenis').value = t.jenis;
 
@@ -1783,6 +1786,41 @@ function formatCurrency(amount) {
     maximumFractionDigits: 0
   }).format(amount);
 }
+
+// ===== FORMAT INPUT NOMINAL =====
+function formatRibuan(value) {
+  // Hapus semua karakter selain angka
+  const angka = String(value).replace(/\D/g, '');
+  if (!angka) return '';
+  // Format dengan titik ribuan
+  return angka.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function parseRibuan(value) {
+  // Hapus titik, kembalikan angka murni
+  return parseFloat(String(value).replace(/\./g, '')) || 0;
+}
+
+function applyFormatRibuan(input) {
+  input.addEventListener('input', function () {
+    const pos = this.selectionStart;
+    const prevLen = this.value.length;
+    const raw = this.value.replace(/\D/g, '');
+    const formatted = formatRibuan(raw);
+    this.value = formatted;
+    // Jaga posisi kursor tetap natural
+    const diff = formatted.length - prevLen;
+    this.setSelectionRange(pos + diff, pos + diff);
+  });
+  input.addEventListener('keydown', function (e) {
+    // Izinkan: backspace, delete, tab, escape, enter, arrow keys, Ctrl+A/C/V/X
+    if ([8, 9, 27, 13, 46, 37, 38, 39, 40].includes(e.keyCode)) return;
+    if ((e.ctrlKey || e.metaKey) && [65, 67, 86, 88].includes(e.keyCode)) return;
+    // Blokir input non-angka
+    if (!/^\d$/.test(e.key)) e.preventDefault();
+  });
+}
+// ================================
 
 function formatDate(isoDate) {
   const date = new Date(isoDate + 'T00:00:00');
@@ -3750,11 +3788,13 @@ function switchTab(pageId, element) {
     if (summaryGrid) summaryGrid.style.setProperty('display', 'grid', 'important');
     berandaLainnya.forEach(el => el.style.display = 'block');
     if (appHeader) appHeader.style.display = 'flex';
+    document.body.style.background = '';
   } else {
     // Sembunyikan elemen beranda agar tidak "tembus"
     if (summaryGrid) summaryGrid.style.display = 'none';
     berandaLainnya.forEach(el => el.style.display = 'none');
     if (appHeader) appHeader.style.display = 'none';
+    document.body.style.background = 'var(--background)';
   }
 
   // 4. Tampilkan halaman tujuan
@@ -3801,7 +3841,10 @@ function switchTab(pageId, element) {
 }
 
 // --- LOGIKA PORTOFOLIO ---
-function tutupModalAset() { document.getElementById('modal-tambah-aset').style.display = 'none'; }
+function tutupModalAset() {
+    tutupKategoriFloating();
+    document.getElementById('modal-tambah-aset').style.display = 'none';
+}
 function tutupModalTransaksiAset() { document.getElementById('modal-transaksi-aset').style.display = 'none'; }
 
 // 1. Simpan Wadah Aset (Tanpa Harga)
@@ -4026,14 +4069,17 @@ function initTransaksiAsetListeners() {
     transHarga  = document.getElementById('trans-harga');
     transLembar = document.getElementById('trans-lembar');
     transPreview = document.getElementById('trans-total-preview');
-    if (transHarga)  transHarga.addEventListener('input', hitungTotalTransaksi);
+    if (transHarga) {
+        applyFormatRibuan(transHarga);
+        transHarga.addEventListener('input', hitungTotalTransaksi);
+    }
     if (transLembar) transLembar.addEventListener('input', hitungTotalTransaksi);
 }
 
 function hitungTotalTransaksi() {
     const hargaEl  = document.getElementById('trans-harga');
     const lembarEl = document.getElementById('trans-lembar');
-    const h = parseFloat(hargaEl ? hargaEl.value : 0) || 0;
+    const h = parseRibuan(hargaEl ? hargaEl.value : 0);
     const l = parseFloat(lembarEl ? lembarEl.value : 0) || 0;
     const idAset = document.getElementById('trans-aset-id').value;
     const aset = dataAset.find(a => a.id === idAset);
@@ -4072,7 +4118,7 @@ function handleSimpanTransaksiAset(event) {
     event.preventDefault();
     const idAset = document.getElementById('trans-aset-id').value;
     const jenis = document.getElementById('trans-aset-jenis').value;
-    const harga = parseFloat(document.getElementById('trans-harga').value);
+    const harga = parseRibuan(document.getElementById('trans-harga').value);
     const tanggal = document.getElementById('trans-tanggal').value;
     const isEWallet = document.getElementById('trans-ewallet-mode').value === '1';
 
@@ -4207,7 +4253,7 @@ function editTrxAset(idAset, idTrx) {
     setTimeout(() => {
         bukaModalTransaksiAset(idAset);
         setTimeout(() => {
-            document.getElementById('trans-harga').value = trx.harga;
+            document.getElementById('trans-harga').value = formatRibuan(trx.harga);
             document.getElementById('trans-tanggal').value = trx.tanggal;
             setJenisTransaksiAset(trx.jenis);
             const isEWallet = (aset.kategori || '').toLowerCase() === 'ewallet';
@@ -4233,6 +4279,28 @@ function lihatRiwayat(idAset) {
 
     document.getElementById('riwayat-aset-nama').textContent = aset.nama;
     document.getElementById('riwayat-aset-sub').textContent = kategoriLabel;
+
+    // Tampilkan avg harga beli khusus saham
+    const avgEl = document.getElementById('riwayat-avg-harga');
+    if (avgEl) {
+        const isSaham = (aset.kategori || '').toLowerCase() === 'saham';
+        if (isSaham) {
+            const allTrx = aset.transaksi || [];
+            const beliTrx = allTrx.filter(t => t.jenis === 'beli');
+            const totalLembarBeli = beliTrx.reduce((s, t) => s + (parseFloat(t.lembar) || 0), 0);
+            const totalNilaiBeli  = beliTrx.reduce((s, t) => s + ((parseFloat(t.harga) || 0) * (parseFloat(t.lembar) || 0)), 0);
+            const avgHarga = totalLembarBeli > 0 ? totalNilaiBeli / totalLembarBeli : 0;
+
+            avgEl.style.display = 'flex';
+            avgEl.innerHTML = `
+                <span style="font-size:12px;color:#888;">Avg. Harga Beli</span>
+                <span style="font-size:15px;font-weight:700;color:#1a1c21;">${formatCurrency(avgHarga)}<span style="font-size:11px;font-weight:400;color:#aaa;">/lembar</span></span>
+            `;
+        } else {
+            avgEl.style.display = 'none';
+            avgEl.innerHTML = '';
+        }
+    }
 
     const list = document.getElementById('riwayat-list');
     list.innerHTML = '';
@@ -4337,82 +4405,150 @@ function bukaModalAset() {
     if (catatanEl) catatanEl.value = '';
     if (counterEl) counterEl.textContent = '0';
     initializeAssetCategorySelect();
-    if (window.lucide) lucide.createIcons(); // Render ulang ikon Lucide
+    if (window.lucide) lucide.createIcons();
 }
 
-// Versi Upgrade Lengkap fungsi initializeAssetCategorySelect:
+// Floating dropdown — list di-render ke body agar tidak terpotong oleh overflow modal
+let _kategoriFloating = null;
+let _kategoriFloatingOpen = false;
+
+function tutupKategoriFloating() {
+    if (_kategoriFloating) {
+        _kategoriFloating.remove();
+        _kategoriFloating = null;
+    }
+    _kategoriFloatingOpen = false;
+}
+
 function initializeAssetCategorySelect() {
-    const container = document.getElementById('custom-kategori-aset');
-    const selectedDisplay = container.querySelector('.select-selected');
+    const container   = document.getElementById('custom-kategori-aset');
     const hiddenInput = document.getElementById('input-kategori');
-    const optionsContainer = container.querySelector('.select-items');
     const labelNamaAset = document.getElementById('label-nama-aset');
-    const inputNama = document.getElementById('input-nama');
+    const inputNama     = document.getElementById('input-nama');
 
     const optionsData = [
-        { value: 'Saham',     icon: 'bar-chart-2', label: 'Saham',        contoh: 'BBCA, BMRI, BBRI, BBNI' },
-        { value: 'Kripto',    icon: 'bitcoin',      label: 'Kripto',       contoh: 'BITCOIN, ETH, SOL' },
-        { value: 'Emas',      icon: 'cuboid',       label: 'Emas',         contoh: 'Antam, UBS' },
-        { value: 'Reksadana', icon: 'sprout',       label: 'Reksadana',    contoh: 'Bahana liquid plus, Schroder dana prestasi, Sucorinvest bond fund' },
+        { value: 'Saham',     icon: 'bar-chart-2', label: 'Saham',         contoh: 'BBCA, BMRI, BBRI, BBNI' },
+        { value: 'Kripto',    icon: 'bitcoin',      label: 'Kripto',        contoh: 'BITCOIN, ETH, SOL' },
+        { value: 'Emas',      icon: 'cuboid',       label: 'Emas',          contoh: 'Antam, UBS' },
+        { value: 'Reksadana', icon: 'sprout',       label: 'Reksadana',     contoh: 'Bahana liquid plus, Schroder dana prestasi' },
         { value: 'EWallet',   icon: 'landmark',     label: 'E-Wallet/Bank', contoh: 'GoPay, OVO, BCA, Mandiri' }
     ];
 
+    // Selalu ambil trigger terbaru (bukan dari closure lama)
+    function getTrigger() {
+        return document.querySelector('#custom-kategori-aset .select-selected');
+    }
+
     function setSelected(opt) {
-        // Bangun konten selected tanpa Lucide — pakai span placeholder ikon lalu createIcons
-        selectedDisplay.style.cssText = 'display:flex; align-items:center; padding:12px; border:1px solid #e1e4ea; border-radius:12px; cursor:pointer; gap:10px;';
-        selectedDisplay.innerHTML = `<i data-lucide="${opt.icon}" style="width:18px;height:18px;flex-shrink:0;"></i><span style="flex:1;">${opt.label}</span>`;
-        if (window.lucide) lucide.createIcons({ el: selectedDisplay });
-        // Paksa svg tetap inline-flex
-        const svg = selectedDisplay.querySelector('svg');
+        const t = getTrigger();
+        if (!t) return;
+        t.innerHTML = `<i data-lucide="${opt.icon}" style="width:18px;height:18px;flex-shrink:0;"></i><span style="flex:1;">${opt.label}</span>`;
+        if (window.lucide) lucide.createIcons({ el: t });
+        const svg = t.querySelector('svg');
         if (svg) svg.style.cssText = 'width:18px;height:18px;flex-shrink:0;display:block;';
     }
 
-    optionsContainer.innerHTML = '';
-    optionsData.forEach(opt => {
-        const div = document.createElement('div');
-        div.style.cssText = 'display:flex; align-items:center; gap:10px; padding:10px 12px; cursor:pointer;';
-        div.innerHTML = `<i data-lucide="${opt.icon}" style="width:18px;height:18px;flex-shrink:0;"></i><span>${opt.label}</span>`;
-        div.setAttribute('data-value', opt.value);
+    function openFloating() {
+        tutupKategoriFloating();
+        _kategoriFloatingOpen = true;
 
-        div.addEventListener('click', function() {
-            hiddenInput.value = opt.value;
-            labelNamaAset.innerText = opt.label;
-            inputNama.placeholder = opt.contoh;
-            setSelected(opt);
+        const t = getTrigger();
+        if (!t) return;
+        const rect = t.getBoundingClientRect();
 
-            // Show/hide section jenis reksadana
-            const sectionRD = document.getElementById('section-jenis-rd');
-            const sectionEW = document.getElementById('section-jenis-ewallet');
-            if (opt.value === 'Reksadana') {
-                sectionRD.style.display = 'block';
-                sectionEW.style.display = 'none';
-                document.getElementById('input-jenis-ewallet').value = '';
-                document.querySelectorAll('#ewallet-jenis-pills .rd-pill').forEach(p => p.classList.remove('active'));
-            } else if (opt.value === 'EWallet') {
-                sectionEW.style.display = 'block';
-                sectionRD.style.display = 'none';
-                document.getElementById('input-jenis-rd').value = '';
-                document.querySelectorAll('#rd-jenis-pills .rd-pill').forEach(p => p.classList.remove('active'));
-            } else {
-                sectionRD.style.display = 'none';
-                sectionEW.style.display = 'none';
-                document.getElementById('input-jenis-rd').value = '';
-                document.getElementById('input-jenis-ewallet').value = '';
-                document.querySelectorAll('.rd-pill').forEach(p => p.classList.remove('active'));
-            }
+        const list = document.createElement('div');
+        list.id = 'kategori-floating-list';
+        list.style.cssText = `
+            position: fixed;
+            top: ${rect.bottom + 6}px;
+            left: ${rect.left}px;
+            width: ${rect.width}px;
+            background: #fff;
+            border: 1px solid #e1e4ea;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            z-index: 99999;
+            overflow: hidden;
+        `;
 
-            optionsContainer.classList.add('select-hide');
-            container.classList.remove('select-active');
+        optionsData.forEach(opt => {
+            const div = document.createElement('div');
+            div.style.cssText = 'display:flex; align-items:center; gap:10px; padding:11px 14px; cursor:pointer; font-size:15px; color:#1a1c21; transition: background 0.15s;';
+            div.innerHTML = `<i data-lucide="${opt.icon}" style="width:18px;height:18px;flex-shrink:0;"></i><span>${opt.label}</span>`;
+
+            div.addEventListener('mouseenter', () => div.style.background = '#f5f5ff');
+            div.addEventListener('mouseleave', () => div.style.background = '');
+
+            div.addEventListener('click', (e) => {
+                e.stopPropagation();
+                hiddenInput.value = opt.value;
+                labelNamaAset.innerText = opt.label;
+                inputNama.placeholder = opt.contoh;
+                setSelected(opt);
+
+                const sectionRD = document.getElementById('section-jenis-rd');
+                const sectionEW = document.getElementById('section-jenis-ewallet');
+                if (opt.value === 'Reksadana') {
+                    sectionRD.style.display = 'block';
+                    sectionEW.style.display = 'none';
+                    document.getElementById('input-jenis-ewallet').value = '';
+                    document.querySelectorAll('#ewallet-jenis-pills .rd-pill').forEach(p => p.classList.remove('active'));
+                } else if (opt.value === 'EWallet') {
+                    sectionEW.style.display = 'block';
+                    sectionRD.style.display = 'none';
+                    document.getElementById('input-jenis-rd').value = '';
+                    document.querySelectorAll('#rd-jenis-pills .rd-pill').forEach(p => p.classList.remove('active'));
+                } else {
+                    sectionRD.style.display = 'none';
+                    sectionEW.style.display = 'none';
+                    document.getElementById('input-jenis-rd').value = '';
+                    document.getElementById('input-jenis-ewallet').value = '';
+                    document.querySelectorAll('.rd-pill').forEach(p => p.classList.remove('active'));
+                }
+                tutupKategoriFloating();
+            });
+            list.appendChild(div);
         });
-        optionsContainer.appendChild(div);
-    });
 
-    if (window.lucide) lucide.createIcons({ el: optionsContainer });
+        document.body.appendChild(list);
+        _kategoriFloating = list;
+        if (window.lucide) lucide.createIcons({ el: list });
 
-    selectedDisplay.onclick = (e) => {
-        e.stopPropagation();
-        optionsContainer.classList.toggle('select-hide');
-    };
+        setTimeout(() => {
+            document.addEventListener('click', function _close(e) {
+                if (!list.contains(e.target) && !getTrigger()?.contains(e.target)) {
+                    tutupKategoriFloating();
+                    document.removeEventListener('click', _close);
+                }
+            });
+        }, 0);
+    }
+
+    // Pasang listener langsung — tidak clone agar referensi DOM tetap valid
+    const t = getTrigger();
+    if (t) {
+        t.style.cssText = 'display:flex; align-items:center; padding:12px; border:1px solid #e1e4ea; border-radius:12px; cursor:pointer; gap:10px;';
+        // Hapus listener lama dengan replace onclick
+        t.onclick = (e) => {
+            e.stopPropagation();
+            if (_kategoriFloatingOpen) {
+                tutupKategoriFloating();
+            } else {
+                openFloating();
+            }
+        };
+    }
+
+    // Tutup floating saat klik backdrop modal
+    const modalEl = document.getElementById('modal-tambah-aset');
+    if (modalEl) {
+        modalEl.onclick = (e) => {
+            if (e.target === modalEl) {
+                tutupKategoriFloating();
+                tutupModalAset();
+            }
+        };
+    }
 
     // Setup pill listener jenis reksadana
     document.querySelectorAll('#rd-jenis-pills .rd-pill').forEach(pill => {
@@ -4454,6 +4590,151 @@ function selectTransactionType(type) {
 // ===== HALAMAN PROFIL/SAYA =====
 
 let kodeAksesVisible = false;
+
+// ===== BACKUP & RESTORE DATA =====
+const BACKUP_KEYS = [
+    'transaksi',
+    'myBudgetly_assets',
+    'myBudgetly_tugas',
+    'myBudgetly_todo',
+    'myBudgetly_catatan',
+    'myBudgetly_jadwal',
+    'myBudgetly_rutin',
+    'myBudgetly_voted_polls',
+    'appTitle',
+    'profilePhoto',
+    'colorTheme',
+    'customAccentColor',
+    'theme',
+];
+
+function backupSemuaData() {
+    const backup = {
+        _version: 1,
+        _tanggal: new Date().toISOString(),
+        _app: document.getElementById('app-title')?.textContent || 'MyBudgetly',
+    };
+
+    BACKUP_KEYS.forEach(key => {
+        const val = localStorage.getItem(key);
+        if (val !== null) backup[key] = val;
+    });
+
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const tgl  = new Date().toISOString().slice(0, 10);
+    const nama = (backup._app || 'MyBudgetly').replace(/\s/g, '-');
+
+    a.href     = url;
+    a.download = `${nama}-backup-${tgl}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showNotification('Backup berhasil diunduh!', 'success');
+}
+
+function restoreSemuaData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+
+            if (!data._version) {
+                showNotification('File backup tidak valid.', 'error');
+                return;
+            }
+
+            openConfirmationModal(
+                `Restore akan menimpa semua data saat ini dengan data dari backup tanggal ${(data._tanggal || '').slice(0, 10)}. Lanjutkan?`,
+                () => {
+                    BACKUP_KEYS.forEach(key => {
+                        if (data[key] !== undefined) {
+                            localStorage.setItem(key, data[key]);
+                        }
+                    });
+
+                    showNotification('Data berhasil direstore! Halaman akan dimuat ulang...', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                }
+            );
+        } catch {
+            showNotification('File tidak dapat dibaca. Pastikan file backup valid.', 'error');
+        }
+    };
+    reader.readAsText(file);
+    // Reset input agar bisa pilih file yang sama lagi
+    event.target.value = '';
+}
+// ==================================
+
+async function handleHapusAkun() {
+    const kode = localStorage.getItem('myAccessCode');
+    if (localStorage.getItem('isLoggedIn') !== 'true' || !kode) {
+        showNotification('Kamu harus login untuk menghapus akun.', 'error');
+        return;
+    }
+
+    openConfirmationModal(
+        '⚠️ Hapus akun PERMANEN — akun, semua sesi, dan pesan forum akan dihapus. Tindakan ini tidak bisa dibatalkan. Yakin?',
+        _eksekusiHapusAkun
+    );
+}
+
+async function _eksekusiHapusAkun() {
+    const kode     = localStorage.getItem('myAccessCode');
+    const username = localStorage.getItem('myUsername');
+
+    if (!kode) {
+        showNotification('Sesi tidak valid, silakan login ulang.', 'error');
+        return;
+    }
+
+    showNotification('Menghapus akun...', 'info');
+
+    try {
+        // 1. Hapus semua device terdaftar akun ini
+        await supabaseClient
+            .from('device_pelanggan')
+            .delete()
+            .eq('kode_pelanggan', kode);
+
+        // 2. Hapus pesan forum milik user ini
+        if (username) {
+            await supabaseClient
+                .from('forum_messages')
+                .delete()
+                .eq('username', username);
+        }
+
+        // 3. Hapus record akun dari tabel pelanggan
+        const { error } = await supabaseClient
+            .from('pelanggan')
+            .delete()
+            .eq('kode_akses', kode);
+
+        if (error) throw error;
+
+        // 4. Bersihkan semua data lokal
+        BACKUP_KEYS.forEach(key => localStorage.removeItem(key));
+        ['isLoggedIn', 'myAccessCode', 'myUsername', 'myDeviceId', 'activePageId', 'myBudgetlyDeviceId'].forEach(k => localStorage.removeItem(k));
+
+        showNotification('Akun berhasil dihapus. Sampai jumpa!', 'success');
+
+        // 5. Reload ke halaman awal
+        setTimeout(() => location.reload(), 1500);
+
+    } catch (err) {
+        console.error('Hapus akun gagal:', err);
+        showNotification('Gagal menghapus akun: ' + (err.message || 'Terjadi kesalahan.'), 'error');
+    }
+}
 
 function loadProfilPage() {
   const username = localStorage.getItem('myUsername') || '—';

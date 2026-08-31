@@ -228,7 +228,7 @@
 
           <div class="input-group">
             <label class="input-label" for="jumlah">Jumlah (Rp)</label>
-            <input type="number" id="jumlah" class="input-field" placeholder="500000" required />
+            <input type="text" id="jumlah" class="input-field" placeholder="500.000" inputmode="numeric" autocomplete="off" required />
             <div class="quick-amounts">
               <button type="button" class="quick-amount-btn" data-amount="50000">50K</button>
               <button type="button" class="quick-amount-btn" data-amount="100000">100K</button>
@@ -890,57 +890,86 @@
     </div>
   </div>
   <div id="page-saya" class="app-page" style="display: none;">
-    <div class="profil-page">
+    <div class="profil-page2">
 
-      <!-- Foto -->
-      <div class="profil-row profil-row-foto">
-        <span class="profil-label">Foto</span>
-        <div class="profil-avatar" onclick="document.getElementById('profil-photo-input').click()">
+      <!-- Header -->
+      <div class="profil2-header">
+        <div>
+          <h2 class="profil2-title">Pengaturan Akun</h2>
+          <p class="profil2-subtitle">Kelola informasi akun dan data Anda</p>
+        </div>
+        <div class="profil2-avatar" onclick="document.getElementById('profil-photo-input').click()" title="Ganti foto profil">
           <img id="profil-photo-display" class="profil-photo-img" alt="Foto Profil">
           <div id="profil-photo-placeholder" class="profil-photo-placeholder">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28" aria-hidden="true">
               <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
             </svg>
           </div>
         </div>
         <input type="file" id="profil-photo-input" style="display:none;" accept="image/*" onchange="handleProfilePhotoChange(event); syncProfilPhoto();">
       </div>
-      <div class="profil-divider"></div>
 
-      <!-- Username -->
-      <div class="profil-row">
-        <span class="profil-label">Username</span>
-        <span class="profil-value" id="profil-username-display">—</span>
-      </div>
-      <div class="profil-divider"></div>
-
-      <!-- Kode Akses -->
-      <div class="profil-row">
-        <span class="profil-label">Kode Akses</span>
-        <div class="profil-kode-right">
-          <span class="profil-value profil-kode-mono" id="profil-kode-text">••••••••</span>
-          <button class="profil-eye-btn" onclick="toggleKodeAkses()" aria-label="Toggle kode akses">
-            <i data-lucide="eye" id="profil-eye-icon" style="width:15px;height:15px;"></i>
-          </button>
+      <!-- INFORMASI AKUN -->
+      <div class="profil2-section-label">INFORMASI AKUN</div>
+      <div class="profil2-card">
+        <!-- Username -->
+        <div class="profil2-row">
+          <span class="profil2-row-label">Username</span>
+          <span class="profil2-row-value" id="profil-username-display">—</span>
+        </div>
+        <div class="profil2-divider"></div>
+        <!-- Kode Akses -->
+        <div class="profil2-row">
+          <span class="profil2-row-label">Kode Akses</span>
+          <div class="profil-kode-right">
+            <span class="profil2-row-value profil-kode-mono" id="profil-kode-text">••••••</span>
+            <button class="profil-eye-btn" onclick="toggleKodeAkses()" aria-label="Toggle kode akses">
+              <i data-lucide="eye" id="profil-eye-icon" style="width:15px;height:15px;"></i>
+            </button>
+          </div>
         </div>
       </div>
-      <div class="profil-divider"></div>
 
-      <!-- Pengaturan Akun heading -->
-      <div class="profil-section-heading">Pengaturan Akun</div>
-
-      <!-- Backup Data -->
-      <div class="profil-row profil-row-action" onclick="/* Coming Soon */">
-        <span class="profil-label">Backup Data</span>
-        <span class="profil-coming-soon">Segera Hadir</span>
+      <!-- PENGELOLAAN DATA -->
+      <div class="profil2-section-label">PENGELOLAAN DATA</div>
+      <div class="profil2-card">
+        <!-- Backup -->
+        <div class="profil2-row profil2-row-action" onclick="backupSemuaData()">
+          <div class="profil2-icon-wrap">
+            <i data-lucide="cloud-download" style="width:18px;height:18px;"></i>
+          </div>
+          <div class="profil2-row-text">
+            <span class="profil2-row-label">Backup Data</span>
+            <span class="profil2-row-desc">Unduh semua salinan data akun anda</span>
+          </div>
+        </div>
+        <div class="profil2-divider"></div>
+        <!-- Restore -->
+        <div class="profil2-row profil2-row-action" onclick="document.getElementById('restore-file-input').click()">
+          <div class="profil2-icon-wrap">
+            <i data-lucide="cloud-upload" style="width:18px;height:18px;"></i>
+          </div>
+          <div class="profil2-row-text">
+            <span class="profil2-row-label">Restore Data</span>
+            <span class="profil2-row-desc">Pulihkan data akun anda</span>
+          </div>
+        </div>
+        <input type="file" id="restore-file-input" style="display:none;" accept=".json" onchange="restoreSemuaData(event)">
       </div>
-      <div class="profil-divider"></div>
 
-      <!-- Hapus Akun -->
-      <div class="profil-row profil-row-action" onclick="/* Hapus Akun - Coming Soon */">
-        <span class="profil-label profil-label-danger">Hapus Akun</span>
+      <!-- HAPUS AKUN -->
+      <div class="profil2-section-label">HAPUS AKUN</div>
+      <div class="profil2-card">
+        <div class="profil2-row profil2-row-action" onclick="handleHapusAkun()">
+          <div class="profil2-icon-wrap profil2-icon-danger">
+            <i data-lucide="trash-2" style="width:18px;height:18px;"></i>
+          </div>
+          <div class="profil2-row-text">
+            <span class="profil2-row-label profil2-label-danger">Hapus Akun</span>
+            <span class="profil2-row-desc">Akun dan semua data Anda akan dihapus secara permanen.</span>
+          </div>
+        </div>
       </div>
-      <div class="profil-divider"></div>
 
       <!-- Logout -->
       <div class="profil-logout-wrap">
@@ -1286,8 +1315,9 @@
   </div>
 </nav>
 <div id="modal-tambah-aset" class="modal" style="display: none; z-index: 2000; align-items: center; justify-content: center;">
-    <div class="custom-modal-content">
-        <div class="custom-modal-header" style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+    <div class="custom-modal-content" style="display:flex; flex-direction:column; max-height:90vh; padding:0; overflow:hidden;">
+        <!-- Header -->
+        <div class="custom-modal-header" style="display: flex; align-items: center; gap: 16px; padding: 24px 24px 20px; flex-shrink:0;">
             <div style="width: 65px; height: 65px; background: #f0f5ff; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                 <img src="assets/portoaset.png" alt="Wallet" style="width: 70px; height: 70px; object-fit: contain;">
             </div>
@@ -1298,60 +1328,64 @@
             <button class="custom-close-btn" onclick="tutupModalAset()" style="background: #f7f7f9; border: none; padding: 8px; border-radius: 8px; cursor: pointer;">✕</button>
         </div>
 
-        <form id="form-aset" onsubmit="handleSimpanAset(event)">
-            <div class="custom-input-group" style="margin-bottom: 20px;">
-                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #1a1c21;">Kategori</label>
-                <div class="custom-select-container" id="custom-kategori-aset" style="width: 100%;">
-                    <div class="select-selected" style="display: flex; align-items: center; padding: 12px; border: 1px solid #e1e4ea; border-radius: 12px; cursor: pointer;">
-                        <i data-lucide="bar-chart-2" style="width: 18px; margin-right: 10px; color: #4a5568;"></i>
-                        <span style="flex: 1;">Saham</span>
+        <form id="form-aset" onsubmit="handleSimpanAset(event)" style="display:flex; flex-direction:column; flex:1; min-height:0;">
+            <!-- Scrollable area -->
+            <div class="aset-scroll" style="flex:1; overflow-y:auto; padding: 0 24px;">
+                <div class="custom-input-group" style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #1a1c21;">Kategori</label>
+                    <div class="custom-select-container" id="custom-kategori-aset" style="width: 100%;">
+                        <div class="select-selected" style="display: flex; align-items: center; padding: 12px; border: 1px solid #e1e4ea; border-radius: 12px; cursor: pointer;">
+                            <i data-lucide="bar-chart-2" style="width: 18px; margin-right: 10px; color: #4a5568;"></i>
+                            <span style="flex: 1;">Saham</span>
+                        </div>
+                        <div class="select-items select-hide" style="position: absolute; width: 100%; background: white; border: 1px solid #e1e4ea; border-radius: 12px; margin-top: 5px; z-index: 10;">
+                            <div data-value="Saham">Saham</div>
+                            <div data-value="Kripto">Kripto</div>
+                            <div data-value="Emas">Emas</div>
+                            <div data-value="Reksadana">Reksadana</div>
+                            <div data-value="EWallet">E-Wallet/Bank</div>
+                        </div>
                     </div>
-                    <div class="select-items select-hide" style="position: absolute; width: 100%; background: white; border: 1px solid #e1e4ea; border-radius: 12px; margin-top: 5px; z-index: 10;">
-                        <div data-value="Saham">Saham</div>
-                        <div data-value="Kripto">Kripto</div>
-                        <div data-value="Emas">Emas</div>
-                        <div data-value="Reksadana">Reksadana</div>
-                        <div data-value="EWallet">E-Wallet/Bank</div>
+                    <input type="hidden" id="input-kategori" value="Saham">
+                </div>
+
+                <div class="custom-input-group" style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #1a1c21;" id="label-nama-aset">Saham</label>
+                    <input type="text" id="input-nama" class="custom-input" placeholder="BBCA" required style="width: 100%; padding: 12px; border: 1px solid #e1e4ea; border-radius: 12px; box-sizing: border-box;">
+                </div>
+
+                <!-- Jenis Reksadana -->
+                <div id="section-jenis-rd" class="custom-input-group" style="display:none; margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #1a1c21;">Jenis Reksadana <span style="color:#ef4444;">*</span></label>
+                    <div class="rd-jenis-pills" id="rd-jenis-pills">
+                        <button type="button" class="rd-pill" data-jenis="Pasar Uang">Pasar Uang</button>
+                        <button type="button" class="rd-pill" data-jenis="Obligasi">Obligasi</button>
+                        <button type="button" class="rd-pill" data-jenis="Saham">Saham</button>
+                        <button type="button" class="rd-pill" data-jenis="Syariah">Syariah</button>
+                        <button type="button" class="rd-pill" data-jenis="Campuran">Campuran</button>
                     </div>
+                    <input type="hidden" id="input-jenis-rd" value="">
                 </div>
-                <input type="hidden" id="input-kategori" value="Saham">
-            </div>
 
-            <div class="custom-input-group" style="margin-bottom: 20px;">
-                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #1a1c21;" id="label-nama-aset">Saham</label>
-                <input type="text" id="input-nama" class="custom-input" placeholder="BBCA" required style="width: 100%; padding: 12px; border: 1px solid #e1e4ea; border-radius: 12px; box-sizing: border-box;">
-            </div>
-
-            <!-- Jenis Reksadana (hanya muncul saat kategori = Reksadana) -->
-            <div id="section-jenis-rd" class="custom-input-group" style="display:none; margin-bottom: 20px;">
-                <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #1a1c21;">Jenis Reksadana <span style="color:#ef4444;">*</span></label>
-                <div class="rd-jenis-pills" id="rd-jenis-pills">
-                    <button type="button" class="rd-pill" data-jenis="Pasar Uang">Pasar Uang</button>
-                    <button type="button" class="rd-pill" data-jenis="Obligasi">Obligasi</button>
-                    <button type="button" class="rd-pill" data-jenis="Saham">Saham</button>
-                    <button type="button" class="rd-pill" data-jenis="Syariah">Syariah</button>
-                    <button type="button" class="rd-pill" data-jenis="Campuran">Campuran</button>
+                <!-- Jenis E-Wallet/Bank -->
+                <div id="section-jenis-ewallet" class="custom-input-group" style="display:none; margin-bottom: 20px;">
+                    <div class="rd-jenis-pills" id="ewallet-jenis-pills">
+                        <button type="button" class="rd-pill" data-jenis="E-Wallet">E-Wallet</button>
+                        <button type="button" class="rd-pill" data-jenis="M-Banking">M-Banking</button>
+                        <button type="button" class="rd-pill" data-jenis="Bank Digital">Bank Digital</button>
+                    </div>
+                    <input type="hidden" id="input-jenis-ewallet" value="">
                 </div>
-                <input type="hidden" id="input-jenis-rd" value="">
-            </div>
 
-            <!-- Jenis E-Wallet/Bank (hanya muncul saat kategori = EWallet) -->
-            <div id="section-jenis-ewallet" class="custom-input-group" style="display:none; margin-bottom: 20px;">
-                <div class="rd-jenis-pills" id="ewallet-jenis-pills">
-                    <button type="button" class="rd-pill" data-jenis="E-Wallet">E-Wallet</button>
-                    <button type="button" class="rd-pill" data-jenis="M-Banking">M-Banking</button>
-                    <button type="button" class="rd-pill" data-jenis="Bank Digital">Bank Digital</button>
+                <div class="custom-input-group" style="margin-bottom: 8px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #1a1c21;">Catatan (Opsional)</label>
+                    <textarea id="input-catatan" class="custom-input" maxlength="40" placeholder="Tulis catatan Anda (opsional)..." style="width: 100%; height: 100px; padding: 12px; border: 1px solid #e1e4ea; border-radius: 12px; resize: none; box-sizing: border-box;"></textarea>
+                    <div style="text-align:right; font-size:11px; color:var(--text-muted); margin-top:4px;"><span id="catatan-counter">0</span>/40</div>
                 </div>
-                <input type="hidden" id="input-jenis-ewallet" value="">
             </div>
 
-            <div class="custom-input-group" style="margin-bottom: 24px;">
-                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #1a1c21;">Catatan (Opsional)</label>
-                <textarea id="input-catatan" class="custom-input" maxlength="40" placeholder="Tulis catatan Anda (opsional)..." style="width: 100%; height: 100px; padding: 12px; border: 1px solid #e1e4ea; border-radius: 12px; resize: none; box-sizing: border-box;"></textarea>
-                <div style="text-align:right; font-size:11px; color:var(--text-muted); margin-top:4px;"><span id="catatan-counter">0</span>/40</div>
-            </div>
-
-            <div style="display: flex; gap: 12px;">
+            <!-- Tombol sticky di bawah -->
+            <div style="display: flex; gap: 12px; padding: 16px 24px; border-top: 1px solid #f0f0f0; flex-shrink:0; background:#fff; border-radius: 0 0 24px 24px;">
                 <button type="button" onclick="tutupModalAset()" style="flex: 1; padding: 14px; background: #fff; border: 1px solid #e1e4ea; border-radius: 12px; font-weight: 600; cursor: pointer;">Batal</button>
                 <button type="submit" style="flex: 1; padding: 14px; background: #f0f2ff; border: none; border-radius: 12px; color: #4e4af2; font-weight: 600; cursor: pointer;">Simpan</button>
             </div>
@@ -1386,7 +1420,7 @@
           <label class="custom-label" id="trans-label-harga">Harga Beli Total (Rp)</label>
           <div style="position: relative;">
             <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-family: monospace; color: #555;">Rp</span>
-            <input type="number" id="trans-harga" class="custom-input" style="padding-left: 35px; font-family: monospace;" step="1" placeholder="0" required>
+            <input type="text" id="trans-harga" class="custom-input" style="padding-left: 35px; font-family: monospace;" inputmode="numeric" autocomplete="off" placeholder="0" required>
           </div>
         </div>
         
@@ -1425,6 +1459,7 @@
       </div>
       <button onclick="tutupModalRiwayat()" style="background:none;border:none;cursor:pointer;font-size:18px;color:#aaa;">✕</button>
     </div>
+    <div id="riwayat-avg-harga" style="display:none; flex-direction:column; gap:2px; padding:10px 20px; background:#f9fafb; border-bottom:1px solid #f0f0f0;"></div>
     <div id="riwayat-list" style="max-height:65vh; overflow-y:auto; padding:0 0 8px 0;"></div>
   </div>
 </div>

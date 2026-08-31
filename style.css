@@ -99,7 +99,7 @@
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--background-gradient);
+  background: var(--background);
   min-height: 100vh;
   color: var(--text-primary);
   font-size: 14px;
@@ -2859,9 +2859,27 @@ body {
 .app-page.active { display: block; }
 
 /* --- PORTOFOLIO CLEAN DESIGN (PERSIS GAMBAR) --- */
-.porto-header-section { margin-bottom: 25px; padding-top: 1.5rem; }
-.porto-main-title { font-size: 24px; font-weight: 800; color: #1a202c; letter-spacing: 0.5px; }
-.porto-main-subtitle { color: #718096; font-size: 14px; }
+.porto-header-section {
+  margin-bottom: 20px;
+  padding-top: 60px;
+}
+.porto-main-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+  margin: 0 0 4px;
+}
+.porto-main-subtitle {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .porto-header-section { padding-top: 50px; }
+  .porto-main-title { font-size: 20px; }
+}
 
 .porto-summary-white {
     background: #ffffff;
@@ -3186,6 +3204,10 @@ body {
   border-radius: 4px;
 }
 
+/* Scroll area dalam modal Tambah Aset — tanpa scrollbar terlihat */
+.aset-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+.aset-scroll::-webkit-scrollbar { display: none; }
+
 .custom-select-container .select-selected:hover {
   border-color: var(--text-secondary);
   background-color: var(--background-secondary);
@@ -3330,8 +3352,6 @@ html[data-warna-putih="true"]:not([data-theme="dark"]) h3.section-title svg {
 }
 
 #page-portofolio {
-    background-color: var(--background) !important;
-    min-height: 100vh;
     width: 100%;
 }
 /* Modal Wrapper agar posisi pas */
@@ -3544,6 +3564,154 @@ html[data-warna-putih="true"]:not([data-theme="dark"]) h3.section-title svg {
   display: flex;
   flex-direction: column;
 }
+
+/* ===== PROFIL v2 ===== */
+.profil-page2 {
+  padding: 16px 16px 120px;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Halaman Saya, Porto, Ruang, Forum — background putih (bukan gradient abu) */
+#page-saya,
+#page-portofolio,
+#page-ruang,
+#page-forum {
+  background: var(--background);
+  min-height: 100vh;
+}
+
+/* Header */
+.profil2-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 8px 0 24px;
+}
+.profil2-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+  letter-spacing: -0.02em;
+}
+.profil2-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.profil2-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.profil2-avatar:hover { opacity: 0.75; }
+
+/* Section labels */
+.profil2-section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 20px 4px 8px;
+}
+
+/* Card */
+.profil2-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+/* Row dalam card */
+.profil2-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  gap: 12px;
+  background: transparent;
+  transition: background 0.12s;
+}.profil2-row-action {
+  cursor: pointer;
+}
+.profil2-row-action:hover {
+  background: var(--background-secondary);
+}
+
+/* Divider dalam card */
+.profil2-divider {
+  height: 1px;
+  background: var(--border-light, var(--border));
+  margin: 0 16px;
+}
+
+/* Icon wrap */
+.profil2-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--background-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+.profil2-icon-danger {
+  background: rgba(239,68,68,0.08);
+  color: #ef4444;
+}
+
+/* Row text (label + desc) */
+.profil2-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.profil2-row-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.3;
+  flex: 1;
+}
+
+/* Kalau label ada di dalam row-text, jangan flex grow */
+.profil2-row-text .profil2-row-label {
+  flex: none;
+}
+.profil2-row-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+.profil2-label-danger {
+  color: #ef4444;
+}
+
+/* Value di kanan (username, kode) */
+.profil2-row-value {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
 
 /* ── Divider ── */
 .profil-divider {
