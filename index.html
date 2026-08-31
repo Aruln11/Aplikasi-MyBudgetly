@@ -1014,41 +1014,41 @@
             </div>
             <div class="profil2-row-text" style="flex:1;">
               <span class="profil2-row-label">Pengingat Tugas</span>
-              <span class="profil2-row-desc">Berapa hari sebelum deadline?</span>
+              <span class="profil2-row-desc">Notifikasi sebelum deadline</span>
             </div>
             <label class="profil2-toggle-wrap">
               <input type="checkbox" id="notif-tugas-toggle" onchange="notifSaveSettings()">
               <span class="profil2-toggle-slider"></span>
             </label>
           </div>
-          <!-- Input H-berapa -->
-          <div id="notif-tugas-options" style="padding:10px 0 4px 46px;width:100%;display:none;">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <span style="font-size:13px;color:var(--text-secondary);">H-</span>
+
+          <div id="notif-tugas-options" style="padding:12px 0 6px 46px;width:100%;display:none;">
+            <span style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Ingatkan saya</span>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
               <input
                 type="number"
-                id="notif-tugas-hmin"
-                min="0" max="365"
-                value="1"
-                style="width:64px;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--background-secondary);color:var(--text-primary);font-size:13px;font-family:inherit;"
+                id="notif-tugas-angka"
+                min="1" max="9999"
+                value="30"
+                style="width:70px;padding:7px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--background-secondary);color:var(--text-primary);font-size:14px;font-family:inherit;text-align:center;"
                 onchange="notifSaveSettings()"
               />
-              <span style="font-size:13px;color:var(--text-secondary);">hari sebelum deadline</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;">
-              <span style="font-size:13px;color:var(--text-secondary);">Di hari H jam:</span>
-              <input
-                type="time"
-                id="notif-tugas-jam-h"
-                value="08:00"
-                style="padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--background-secondary);color:var(--text-primary);font-size:13px;font-family:inherit;"
+              <select
+                id="notif-tugas-satuan"
+                style="padding:7px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--background-secondary);color:var(--text-primary);font-size:14px;font-family:inherit;cursor:pointer;"
                 onchange="notifSaveSettings()"
-              />
+              >
+                <option value="menit">Menit</option>
+                <option value="jam" selected>Jam</option>
+                <option value="hari">Hari</option>
+              </select>
+              <span style="font-size:13px;color:var(--text-secondary);">sebelum deadline</span>
             </div>
+            <p id="notif-tugas-preview" style="font-size:12px;color:var(--text-muted);margin-top:6px;min-height:16px;"></p>
             <button
               onclick="notifTestTugas()"
-              style="margin-top:10px;padding:7px 14px;border-radius:8px;border:1.5px solid var(--primary-accent-color);background:none;color:var(--primary-accent-color);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
-              🔔 Test Notifikasi
+              style="margin-top:8px;padding:8px 0;border-radius:8px;border:1.5px solid var(--border);background:var(--background-secondary);color:var(--text-primary);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;">
+              Kirim Test Notifikasi
             </button>
           </div>
         </div>

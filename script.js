@@ -5168,26 +5168,44 @@ function toggleKodeAkses() {
 const NOTIF_STORAGE_KEY = 'notifSettings';
 
 function notifGetSettings() {
-    const def = { master: false, tugas: false, tugasHMin: 1, tugasJamH: '08:00' };
+    const def = { master: false, tugas: false, tugasAngka: 30, tugasSatuan: 'jam' };
     try {
         return Object.assign(def, JSON.parse(localStorage.getItem(NOTIF_STORAGE_KEY) || '{}'));
     } catch(e) { return def; }
 }
 
+// Konversi angka + satuan ke milidetik
+function notifToMs(angka, satuan) {
+    const map = { menit: 60*1000, jam: 3600*1000, hari: 86400*1000 };
+    return angka * (map[satuan] || 3600*1000);
+}
+
+// Label singkat untuk preview dan notifikasi
+function notifLabel(angka, satuan) {
+    return `${angka} ${satuan}`;
+}
+
 function notifSaveSettings() {
+    const angkaEl  = document.getElementById('notif-tugas-angka');
+    const satuanEl = document.getElementById('notif-tugas-satuan');
     const s = {
-        master:     document.getElementById('notif-master-toggle')?.checked || false,
-        tugas:      document.getElementById('notif-tugas-toggle')?.checked  || false,
-        tugasHMin:  parseInt(document.getElementById('notif-tugas-hmin')?.value || '1', 10),
-        tugasJamH:  document.getElementById('notif-tugas-jam-h')?.value || '08:00',
+        master:      document.getElementById('notif-master-toggle')?.checked || false,
+        tugas:       document.getElementById('notif-tugas-toggle')?.checked  || false,
+        tugasAngka:  parseInt(angkaEl?.value || '30', 10),
+        tugasSatuan: satuanEl?.value || 'jam',
     };
     localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(s));
 
-    // Tampilkan/sembunyikan opsi detail tugas
+    // Tampilkan/sembunyikan opsi
     const optEl = document.getElementById('notif-tugas-options');
     if (optEl) optEl.style.display = (s.master && s.tugas) ? 'block' : 'none';
 
-    // Jadwalkan ulang semua notifikasi
+    // Update preview
+    const prevEl = document.getElementById('notif-tugas-preview');
+    if (prevEl && s.tugas) {
+        prevEl.textContent = `Notifikasi akan muncul ${notifLabel(s.tugasAngka, s.tugasSatuan)} sebelum deadline.`;
+    }
+
     notifScheduleAll();
 }
 
@@ -5195,21 +5213,24 @@ function notifLoadUI() {
     const s = notifGetSettings();
     const masterEl = document.getElementById('notif-master-toggle');
     const tugasEl  = document.getElementById('notif-tugas-toggle');
-    const hminEl   = document.getElementById('notif-tugas-hmin');
-    const jamHEl   = document.getElementById('notif-tugas-jam-h');
+    const angkaEl  = document.getElementById('notif-tugas-angka');
+    const satuanEl = document.getElementById('notif-tugas-satuan');
     const optEl    = document.getElementById('notif-tugas-options');
     const descEl   = document.getElementById('notif-permission-desc');
+    const prevEl   = document.getElementById('notif-tugas-preview');
 
     if (masterEl) masterEl.checked = s.master;
     if (tugasEl)  tugasEl.checked  = s.tugas;
-    if (hminEl)   hminEl.value     = s.tugasHMin;
-    if (jamHEl)   jamHEl.value     = s.tugasJamH;
+    if (angkaEl)  angkaEl.value    = s.tugasAngka;
+    if (satuanEl) satuanEl.value   = s.tugasSatuan;
     if (optEl)    optEl.style.display = (s.master && s.tugas) ? 'block' : 'none';
+    if (prevEl && s.tugas) {
+        prevEl.textContent = `Notifikasi akan muncul ${notifLabel(s.tugasAngka, s.tugasSatuan)} sebelum deadline.`;
+    }
 
-    // Update deskripsi status izin
     if (descEl) {
         const perm = Notification.permission;
-        if (perm === 'granted')  descEl.textContent = 'Notifikasi diizinkan ✓';
+        if (perm === 'granted')  descEl.textContent = 'Notifikasi diizinkan';
         else if (perm === 'denied') descEl.textContent = 'Notifikasi diblokir — ubah di pengaturan browser';
         else descEl.textContent = 'Izinkan app mengirim pengingat';
     }
@@ -5217,7 +5238,6 @@ function notifLoadUI() {
 
 async function notifHandleMasterToggle(el) {
     if (el.checked) {
-        // Minta izin browser
         const perm = await Notification.requestPermission();
         if (perm !== 'granted') {
             el.checked = false;
@@ -5230,18 +5250,30 @@ async function notifHandleMasterToggle(el) {
     notifLoadUI();
 }
 
-// Kirim push notification
-function notifKirim(judul, isi, tag) {
+// Format tanggal singkat: "Senin, 2 Sep 2026 08:00"
+function notifFormatDeadline(tanggal, jam) {
+    const d = new Date(`${tanggal}T${jam}`);
+    if (isNaN(d)) return `${tanggal} ${jam}`;
+    return d.toLocaleString('id-ID', {
+        weekday: 'long', day: 'numeric', month: 'short',
+        year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+}
+
+// Kirim push notification — format simpel seperti WhatsApp/IG
+function notifKirim(judulTugas, tanggal, jam, tag) {
     if (Notification.permission !== 'granted') return;
     const s = notifGetSettings();
     if (!s.master) return;
 
-    new Notification(judul, {
-        body: isi,
-        icon: '/assets/favicon-96x96.png',
+    const deadlineStr = notifFormatDeadline(tanggal, jam);
+
+    new Notification('MyBudgetly', {
+        body: `${judulTugas}\nDeadline: ${deadlineStr}`,
+        icon: '/assets/logo.png',
         badge: '/assets/favicon-96x96.png',
-        tag: tag || 'mybudgetly-notif',   // tag sama = notif lama diganti (tidak numpuk)
-        renotify: true,                    // suara berbunyi lagi walau tag sama
+        tag: tag || 'mybudgetly-notif',
+        renotify: true,
     });
 }
 
@@ -5255,17 +5287,14 @@ function notifScheduleAll() {
     if (!s.master || !s.tugas) return;
     if (Notification.permission !== 'granted') return;
 
-    // Reset catatan notif yang sudah terkirim kalau sudah hari baru
+    // Reset catatan tiap hari baru
     const hariIni = new Date().toDateString();
     if (localStorage.getItem('_notifSentDate') !== hariIni) {
         localStorage.setItem('_notifSentDate', hariIni);
         localStorage.setItem('_notifSent', JSON.stringify({}));
     }
 
-    // Cek langsung sekali saat dipanggil
     notifCekSekarang();
-
-    // Lalu cek setiap 30 detik selama app terbuka
     window._notifPollTimer = setInterval(notifCekSekarang, 30 * 1000);
 }
 
@@ -5274,11 +5303,12 @@ function notifCekSekarang() {
     if (!s.master || !s.tugas) return;
     if (Notification.permission !== 'granted') return;
 
-    // Ambil catatan notif yang sudah terkirim (supaya tidak kirim dobel)
     let sudahKirim = {};
     try { sudahKirim = JSON.parse(localStorage.getItem('_notifSent') || '{}'); } catch(e) {}
 
-    const sekarangMs = Date.now();
+    const sekarangMs  = Date.now();
+    const toleransiMs = 2 * 60 * 1000;
+    const offsetMs    = notifToMs(s.tugasAngka, s.tugasSatuan);
 
     dataTugas.forEach(tugas => {
         if (tugas.status === 'selesai') return;
@@ -5286,49 +5316,40 @@ function notifCekSekarang() {
 
         const deadlineMs = new Date(`${tugas.tanggal}T${tugas.jam}`).getTime();
         if (isNaN(deadlineMs)) return;
-        if (deadlineMs < sekarangMs - 2 * 60 * 1000) return; // sudah lewat >2 menit, skip
+        if (deadlineMs < sekarangMs) return; // sudah lewat deadline
 
-        // --- Notifikasi H-N ---
-        if (s.tugasHMin > 0) {
-            const hMinMs = deadlineMs - (s.tugasHMin * 24 * 60 * 60 * 1000);
-            const keyHMin = `hmin-${tugas.id}-${s.tugasHMin}`;
-            // Kirim kalau waktunya sudah tiba (toleransi ±2 menit) dan belum pernah kirim
-            if (!sudahKirim[keyHMin] && sekarangMs >= hMinMs && sekarangMs < hMinMs + 2 * 60 * 1000) {
-                notifKirim(
-                    `📋 Tugas: ${tugas.judul}`,
-                    `Deadline ${s.tugasHMin} hari lagi — ${tugas.tanggal} jam ${tugas.jam}${tugas.label ? ' · ' + tugas.label : ''}`,
-                    keyHMin
-                );
-                sudahKirim[keyHMin] = true;
-            }
-        }
+        // Waktu notifikasi = deadline - offset
+        const notifMs = deadlineMs - offsetMs;
+        const key     = `notif-${tugas.id}-${s.tugasAngka}-${s.tugasSatuan}`;
 
-        // --- Notifikasi tepat jam deadline ---
-        const keyDeadline = `deadline-${tugas.id}`;
-        if (!sudahKirim[keyDeadline] && sekarangMs >= deadlineMs && sekarangMs < deadlineMs + 2 * 60 * 1000) {
-            notifKirim(
-                `⏰ Deadline Sekarang: ${tugas.judul}`,
-                `Tugas harus dikumpulkan sekarang!${tugas.label ? ' · ' + tugas.label : ''}`,
-                keyDeadline
-            );
-            sudahKirim[keyDeadline] = true;
+        if (!sudahKirim[key]
+            && sekarangMs >= notifMs
+            && sekarangMs < notifMs + toleransiMs) {
+            notifKirim(tugas.judul, tugas.tanggal, tugas.jam, key);
+            sudahKirim[key] = true;
         }
     });
 
     localStorage.setItem('_notifSent', JSON.stringify(sudahKirim));
 }
 
-// Test notifikasi — langsung muncul sekarang
+// Test notifikasi — tampil langsung dengan format yang sama
 function notifTestTugas() {
     if (Notification.permission !== 'granted') {
         showNotification('Aktifkan notifikasi dulu!', 'error');
         return;
     }
-    notifKirim(
-        '🔔 Test Notifikasi MyBudgetly',
-        'Notifikasi tugas kamu sudah berfungsi dengan baik!',
-        'test-notif'
-    );
+    const s       = notifGetSettings();
+    const contoh  = new Date(Date.now() + notifToMs(s.tugasAngka, s.tugasSatuan));
+    const tgl     = contoh.toISOString().slice(0, 10);
+    const jam     = contoh.toTimeString().slice(0, 5);
+    new Notification('MyBudgetly', {
+        body:     `Contoh Tugas\nDeadline: ${notifFormatDeadline(tgl, jam)}`,
+        icon:     '/assets/logo.png',
+        badge:    '/assets/favicon-96x96.png',
+        tag:      'test-notif',
+        renotify: true,
+    });
 }
 
 // Panggil ini setiap kali simpan tugas baru/edit
