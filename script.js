@@ -4,6 +4,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let realtimeChannel = null;
+let realtimeAdminSettingChannel = null;
 
 let transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
 let editIndex = null;
@@ -388,6 +389,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   updateAuthUI();
   updateUI();
+  stmInitListeners();
+  stmApplyLoginState();
 
   // Restore halaman terakhir yang dibuka
   const savedPage = localStorage.getItem('activePageId');
@@ -2163,6 +2166,7 @@ async function handleLogin(event) {
         if (typeof startRealtimeSessionListener === 'function') {
             startRealtimeSessionListener();
         }
+        stmApplyLoginState();
 
     } catch (error) {
         console.error("Login Failed:", error.message);
@@ -2207,13 +2211,68 @@ async function startRealtimeSessionListener() {
             }
         )
         .subscribe();
+
+    // Listen perubahan pengaturan session timeout dari admin
+    startAdminSettingListener();
+}
+
+function startAdminSettingListener() {
+    if (realtimeAdminSettingChannel) {
+        supabaseClient.removeChannel(realtimeAdminSettingChannel);
+        realtimeAdminSettingChannel = null;
+    }
+
+    realtimeAdminSettingChannel = supabaseClient
+        .channel('admin-session-timeout')
+        .on(
+            'postgres_changes',
+            {
+                event: '*',
+                schema: 'public',
+                table: 'pengaturan_admin',
+                filter: `setting_fitur=eq.session timeout`
+            },
+            (payload) => {
+                if (!stmIsLoggedIn()) return;
+                const rawVal = payload.new?.value ?? '0:menit';
+                const secs   = stmParseToSeconds(rawVal);
+                _stmDurationSec = secs;
+                stmReset();
+                if (secs === 0) {
+                    showNotification('Session timeout dinonaktifkan oleh admin.', 'info', 4000);
+                } else {
+                    const { num, unit } = stmParseRaw(rawVal);
+                    showNotification(`Session timeout diubah: ${num} ${unit} tidak aktif.`, 'info', 4000);
+                }
+            }
+        )
+        .subscribe();
+}
+
+async function loadAdminSessionTimeout() {
+    try {
+        const { data } = await supabaseClient
+            .from('pengaturan_admin')
+            .select('value')
+            .eq('setting_fitur', 'session timeout')
+            .maybeSingle();
+        if (data && data.value) {
+            _stmDurationSec = stmParseToSeconds(data.value);
+        } else {
+            _stmDurationSec = 0;
+        }
+    } catch(e) { /* jaringan mati, abaikan */ }
 }
 
 async function forceLogout(message) {
     if (realtimeChannel) { 
-   supabaseClient.removeChannel(realtimeChannel);
-    realtimeChannel = null; 
-}
+        supabaseClient.removeChannel(realtimeChannel);
+        realtimeChannel = null; 
+    }
+    if (realtimeAdminSettingChannel) {
+        supabaseClient.removeChannel(realtimeAdminSettingChannel);
+        realtimeAdminSettingChannel = null;
+    }
 
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('myAccessCode');
@@ -2224,6 +2283,143 @@ async function forceLogout(message) {
     updateUI();     
 
     showNotification(message, 'error', 6000);
+    stmApplyLoginState();
+}
+
+// ===== SESSION TIMEOUT (Bank-style) =====
+// Satu timer idle. Setiap aktivitas user → reset penuh.
+// Kalau idle sampai (durasi - warnSec) → modal muncul tapi timer TETAP jalan.
+// Kalau user gerak saat modal terbuka → modal tutup + timer reset.
+// Kalau timer habis → langsung logout, tanpa ampun.
+
+let _stmIdleTimer   = null;   // setTimeout utama — reset setiap aktivitas
+let _stmTickTimer   = null;   // setInterval untuk countdown di modal
+let _stmDeadline    = 0;      // timestamp (ms) kapan timeout terjadi
+let _stmDurationSec = 0;      // 0 = nonaktif
+
+// Hitung warning window: 20% durasi, min 5 detik, max 60 detik
+function _stmWarnSec() {
+    return Math.min(60, Math.max(5, Math.floor(_stmDurationSec * 0.2)));
+}
+
+// Parse "30:menit" → detik
+function stmParseToSeconds(raw) {
+    if (!raw) return 0;
+    const parts = String(raw).split(':');
+    const num  = parseInt(parts[0], 10);
+    const unit = (parts[1] || 'menit').toLowerCase();
+    if (isNaN(num) || num <= 0) return 0;
+    const map = { detik: 1, menit: 60, jam: 3600, hari: 86400 };
+    return num * (map[unit] || 60);
+}
+
+// Parse "30:menit" → { num, unit }
+function stmParseRaw(raw) {
+    const parts = String(raw || '0:menit').split(':');
+    return { num: parseInt(parts[0], 10) || 0, unit: parts[1] || 'menit' };
+}
+
+function stmIsLoggedIn() {
+    return localStorage.getItem('isLoggedIn') === 'true';
+}
+
+// Dipanggil setiap ada aktivitas — ini inti dari logika bank
+function stmReset() {
+    if (!stmIsLoggedIn() || _stmDurationSec <= 0) {
+        clearTimeout(_stmIdleTimer);
+        clearInterval(_stmTickTimer);
+        _stmCloseModal();
+        return;
+    }
+
+    // Clear timer lama
+    clearTimeout(_stmIdleTimer);
+    clearInterval(_stmTickTimer);
+
+    // Tutup modal jika terbuka (user aktif lagi)
+    _stmCloseModal();
+
+    // Set deadline baru
+    _stmDeadline = Date.now() + _stmDurationSec * 1000;
+
+    // Timer utama: saat (durasi - warnSec) berlalu → tampilkan warning
+    const warnSec  = _stmWarnSec();
+    const waitMs   = Math.max((_stmDurationSec - warnSec) * 1000, 1000);
+
+    _stmIdleTimer = setTimeout(() => {
+        if (!stmIsLoggedIn()) return;
+        _stmShowWarning();
+    }, waitMs);
+}
+
+function _stmShowWarning() {
+    if (!stmIsLoggedIn()) return;
+
+    const modal   = document.getElementById('session-timeout-modal');
+    const countEl = document.getElementById('stm-countdown');
+    const barEl   = document.getElementById('stm-progress-bar');
+    if (!modal) return;
+
+    modal.classList.add('open');
+
+    // Tick setiap detik — hitung mundur dari deadline
+    clearInterval(_stmTickTimer);
+    _stmTickTimer = setInterval(() => {
+        const msLeft = Math.max(0, _stmDeadline - Date.now());
+        const secLeft = Math.ceil(msLeft / 1000);
+
+        if (countEl) countEl.textContent = secLeft;
+        const warnSec = _stmWarnSec();
+        const pct = Math.min(100, (msLeft / (warnSec * 1000)) * 100);
+        if (barEl) barEl.style.width = pct + '%';
+
+        if (msLeft <= 0) {
+            clearInterval(_stmTickTimer);
+            _stmCloseModal();
+            handleLogout().then(() => {
+                showNotification('Sesi berakhir karena tidak aktif.', 'info', 5000);
+            });
+        }
+    }, 250); // update setiap 250ms supaya akurat
+}
+
+function _stmCloseModal() {
+    const modal = document.getElementById('session-timeout-modal');
+    if (modal) modal.classList.remove('open');
+    clearInterval(_stmTickTimer);
+}
+
+// Tombol "Tetap Login" — reset timer
+function stmStayLoggedIn() { stmReset(); }
+
+// Tombol "Logout Sekarang"
+function stmLogoutNow() {
+    clearTimeout(_stmIdleTimer);
+    clearInterval(_stmTickTimer);
+    _stmCloseModal();
+    handleLogout().then(() => showNotification('Kamu telah logout.', 'info'));
+}
+
+// Pasang event listener — SEMUA aktivitas reset timer
+function stmInitListeners() {
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'touchmove', 'scroll', 'click', 'wheel'];
+    events.forEach(ev => {
+        document.addEventListener(ev, () => {
+            if (!stmIsLoggedIn() || _stmDurationSec <= 0) return;
+            stmReset();
+        }, { passive: true });
+    });
+}
+
+function stmApplyLoginState() {
+    if (stmIsLoggedIn()) {
+        loadAdminSessionTimeout().then(() => stmReset());
+    } else {
+        _stmDurationSec = 0;
+        clearTimeout(_stmIdleTimer);
+        clearInterval(_stmTickTimer);
+        _stmCloseModal();
+    }
 }
 
 async function handleLogout() {
@@ -2235,6 +2431,10 @@ async function handleLogout() {
   if (realtimeChannel) { 
     await supabaseClient.removeChannel(realtimeChannel);
     realtimeChannel = null; 
+  }
+  if (realtimeAdminSettingChannel) {
+    supabaseClient.removeChannel(realtimeAdminSettingChannel);
+    realtimeAdminSettingChannel = null;
   }
 
   try {
@@ -2255,6 +2455,7 @@ async function handleLogout() {
     showNotification('Anda telah logout.', 'info');
 
     document.getElementById('settings-menu').classList.remove('open');
+    stmApplyLoginState();
   }
 }
 
@@ -3012,7 +3213,13 @@ function renderJadwal() {
     hariTampil.forEach(h => {
         const cell = document.createElement('div');
         cell.style.cssText = 'flex:1;min-width:90px;padding:12px 8px;text-align:center;border-right:1px solid var(--border-light);';
-        cell.innerHTML = `<div style="font-size:13px;font-weight:700;color:var(--text-primary);">${h}</div>`;
+        const span = document.createElement('span');
+        span.className = 'jk-day-header-clickable';
+        span.textContent = h;
+        span.style.cssText = 'font-size:13px;font-weight:700;color:var(--text-primary);';
+        span.title = `Lihat jadwal ${h}`;
+        span.onclick = () => bukaModalJadwalHari(h);
+        cell.appendChild(span);
         header.appendChild(cell);
     });
     grid.appendChild(header);
@@ -3107,6 +3314,72 @@ function renderJadwal() {
     });
 
     grid.appendChild(body);
+}
+
+// ===== MODAL JADWAL HARI =====
+const palet_mjh = [
+    { bg: 'rgba(99,102,241,0.12)',  text: '#4338ca', border: '#6366f1' },
+    { bg: 'rgba(16,185,129,0.12)',  text: '#065f46', border: '#10b981' },
+    { bg: 'rgba(245,158,11,0.12)',  text: '#92400e', border: '#f59e0b' },
+    { bg: 'rgba(59,130,246,0.12)',  text: '#1e40af', border: '#3b82f6' },
+    { bg: 'rgba(236,72,153,0.12)',  text: '#9d174d', border: '#ec4899' },
+    { bg: 'rgba(139,92,246,0.12)',  text: '#5b21b6', border: '#8b5cf6' },
+    { bg: 'rgba(239,68,68,0.12)',   text: '#991b1b', border: '#ef4444' },
+    { bg: 'rgba(20,184,166,0.12)',  text: '#134e4a', border: '#14b8a6' },
+];
+
+function bukaModalJadwalHari(hari) {
+    const modal = document.getElementById('modal-jadwal-hari');
+    const title = document.getElementById('mjh-title');
+    const body  = document.getElementById('mjh-body');
+    if (!modal || !title || !body) return;
+
+    title.textContent = `Jadwal ${hari}`;
+    body.innerHTML = '';
+
+    const jadwalHari = (dataJadwal || [])
+        .filter(j => j.hari === hari && j.jamMulai)
+        .sort((a, b) => a.jamMulai.localeCompare(b.jamMulai));
+
+    if (jadwalHari.length === 0) {
+        body.innerHTML = `<div class="mjh-empty">Tidak ada jadwal untuk hari ${hari} 🗓️</div>`;
+    } else {
+        const namaList = [...new Set((dataJadwal || []).map(j => j.nama))];
+        const warnaMap = {};
+        namaList.forEach((n, i) => { warnaMap[n] = palet_mjh[i % palet_mjh.length]; });
+
+        jadwalHari.forEach(j => {
+            const w = warnaMap[j.nama] || palet_mjh[0];
+            const item = document.createElement('div');
+            item.className = 'mjh-item';
+            item.style.background = w.bg;
+            item.style.borderLeft = `3px solid ${w.border}`;
+            item.innerHTML = `
+                <div class="mjh-time-col" style="color:${w.text};">
+                    ${j.jamMulai}${j.jamSelesai ? '<br>' + j.jamSelesai : ''}
+                </div>
+                <div class="mjh-info-col">
+                    <div class="mjh-nama" style="color:${w.text};">${j.nama}</div>
+                    ${j.dosen ? `<div class="mjh-sub" style="color:${w.text};">👤 ${j.dosen}</div>` : ''}
+                    ${j.ruang  ? `<div class="mjh-sub" style="color:${w.text};">📍 ${j.ruang}</div>`  : ''}
+                </div>
+            `;
+            item.onclick = () => {
+                tutupModalJadwalHari();
+                lihatDetailJadwal(j.id);
+            };
+            body.appendChild(item);
+        });
+    }
+
+    modal.classList.add('open');
+    // Tutup saat klik luar panel
+    modal.onclick = (e) => { if (e.target === modal) tutupModalJadwalHari(); };
+}
+
+function tutupModalJadwalHari() {
+    const modal = document.getElementById('modal-jadwal-hari');
+    if (modal) modal.classList.remove('open');
 }
 
 
@@ -3808,6 +4081,14 @@ function switchTab(pageId, element) {
   // 5. Update tombol navigasi bawah
   document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
   if (element) element.classList.add('active');
+
+  // 6. Tampilkan hamburger menu hanya di beranda
+  const settingsMenuEl = document.getElementById('settings-menu');
+  if (settingsMenuEl) {
+    settingsMenuEl.style.display = pageId === 'home' ? '' : 'none';
+    // Tutup dropdown jika sedang terbuka
+    if (pageId !== 'home') settingsMenuEl.classList.remove('open');
+  }
 
   // Khusus Porto, jalankan render data
   if (pageId === 'portofolio') {

@@ -537,7 +537,68 @@ async function loadSettings() {
     if (limitSetting) {
         document.getElementById("input-default-limit").value = limitSetting.value;
     }
+
+    // Load session timeout
+    const { data: sessionSetting } = await supabaseClient
+        .from("pengaturan_admin")
+        .select("value")
+        .eq("setting_fitur", "session timeout")
+        .maybeSingle();
+    if (sessionSetting && sessionSetting.value) {
+        const parts = sessionSetting.value.split(':');
+        const numEl  = document.getElementById("input-session-timeout-val");
+        const unitEl = document.getElementById("select-session-timeout-unit");
+        if (numEl)  numEl.value  = parts[0] || '0';
+        if (unitEl) unitEl.value = parts[1] || 'menit';
+        // Trigger preview
+        if (typeof stmUpdatePreview === 'function') stmUpdatePreview();
+    }
 }
+
+async function saveSessionTimeout() {
+    const numEl   = document.getElementById("input-session-timeout-val");
+    const unitEl  = document.getElementById("select-session-timeout-unit");
+    const statusEl = document.getElementById("session-timeout-status");
+    if (!numEl || !unitEl) return;
+
+    const num  = parseInt(numEl.value || '0', 10);
+    const unit = unitEl.value; // detik | menit | jam | hari
+    const isOff = !num || num <= 0;
+    // Simpan format "30:menit" atau "0:menit" kalau nonaktif
+    const val = isOff ? "0:menit" : `${num}:${unit}`;
+
+    const { data: existing } = await supabaseClient
+        .from("pengaturan_admin")
+        .select("id")
+        .eq("setting_fitur", "session timeout")
+        .maybeSingle();
+
+    let error;
+    if (existing) {
+        ({ error } = await supabaseClient
+            .from("pengaturan_admin")
+            .update({ value: val, status: !isOff })
+            .eq("setting_fitur", "session timeout"));
+    } else {
+        ({ error } = await supabaseClient
+            .from("pengaturan_admin")
+            .insert({ setting_fitur: "session timeout", value: val, status: !isOff }));
+    }
+
+    if (!error) {
+        if (statusEl) {
+            const label = isOff
+                ? "Fitur dinonaktifkan."
+                : `Semua perangkat timeout setelah ${num} ${unit} tidak aktif.`;
+            statusEl.textContent = "✅ Tersimpan — " + label;
+            statusEl.style.display = "block";
+            setTimeout(() => { statusEl.style.display = "none"; }, 4000);
+        }
+    } else {
+        alert("Gagal menyimpan: " + error.message);
+    }
+}
+
 async function updateDefaultLimit() {
     const newLimit = document.getElementById("input-default-limit").value;
     if (!newLimit || newLimit < 1) return alert("Batas perangkat minimal 1!");

@@ -702,6 +702,34 @@
   </div>
 </div>
 
+<!-- Modal Session Timeout -->
+<div id="session-timeout-modal">
+  <div class="stm-panel">
+    <div class="stm-icon">⏳</div>
+    <div class="stm-title">Sesi Hampir Berakhir</div>
+    <div class="stm-desc">Kamu tidak aktif. Akan otomatis logout dalam:</div>
+    <div class="stm-countdown" id="stm-countdown">30</div>
+    <div class="stm-progress-wrap">
+      <div class="stm-progress-bar" id="stm-progress-bar" style="width:100%;"></div>
+    </div>
+    <div class="stm-btn-row">
+      <button class="stm-btn stay" onclick="stmStayLoggedIn()">Tetap Login</button>
+      <button class="stm-btn leave" onclick="stmLogoutNow()">Logout Sekarang</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Jadwal Hari -->
+<div id="modal-jadwal-hari">
+  <div class="mjh-panel">
+    <div class="mjh-header">
+      <span class="mjh-title" id="mjh-title">Jadwal Hari Ini</span>
+      <button class="mjh-close" onclick="tutupModalJadwalHari()">✕</button>
+    </div>
+    <div class="mjh-body" id="mjh-body"></div>
+  </div>
+</div>
+
 <!-- Modal Jadwal -->
   <div id="modal-jadwal" class="modal" style="display:none; z-index:2001;">
     <div class="ruang-modal-content">

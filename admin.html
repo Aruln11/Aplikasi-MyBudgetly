@@ -677,6 +677,49 @@
                     />
                   </div>
 
+                  <!-- Session Timeout -->
+                  <div
+                    class="setting-item"
+                    style="
+                      display: block;
+                      border-bottom: 1px solid #eee;
+                      margin-bottom: 1rem;
+                      padding-bottom: 1rem;
+                    "
+                  >
+                    <h4 style="margin-bottom: 8px">⏱️ Session Timeout Pelanggan</h4>
+                    <p style="font-size:0.8rem; color:var(--text-gray); margin-bottom:10px;">
+                      Durasi tidak aktif sebelum semua perangkat pelanggan otomatis logout. Isi <strong>0</strong> atau kosongkan untuk mematikan fitur ini.
+                    </p>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                      <input
+                        type="number"
+                        id="input-session-timeout-val"
+                        min="0"
+                        max="9999"
+                        placeholder="0"
+                        style="width:90px; padding:8px 10px; border-radius:8px; border:1px solid var(--border); font-size:14px;"
+                      />
+                      <select
+                        id="select-session-timeout-unit"
+                        style="flex:1; padding:8px 10px; border-radius:8px; border:1px solid var(--border); font-size:14px;"
+                      >
+                        <option value="detik">Detik</option>
+                        <option value="menit" selected>Menit</option>
+                        <option value="jam">Jam</option>
+                        <option value="hari">Hari</option>
+                      </select>
+                      <button
+                        class="btn-solid-black"
+                        onclick="saveSessionTimeout()"
+                      >
+                        Simpan
+                      </button>
+                    </div>
+                    <p id="session-timeout-preview" style="font-size:0.78rem; color:var(--text-gray); margin-top:6px;"></p>
+                    <p id="session-timeout-status" style="font-size:0.78rem; color:#16a34a; margin-top:4px; display:none;"></p>
+                  </div>
+
                   <div class="setting-item" style="display: block">
                     <div
                       style="
@@ -890,5 +933,26 @@
       </div>
     </div>
     <script src="admin.js"></script>
+    <script>
+      // Live preview session timeout
+      function stmUpdatePreview() {
+        const val  = parseInt(document.getElementById('input-session-timeout-val')?.value || '0', 10);
+        const unit = document.getElementById('select-session-timeout-unit')?.value || 'menit';
+        const prev = document.getElementById('session-timeout-preview');
+        if (!prev) return;
+        if (!val || val <= 0) {
+          prev.textContent = 'Fitur akan dinonaktifkan.';
+          prev.style.color = '#ef4444';
+        } else {
+          const labelMap = { detik: 'detik', menit: 'menit', jam: 'jam', hari: 'hari' };
+          prev.textContent = `Pelanggan akan logout setelah ${val} ${labelMap[unit]} tidak aktif.`;
+          prev.style.color = 'var(--text-gray)';
+        }
+      }
+      document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('input-session-timeout-val')?.addEventListener('input', stmUpdatePreview);
+        document.getElementById('select-session-timeout-unit')?.addEventListener('change', stmUpdatePreview);
+      });
+    </script>
   </body>
 </html>
