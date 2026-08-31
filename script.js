@@ -5307,7 +5307,8 @@ function notifCekSekarang() {
     try { sudahKirim = JSON.parse(localStorage.getItem('_notifSent') || '{}'); } catch(e) {}
 
     const sekarangMs  = Date.now();
-    const toleransiMs = 2 * 60 * 1000;
+    // Ganti batas toleransi dari 2 menit menjadi 24 jam agar notif tidak cepat basi
+    const BATAS_TOLERANSI = 24 * 60 * 60 * 1000; 
     const offsetMs    = notifToMs(s.tugasAngka, s.tugasSatuan);
 
     dataTugas.forEach(tugas => {
@@ -5316,17 +5317,31 @@ function notifCekSekarang() {
 
         const deadlineMs = new Date(`${tugas.tanggal}T${tugas.jam}`).getTime();
         if (isNaN(deadlineMs)) return;
-        if (deadlineMs < sekarangMs) return; // sudah lewat deadline
-
-        // Waktu notifikasi = deadline - offset
+        
+        // --- 1. Notifikasi Pengingat Custom (X Menit/Jam/Hari Sebelum) ---
         const notifMs = deadlineMs - offsetMs;
-        const key     = `notif-${tugas.id}-${s.tugasAngka}-${s.tugasSatuan}`;
+        const keyCustom = `notif-${tugas.id}-${s.tugasAngka}-${s.tugasSatuan}`;
 
-        if (!sudahKirim[key]
-            && sekarangMs >= notifMs
-            && sekarangMs < notifMs + toleransiMs) {
-            notifKirim(tugas.judul, tugas.tanggal, tugas.jam, key);
-            sudahKirim[key] = true;
+        if (!sudahKirim[keyCustom] && sekarangMs >= notifMs && sekarangMs < notifMs + BATAS_TOLERANSI) {
+            notifKirim(
+                `📋 Pengingat: ${tugas.judul}`, 
+                tugas.tanggal, 
+                tugas.jam, 
+                keyCustom
+            );
+            sudahKirim[keyCustom] = true;
+        }
+
+        // --- 2. Notifikasi Tepat Saat Deadline ---
+        const keyDeadline = `deadline-${tugas.id}`;
+        if (!sudahKirim[keyDeadline] && sekarangMs >= deadlineMs && sekarangMs < deadlineMs + BATAS_TOLERANSI) {
+            notifKirim(
+                `⏰ Deadline Sekarang: ${tugas.judul}`,
+                tugas.tanggal,
+                tugas.jam,
+                keyDeadline
+            );
+            sudahKirim[keyDeadline] = true;
         }
     });
 
