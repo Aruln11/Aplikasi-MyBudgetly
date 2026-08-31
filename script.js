@@ -390,6 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
   updateAuthUI();
   updateUI();
   stmInitListeners();
+  hbInitVisibilityListener();
   stmApplyLoginState();
 
   // Restore halaman terakhir yang dibuka
@@ -2167,6 +2168,7 @@ async function handleLogin(event) {
             startRealtimeSessionListener();
         }
         stmApplyLoginState();
+        notifScheduleAll();
 
     } catch (error) {
         console.error("Login Failed:", error.message);
@@ -2264,6 +2266,94 @@ async function loadAdminSessionTimeout() {
     } catch(e) { /* jaringan mati, abaikan */ }
 }
 
+// ===== HEARTBEAT + EXPIRY CHECK =====
+// Heartbeat: update terhubung_pada ke Supabase setiap HEARTBEAT_INTERVAL ms
+// Expiry check: saat app dibuka / tab aktif kembali, cek apakah sesi sudah expired di DB
+
+const HEARTBEAT_INTERVAL = 2 * 60 * 1000; // 2 menit
+let _heartbeatTimer = null;
+
+async function hbSendHeartbeat() {
+    if (!stmIsLoggedIn()) return;
+    const deviceId = getDeviceId();
+    const now = new Date().toLocaleString("sv-SE").replace(' ', 'T');
+    try {
+        await supabaseClient
+            .from('device_pelanggan')
+            .update({ terhubung_pada: now })
+            .eq('device_id', deviceId);
+    } catch(e) { /* abaikan, coba lagi di interval berikutnya */ }
+}
+
+function hbStartHeartbeat() {
+    hbStopHeartbeat();
+    if (!stmIsLoggedIn()) return;
+    // Kirim langsung sekali, lalu setiap interval
+    hbSendHeartbeat();
+    _heartbeatTimer = setInterval(() => {
+        hbSendHeartbeat();
+        // Sekalian cek apakah device masih ada di DB (antisipasi dihapus pg_cron)
+        hbCheckExpiry();
+    }, HEARTBEAT_INTERVAL);
+}
+
+function hbStopHeartbeat() {
+    clearInterval(_heartbeatTimer);
+    _heartbeatTimer = null;
+}
+
+async function hbCheckExpiry() {
+    // Dipanggil saat: app pertama load, tab kembali aktif (visibilitychange)
+    if (!stmIsLoggedIn()) return;
+
+    const deviceId = getDeviceId();
+    try {
+        const { data } = await supabaseClient
+            .from('device_pelanggan')
+            .select('terhubung_pada')
+            .eq('device_id', deviceId)
+            .maybeSingle();
+
+        // Kalau device tidak ditemukan di DB → berarti sudah dihapus (expired atau admin hapus)
+        if (!data) {
+            hbStopHeartbeat();
+            clearTimeout(_stmIdleTimer);
+            clearInterval(_stmTickTimer);
+            _stmCloseModal();
+            await forceLogout('Sesi Anda telah berakhir. Silakan login kembali.');
+            return;
+        }
+
+        // Kalau timeout dinonaktifkan (durasi = 0), skip cek expiry
+        if (_stmDurationSec <= 0) return;
+
+        // Cek apakah sudah melewati batas timeout
+        const lastActive = new Date(data.terhubung_pada).getTime();
+        const elapsedSec = (Date.now() - lastActive) / 1000;
+
+        if (elapsedSec > _stmDurationSec) {
+            // Sesi expired — logout langsung tanpa modal
+            hbStopHeartbeat();
+            clearTimeout(_stmIdleTimer);
+            clearInterval(_stmTickTimer);
+            _stmCloseModal();
+            await forceLogout('Sesi berakhir karena tidak aktif terlalu lama.');
+        }
+    } catch(e) { /* abaikan */ }
+}
+
+function hbInitVisibilityListener() {
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            // Tab kembali aktif — cek apakah sudah expired
+            hbCheckExpiry().then(() => {
+                // Kalau masih aktif, reset timer idle
+                if (stmIsLoggedIn()) stmReset();
+            });
+        }
+    });
+}
+
 async function forceLogout(message) {
     if (realtimeChannel) { 
         supabaseClient.removeChannel(realtimeChannel);
@@ -2273,6 +2363,7 @@ async function forceLogout(message) {
         supabaseClient.removeChannel(realtimeAdminSettingChannel);
         realtimeAdminSettingChannel = null;
     }
+    hbStopHeartbeat();
 
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('myAccessCode');
@@ -2413,9 +2504,17 @@ function stmInitListeners() {
 
 function stmApplyLoginState() {
     if (stmIsLoggedIn()) {
-        loadAdminSessionTimeout().then(() => stmReset());
+        loadAdminSessionTimeout().then(() => {
+            hbCheckExpiry().then(() => {
+                if (stmIsLoggedIn()) {
+                    hbStartHeartbeat();
+                    stmReset();
+                }
+            });
+        });
     } else {
         _stmDurationSec = 0;
+        hbStopHeartbeat();
         clearTimeout(_stmIdleTimer);
         clearInterval(_stmTickTimer);
         _stmCloseModal();
@@ -2436,6 +2535,7 @@ async function handleLogout() {
     supabaseClient.removeChannel(realtimeAdminSettingChannel);
     realtimeAdminSettingChannel = null;
   }
+  hbStopHeartbeat();
 
   try {
     if (codeToRelease) {
@@ -2959,6 +3059,7 @@ function simpanTugas() {
     tutupModalTugas();
     renderRuangKalender();
     showNotification('Tugas disimpan!', 'success');
+    notifOnTugasSaved();
 }
 
 function hapusTugas(id) {
@@ -5024,13 +5125,13 @@ function loadProfilPage() {
   const nameEl = document.getElementById('profil-username-display');
   if (nameEl) nameEl.textContent = username;
 
-  // profil-username-value removed in new layout, only display exists
   const valueEl = document.getElementById('profil-username-value');
   if (valueEl) valueEl.textContent = username;
 
   kodeAksesVisible = false;
   updateKodeAksesDisplay(kodeAkses);
   syncProfilPhoto();
+  notifLoadUI();
   if (window.lucide) lucide.createIcons();
 }
 
@@ -5058,6 +5159,159 @@ function toggleKodeAkses() {
   kodeAksesVisible = !kodeAksesVisible;
   const kode = localStorage.getItem('myAccessCode') || '';
   updateKodeAksesDisplay(kode);
+}
+
+// ===== NOTIFIKASI TUGAS =====
+// Pengaturan disimpan di localStorage dengan key 'notifSettings'
+// Format: { master: bool, tugas: bool, tugasHMin: number, tugasJamH: "HH:MM" }
+
+const NOTIF_STORAGE_KEY = 'notifSettings';
+
+function notifGetSettings() {
+    const def = { master: false, tugas: false, tugasHMin: 1, tugasJamH: '08:00' };
+    try {
+        return Object.assign(def, JSON.parse(localStorage.getItem(NOTIF_STORAGE_KEY) || '{}'));
+    } catch(e) { return def; }
+}
+
+function notifSaveSettings() {
+    const s = {
+        master:     document.getElementById('notif-master-toggle')?.checked || false,
+        tugas:      document.getElementById('notif-tugas-toggle')?.checked  || false,
+        tugasHMin:  parseInt(document.getElementById('notif-tugas-hmin')?.value || '1', 10),
+        tugasJamH:  document.getElementById('notif-tugas-jam-h')?.value || '08:00',
+    };
+    localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(s));
+
+    // Tampilkan/sembunyikan opsi detail tugas
+    const optEl = document.getElementById('notif-tugas-options');
+    if (optEl) optEl.style.display = (s.master && s.tugas) ? 'block' : 'none';
+
+    // Jadwalkan ulang semua notifikasi
+    notifScheduleAll();
+}
+
+function notifLoadUI() {
+    const s = notifGetSettings();
+    const masterEl = document.getElementById('notif-master-toggle');
+    const tugasEl  = document.getElementById('notif-tugas-toggle');
+    const hminEl   = document.getElementById('notif-tugas-hmin');
+    const jamHEl   = document.getElementById('notif-tugas-jam-h');
+    const optEl    = document.getElementById('notif-tugas-options');
+    const descEl   = document.getElementById('notif-permission-desc');
+
+    if (masterEl) masterEl.checked = s.master;
+    if (tugasEl)  tugasEl.checked  = s.tugas;
+    if (hminEl)   hminEl.value     = s.tugasHMin;
+    if (jamHEl)   jamHEl.value     = s.tugasJamH;
+    if (optEl)    optEl.style.display = (s.master && s.tugas) ? 'block' : 'none';
+
+    // Update deskripsi status izin
+    if (descEl) {
+        const perm = Notification.permission;
+        if (perm === 'granted')  descEl.textContent = 'Notifikasi diizinkan ✓';
+        else if (perm === 'denied') descEl.textContent = 'Notifikasi diblokir — ubah di pengaturan browser';
+        else descEl.textContent = 'Izinkan app mengirim pengingat';
+    }
+}
+
+async function notifHandleMasterToggle(el) {
+    if (el.checked) {
+        // Minta izin browser
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') {
+            el.checked = false;
+            showNotification('Notifikasi diblokir. Ubah izin di pengaturan browser.', 'error', 4000);
+            return;
+        }
+        showNotification('Notifikasi diaktifkan!', 'success');
+    }
+    notifSaveSettings();
+    notifLoadUI();
+}
+
+// Kirim push notification
+function notifKirim(judul, isi, tag) {
+    if (Notification.permission !== 'granted') return;
+    const s = notifGetSettings();
+    if (!s.master) return;
+
+    new Notification(judul, {
+        body: isi,
+        icon: '/assets/favicon-96x96.png',
+        badge: '/assets/favicon-96x96.png',
+        tag: tag || 'mybudgetly-notif',   // tag sama = notif lama diganti (tidak numpuk)
+        renotify: true,                    // suara berbunyi lagi walau tag sama
+    });
+}
+
+// Jadwalkan semua notifikasi tugas — dipanggil saat: login, simpan tugas, ubah setting
+function notifScheduleAll() {
+    // Bersihkan semua timer notifikasi lama
+    if (window._notifTimers) window._notifTimers.forEach(t => clearTimeout(t));
+    window._notifTimers = [];
+
+    const s = notifGetSettings();
+    if (!s.master || !s.tugas) return;
+    if (Notification.permission !== 'granted') return;
+
+    const sekarang = Date.now();
+
+    dataTugas.forEach(tugas => {
+        // Skip tugas yang sudah selesai atau tidak punya tanggal & jam
+        if (tugas.status === 'selesai') return;
+        if (!tugas.tanggal || !tugas.jam) return;
+
+        const deadlineMs = new Date(`${tugas.tanggal}T${tugas.jam}`).getTime();
+        if (isNaN(deadlineMs)) return;
+
+        // --- Notifikasi H-N (N hari sebelum deadline) ---
+        if (s.tugasHMin > 0) {
+            const hMinMs = deadlineMs - (s.tugasHMin * 24 * 60 * 60 * 1000);
+            const selisihHMin = hMinMs - sekarang;
+            if (selisihHMin > 0) {
+                const t = setTimeout(() => {
+                    notifKirim(
+                        `📋 Tugas: ${tugas.judul}`,
+                        `Deadline ${s.tugasHMin} hari lagi — ${tugas.tanggal} jam ${tugas.jam}${tugas.label ? ' · ' + tugas.label : ''}`,
+                        `tugas-hmin-${tugas.id}`
+                    );
+                }, selisihHMin);
+                window._notifTimers.push(t);
+            }
+        }
+
+        // --- Notifikasi tepat di jam deadline ---
+        const selisihDeadline = deadlineMs - sekarang;
+        if (selisihDeadline > 0) {
+            const t = setTimeout(() => {
+                notifKirim(
+                    `⏰ Deadline Sekarang: ${tugas.judul}`,
+                    `Tugas harus dikumpulkan sekarang!${tugas.label ? ' · ' + tugas.label : ''}`,
+                    `tugas-deadline-${tugas.id}`
+                );
+            }, selisihDeadline);
+            window._notifTimers.push(t);
+        }
+    });
+}
+
+// Test notifikasi — langsung muncul sekarang
+function notifTestTugas() {
+    if (Notification.permission !== 'granted') {
+        showNotification('Aktifkan notifikasi dulu!', 'error');
+        return;
+    }
+    notifKirim(
+        '🔔 Test Notifikasi MyBudgetly',
+        'Notifikasi tugas kamu sudah berfungsi dengan baik!',
+        'test-notif'
+    );
+}
+
+// Panggil ini setiap kali simpan tugas baru/edit
+function notifOnTugasSaved() {
+    notifScheduleAll();
 }
 
 function syncProfilPhoto() {

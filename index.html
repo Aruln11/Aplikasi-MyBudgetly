@@ -985,6 +985,76 @@
         <input type="file" id="restore-file-input" style="display:none;" accept=".json" onchange="restoreSemuaData(event)">
       </div>
 
+      <!-- NOTIFIKASI -->
+      <div class="profil2-section-label">NOTIFIKASI</div>
+      <div class="profil2-card">
+
+        <!-- Aktifkan Notifikasi -->
+        <div class="profil2-row">
+          <div class="profil2-icon-wrap">
+            <i data-lucide="bell" style="width:18px;height:18px;"></i>
+          </div>
+          <div class="profil2-row-text">
+            <span class="profil2-row-label">Aktifkan Notifikasi</span>
+            <span class="profil2-row-desc" id="notif-permission-desc">Izinkan app mengirim pengingat</span>
+          </div>
+          <label class="profil2-toggle-wrap">
+            <input type="checkbox" id="notif-master-toggle" onchange="notifHandleMasterToggle(this)">
+            <span class="profil2-toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="profil2-divider"></div>
+
+        <!-- Pengingat Tugas -->
+        <div class="profil2-row profil2-row-stacked" id="notif-tugas-row">
+          <div style="display:flex;align-items:center;gap:12px;width:100%;">
+            <div class="profil2-icon-wrap">
+              <i data-lucide="clipboard-list" style="width:18px;height:18px;"></i>
+            </div>
+            <div class="profil2-row-text" style="flex:1;">
+              <span class="profil2-row-label">Pengingat Tugas</span>
+              <span class="profil2-row-desc">Berapa hari sebelum deadline?</span>
+            </div>
+            <label class="profil2-toggle-wrap">
+              <input type="checkbox" id="notif-tugas-toggle" onchange="notifSaveSettings()">
+              <span class="profil2-toggle-slider"></span>
+            </label>
+          </div>
+          <!-- Input H-berapa -->
+          <div id="notif-tugas-options" style="padding:10px 0 4px 46px;width:100%;display:none;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:13px;color:var(--text-secondary);">H-</span>
+              <input
+                type="number"
+                id="notif-tugas-hmin"
+                min="0" max="365"
+                value="1"
+                style="width:64px;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--background-secondary);color:var(--text-primary);font-size:13px;font-family:inherit;"
+                onchange="notifSaveSettings()"
+              />
+              <span style="font-size:13px;color:var(--text-secondary);">hari sebelum deadline</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;">
+              <span style="font-size:13px;color:var(--text-secondary);">Di hari H jam:</span>
+              <input
+                type="time"
+                id="notif-tugas-jam-h"
+                value="08:00"
+                style="padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--background-secondary);color:var(--text-primary);font-size:13px;font-family:inherit;"
+                onchange="notifSaveSettings()"
+              />
+            </div>
+            <button
+              onclick="notifTestTugas()"
+              style="margin-top:10px;padding:7px 14px;border-radius:8px;border:1.5px solid var(--primary-accent-color);background:none;color:var(--primary-accent-color);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
+              🔔 Test Notifikasi
+            </button>
+          </div>
+        </div>
+
+      </div>
+
       <!-- HAPUS AKUN -->
       <div class="profil2-section-label">HAPUS AKUN</div>
       <div class="profil2-card">
