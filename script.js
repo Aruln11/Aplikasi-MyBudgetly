@@ -5247,53 +5247,75 @@ function notifKirim(judul, isi, tag) {
 
 // Jadwalkan semua notifikasi tugas — dipanggil saat: login, simpan tugas, ubah setting
 function notifScheduleAll() {
-    // Bersihkan semua timer notifikasi lama
-    if (window._notifTimers) window._notifTimers.forEach(t => clearTimeout(t));
-    window._notifTimers = [];
+    // Hentikan polling lama kalau ada
+    if (window._notifPollTimer) clearInterval(window._notifPollTimer);
+    window._notifPollTimer = null;
 
     const s = notifGetSettings();
     if (!s.master || !s.tugas) return;
     if (Notification.permission !== 'granted') return;
 
-    const sekarang = Date.now();
+    // Reset catatan notif yang sudah terkirim kalau sudah hari baru
+    const hariIni = new Date().toDateString();
+    if (localStorage.getItem('_notifSentDate') !== hariIni) {
+        localStorage.setItem('_notifSentDate', hariIni);
+        localStorage.setItem('_notifSent', JSON.stringify({}));
+    }
+
+    // Cek langsung sekali saat dipanggil
+    notifCekSekarang();
+
+    // Lalu cek setiap 30 detik selama app terbuka
+    window._notifPollTimer = setInterval(notifCekSekarang, 30 * 1000);
+}
+
+function notifCekSekarang() {
+    const s = notifGetSettings();
+    if (!s.master || !s.tugas) return;
+    if (Notification.permission !== 'granted') return;
+
+    // Ambil catatan notif yang sudah terkirim (supaya tidak kirim dobel)
+    let sudahKirim = {};
+    try { sudahKirim = JSON.parse(localStorage.getItem('_notifSent') || '{}'); } catch(e) {}
+
+    const sekarangMs = Date.now();
 
     dataTugas.forEach(tugas => {
-        // Skip tugas yang sudah selesai atau tidak punya tanggal & jam
         if (tugas.status === 'selesai') return;
         if (!tugas.tanggal || !tugas.jam) return;
 
         const deadlineMs = new Date(`${tugas.tanggal}T${tugas.jam}`).getTime();
         if (isNaN(deadlineMs)) return;
+        if (deadlineMs < sekarangMs - 2 * 60 * 1000) return; // sudah lewat >2 menit, skip
 
-        // --- Notifikasi H-N (N hari sebelum deadline) ---
+        // --- Notifikasi H-N ---
         if (s.tugasHMin > 0) {
             const hMinMs = deadlineMs - (s.tugasHMin * 24 * 60 * 60 * 1000);
-            const selisihHMin = hMinMs - sekarang;
-            if (selisihHMin > 0) {
-                const t = setTimeout(() => {
-                    notifKirim(
-                        `📋 Tugas: ${tugas.judul}`,
-                        `Deadline ${s.tugasHMin} hari lagi — ${tugas.tanggal} jam ${tugas.jam}${tugas.label ? ' · ' + tugas.label : ''}`,
-                        `tugas-hmin-${tugas.id}`
-                    );
-                }, selisihHMin);
-                window._notifTimers.push(t);
+            const keyHMin = `hmin-${tugas.id}-${s.tugasHMin}`;
+            // Kirim kalau waktunya sudah tiba (toleransi ±2 menit) dan belum pernah kirim
+            if (!sudahKirim[keyHMin] && sekarangMs >= hMinMs && sekarangMs < hMinMs + 2 * 60 * 1000) {
+                notifKirim(
+                    `📋 Tugas: ${tugas.judul}`,
+                    `Deadline ${s.tugasHMin} hari lagi — ${tugas.tanggal} jam ${tugas.jam}${tugas.label ? ' · ' + tugas.label : ''}`,
+                    keyHMin
+                );
+                sudahKirim[keyHMin] = true;
             }
         }
 
-        // --- Notifikasi tepat di jam deadline ---
-        const selisihDeadline = deadlineMs - sekarang;
-        if (selisihDeadline > 0) {
-            const t = setTimeout(() => {
-                notifKirim(
-                    `⏰ Deadline Sekarang: ${tugas.judul}`,
-                    `Tugas harus dikumpulkan sekarang!${tugas.label ? ' · ' + tugas.label : ''}`,
-                    `tugas-deadline-${tugas.id}`
-                );
-            }, selisihDeadline);
-            window._notifTimers.push(t);
+        // --- Notifikasi tepat jam deadline ---
+        const keyDeadline = `deadline-${tugas.id}`;
+        if (!sudahKirim[keyDeadline] && sekarangMs >= deadlineMs && sekarangMs < deadlineMs + 2 * 60 * 1000) {
+            notifKirim(
+                `⏰ Deadline Sekarang: ${tugas.judul}`,
+                `Tugas harus dikumpulkan sekarang!${tugas.label ? ' · ' + tugas.label : ''}`,
+                keyDeadline
+            );
+            sudahKirim[keyDeadline] = true;
         }
     });
+
+    localStorage.setItem('_notifSent', JSON.stringify(sudahKirim));
 }
 
 // Test notifikasi — langsung muncul sekarang
