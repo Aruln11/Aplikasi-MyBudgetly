@@ -395,9 +395,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Restore halaman terakhir yang dibuka
   const savedPage = localStorage.getItem('activePageId');
-  if (savedPage && savedPage !== 'home') {
+  const validPages = ['home', 'portofolio', 'ruang', 'forum', 'saya'];
+  if (savedPage && savedPage !== 'home' && validPages.includes(savedPage)) {
     const navBtn = document.querySelector(`.nav-item[onclick*="'${savedPage}'"]`);
-    switchTab(savedPage, navBtn);
+    switchTab(savedPage, navBtn || null);
   }
 
   // Auto-refresh countdown tugas setiap 60 detik
@@ -444,7 +445,8 @@ function setupEventListeners() {
   // Format ribuan otomatis pada input jumlah
   applyFormatRibuan(document.getElementById('jumlah'));
 
-  dataActionsToggleBtn.addEventListener('click', () => {
+  dataActionsToggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
     dataActionsDropdown.classList.toggle('open');
   });
 
@@ -498,6 +500,14 @@ function setupEventListeners() {
     if (event.target == importModal) closeImportModal();
     if (event.target == confirmationModal) closeConfirmationModal();
     if (event.target == document.getElementById('login-modal')) closeLoginModal();
+
+    // Tutup delete dropdown saat klik di luar
+    const deleteSelect = document.getElementById('delete-custom-select');
+    if (deleteSelect && !deleteSelect.contains(event.target)) {
+      deleteSelect.classList.remove('open');
+      const dd = document.getElementById('delete-select-dropdown');
+      if (dd) dd.style.display = 'none';
+    }
   });
 
   calendarFilterIcon.addEventListener('click', () => {
@@ -513,25 +523,10 @@ function setupEventListeners() {
 
   clearDateFilterBtn.addEventListener('click', clearDateFilter);
 
-  importFileInput.addEventListener('change', function() {
-    confirmImportBtn.disabled = this.files.length === 0;
-  });
   confirmImportBtn.disabled = true;
 
-  deleteFilterSelect.addEventListener('change', function() {
-    if (this.value === 'custom-range') {
-      dateRangeDeleteGroup.style.display = 'block';
-      if (!deleteStartDateInput.value) {
-        deleteStartDateInput.value = '2000-01-01';
-      }
-      if (!deleteEndDateInput.value) {
-        const today = new Date();
-        deleteEndDateInput.value = today.toISOString().split('T')[0];
-      }
-    } else {
-      dateRangeDeleteGroup.style.display = 'none';
-    }
-  });
+
+
 
   setupScanEventListeners();
 
@@ -1414,10 +1409,64 @@ function openDeleteModal() {
     return;
   }
   deleteModal.style.display = 'flex';
-  if (deleteFilterSelect.value === 'custom-range') {
-    dateRangeDeleteGroup.style.display = 'block';
+  // reset ke "semua"
+  selectDeleteOption('semua');
+  if (window.lucide) lucide.createIcons();
+}
+
+function toggleDeleteDropdown() {
+  const container = document.getElementById('delete-custom-select');
+  const dropdown = document.getElementById('delete-select-dropdown');
+  const isOpen = container.classList.contains('open');
+  if (isOpen) {
+    container.classList.remove('open');
+    dropdown.style.display = 'none';
   } else {
-    dateRangeDeleteGroup.style.display = 'none';
+    container.classList.add('open');
+    dropdown.style.display = 'block';
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
+function selectDeleteOption(value) {
+  // Tutup dropdown
+  const container = document.getElementById('delete-custom-select');
+  const dropdown = document.getElementById('delete-select-dropdown');
+  if (container) container.classList.remove('open');
+  if (dropdown) dropdown.style.display = 'none';
+
+  // sync hidden select
+  const sel = document.getElementById('delete-filter');
+  if (sel) sel.value = value;
+
+  // Update teks & icon trigger
+  const textEl = document.getElementById('delete-select-text');
+  const iconEl = document.getElementById('delete-select-icon-display');
+  const labels = {
+    'semua':        { text: 'Semua Data',              icon: '<i data-lucide="trash-2" style="width:15px;height:15px;"></i>' },
+    'pemasukan':    { text: 'Hanya Pemasukan',         icon: '<img src="assets/growth.png" style="width:15px;height:15px;object-fit:contain;">' },
+    'pengeluaran':  { text: 'Hanya Pengeluaran',       icon: '<img src="assets/coins.png" style="width:15px;height:15px;object-fit:contain;">' },
+    'custom-range': { text: 'Rentang Tanggal Kustom',  icon: '<i data-lucide="calendar" style="width:15px;height:15px;"></i>' },
+  };
+  if (textEl && labels[value]) textEl.textContent = labels[value].text;
+  if (iconEl && labels[value]) {
+    iconEl.innerHTML = labels[value].icon;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  // Tandai item aktif
+  document.querySelectorAll('.delete-select-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.value === value);
+  });
+
+  // show/hide date range
+  const dateRangeGroup = document.getElementById('date-range-delete-group');
+  if (value === 'custom-range') {
+    dateRangeGroup.style.display = 'block';
+    if (!deleteStartDateInput.value) deleteStartDateInput.value = '2000-01-01';
+    if (!deleteEndDateInput.value) deleteEndDateInput.value = new Date().toISOString().split('T')[0];
+  } else {
+    dateRangeGroup.style.display = 'none';
   }
 }
 
@@ -1467,12 +1516,16 @@ function confirmBulkDelete() {
     return;
   }
 
-  const deleteAllBtn = document.querySelector('#deleteModal .btn-delete-all');
+  const deleteAllBtn = document.querySelector('#deleteModal .delete-btn-confirm');
 
   openConfirmationModal(`Yakin ingin menghapus ${toDelete.length} transaksi (${filterName})?`, () => {
-    deleteAllBtn.style.opacity = '0.6';
-    deleteAllBtn.style.pointerEvents = 'none';
-    deleteAllBtn.querySelector('span:last-child').textContent = 'Menghapus...';
+    if (deleteAllBtn) {
+      deleteAllBtn.style.opacity = '0.6';
+      deleteAllBtn.style.pointerEvents = 'none';
+      // Ganti teks langsung via lastChild (text node setelah icon)
+      const textNodes = [...deleteAllBtn.childNodes].filter(n => n.nodeType === 3);
+      if (textNodes.length) textNodes[textNodes.length - 1].textContent = ' Menghapus...';
+    }
 
     setTimeout(() => {
       if (deleteFilter === 'semua') {
@@ -1506,9 +1559,12 @@ function confirmBulkDelete() {
       updateUI();
       showNotification(`${toDelete.length} transaksi berhasil dihapus!`, 'success');
 
-      deleteAllBtn.style.opacity = '1';
-      deleteAllBtn.style.pointerEvents = 'auto';
-      deleteAllBtn.querySelector('span:last-child').textContent = 'Hapus Data';
+      if (deleteAllBtn) {
+        deleteAllBtn.style.opacity = '1';
+        deleteAllBtn.style.pointerEvents = 'auto';
+        const textNodes = [...deleteAllBtn.childNodes].filter(n => n.nodeType === 3);
+        if (textNodes.length) textNodes[textNodes.length - 1].textContent = ' Hapus Data';
+      }
     }, 800);
   });
 }
@@ -1898,12 +1954,63 @@ function openImportModal() {
   importModal.style.display = 'flex';
   importFileInput.value = '';
   confirmImportBtn.disabled = true;
+  document.getElementById('import-file-preview').style.display = 'none';
+  document.getElementById('import-dropzone').style.display = 'flex';
 }
 
 function closeImportModal() {
   importModal.style.display = 'none';
   importFileInput.value = '';
   confirmImportBtn.disabled = true;
+  document.getElementById('import-file-preview').style.display = 'none';
+  document.getElementById('import-dropzone').style.display = 'flex';
+}
+
+function showImportFilePreview(input) {
+  const file = input.files[0];
+  const dropzone = document.getElementById('import-dropzone');
+  const preview = document.getElementById('import-file-preview');
+  if (!file) {
+    dropzone.style.display = 'flex';
+    preview.style.display = 'none';
+    return;
+  }
+  const sizeMB = (file.size / 1024).toFixed(1);
+  const sizeText = file.size > 1024 * 1024
+    ? (file.size / 1024 / 1024).toFixed(1) + ' MB'
+    : sizeMB + ' KB';
+  document.getElementById('import-file-name').textContent = file.name;
+  document.getElementById('import-file-size').textContent = sizeText;
+  dropzone.style.display = 'none';
+  preview.style.display = 'block';
+}
+
+function handleImportFileChange(input) {
+  confirmImportBtn.disabled = input.files.length === 0;
+  showImportFilePreview(input);
+}
+
+function handleImportDrop(event) {
+  event.preventDefault();
+  const dropzone = document.getElementById('import-dropzone');
+  dropzone.classList.remove('dragover');
+  const files = event.dataTransfer.files;
+  if (files.length > 0 && files[0].name.endsWith('.csv')) {
+    const dt = new DataTransfer();
+    dt.items.add(files[0]);
+    importFileInput.files = dt.files;
+    confirmImportBtn.disabled = false;
+    showImportFilePreview(importFileInput);
+  } else {
+    showNotification('Hanya file CSV yang didukung.', 'error');
+  }
+}
+
+function clearImportFile() {
+  importFileInput.value = '';
+  confirmImportBtn.disabled = true;
+  document.getElementById('import-file-preview').style.display = 'none';
+  document.getElementById('import-dropzone').style.display = 'flex';
 }
 
 function confirmImportData() {
