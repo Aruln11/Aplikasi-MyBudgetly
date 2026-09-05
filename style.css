@@ -3361,6 +3361,15 @@ html[data-warna-putih="true"]:not([data-theme="dark"]) h3.section-title svg {
 
 #page-portofolio {
     width: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+    #page-portofolio {
+        padding-left: 12px;
+        padding-right: 12px;
+        overflow-x: hidden;
+    }
 }
 /* Modal Wrapper agar posisi pas */
 #modal-tambah-aset {
@@ -3404,16 +3413,26 @@ html[data-warna-putih="true"]:not([data-theme="dark"]) h3.section-title svg {
     .porto-grid-layout {
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
+        padding-left: 0;
+        padding-right: 0;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .asset-card-design {
         padding: 12px;
         min-height: 0;
         border-radius: 12px;
+        width: 100%;
+        box-sizing: border-box;
+        min-width: 0; /* cegah kartu overflow */
     }
 
     .acd-name {
         font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .acd-category {
@@ -3436,6 +3455,26 @@ html[data-warna-putih="true"]:not([data-theme="dark"]) h3.section-title svg {
     .acd-action-btn {
         width: 28px !important;
         height: 28px !important;
+    }
+
+    /* Logo + nama bank di mobile — logo kecil agar nama tidak wrap */
+    .acd-name-row {
+        gap: 6px;
+        margin-bottom: 8px;
+        align-items: center;
+        min-width: 0; /* penting untuk text-overflow bekerja */
+    }
+
+    .acd-name-row > div {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .acd-bank-logo {
+        width: 24px;
+        height: 24px;
+        border-radius: 5px;
+        flex-shrink: 0;
     }
 }
 
@@ -3474,13 +3513,68 @@ html[data-warna-putih="true"]:not([data-theme="dark"]) h3.section-title svg {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 12px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.acd-header > div {
+    min-width: 0;
+    overflow: hidden;
+    flex: 1;
 }
 
 .acd-name {
-    font-size: 16px; /* Font nama aset diperkecil (sebelumnya 18px) */
+    font-size: 16px;
     font-weight: 800;
     color: var(--text-primary);
     text-transform: capitalize;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Cegah nama overflow keluar kartu */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+/* Layout logo + nama + kategori untuk kartu EWallet/Bank */
+.acd-name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 13px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.acd-name-row > div {
+    min-width: 0;
+    overflow: hidden;
+    flex: 1;
+}
+
+.acd-name-row .acd-name {
+    margin-bottom: 2px;
+    display: block; /* override flex agar ellipsis bekerja */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.acd-name-row .acd-category {
+    margin-bottom: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.acd-bank-logo {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    border-radius: 8px;
+    flex-shrink: 0;
 }
 
 .acd-category {

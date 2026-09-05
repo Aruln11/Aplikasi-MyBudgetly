@@ -4329,6 +4329,158 @@ function switchTab(pageId, element) {
   if (window.lucide) lucide.createIcons();
 }
 
+// --- DATA BANK & EWALLET INDONESIA ---
+const BANK_EWALLET_DATA = [
+    // E-Wallet
+    { nama: 'GoPay',            domain: 'gopay.co.id',              tipe: 'E-Wallet' },
+    { nama: 'OVO',              domain: 'ovo.id',                   tipe: 'E-Wallet',    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Logo_ovo_purple.svg' },
+    { nama: 'DANA',             domain: 'dana.id',                  tipe: 'E-Wallet' },
+    { nama: 'ShopeePay',        domain: 'shopee.co.id',             tipe: 'E-Wallet' },
+    { nama: 'LinkAja',          domain: 'linkaja.id',               tipe: 'E-Wallet' },
+    { nama: 'iSaku',            domain: 'isaku.id',                 tipe: 'E-Wallet' },
+    { nama: 'Doku',             domain: 'doku.com',                 tipe: 'E-Wallet' },
+    { nama: 'Flip',             domain: 'flip.id',                  tipe: 'E-Wallet' },
+    { nama: 'Sakuku',           domain: 'bca.co.id',                tipe: 'E-Wallet' },
+    { nama: 'PayLater Kredivo', domain: 'kredivo.com',              tipe: 'E-Wallet' },
+    { nama: 'Akulaku',          domain: 'akulaku.com',              tipe: 'E-Wallet' },
+    { nama: 'SpotOn',           domain: 'spoton.id',                tipe: 'E-Wallet' },
+
+    // ── Bank BUMN ──
+    { nama: 'BCA',              domain: 'bca.co.id',                tipe: 'M-Banking' },
+    { nama: 'BRI',              domain: 'bri.co.id',                tipe: 'M-Banking' },
+    { nama: 'Bank Mandiri',     domain: 'bankmandiri.co.id',        tipe: 'M-Banking' },
+    { nama: 'BNI',              domain: 'bni.co.id',                tipe: 'M-Banking' },
+    { nama: 'BTN',              domain: 'btn.co.id',                tipe: 'M-Banking' },
+
+    // ── Bank Swasta Nasional ──
+    { nama: 'CIMB Niaga',       domain: 'cimbniaga.co.id',          tipe: 'M-Banking' },
+    { nama: 'Danamon',          domain: 'danamon.co.id',            tipe: 'M-Banking' },
+    { nama: 'Permata Bank',     domain: 'permatabank.com',          tipe: 'M-Banking' },
+    { nama: 'Maybank',          domain: 'maybank.co.id',            tipe: 'M-Banking' },
+    { nama: 'Panin Bank',       domain: 'panin.co.id',              tipe: 'M-Banking' },
+    { nama: 'OCBC',             domain: 'ocbc.id',                  tipe: 'M-Banking' },
+    { nama: 'Bank Mega',        domain: 'bankmega.com',             tipe: 'M-Banking' },
+    { nama: 'Bank Sinarmas',    domain: 'banksinarmas.com',         tipe: 'M-Banking' },
+    { nama: 'Bank Bukopin',     domain: 'bukopin.co.id',            tipe: 'M-Banking' },
+    { nama: 'BTPN',             domain: 'btpn.com',                 tipe: 'M-Banking' },
+    { nama: 'Bank Artha Graha', domain: 'arthagraha.com',           tipe: 'M-Banking' },
+    { nama: 'Bank Bumi Arta',   domain: 'bankbumiarta.co.id',       tipe: 'M-Banking' },
+    { nama: 'Bank Mayapada',    domain: 'bankmayapada.com',         tipe: 'M-Banking' },
+    { nama: 'Bank Mestika',     domain: 'bankmestika.co.id',        tipe: 'M-Banking' },
+    { nama: 'Bank Maspion',     domain: 'bankmaspion.co.id',        tipe: 'M-Banking' },
+    { nama: 'Bank Ganesha',     domain: 'bankganesha.co.id',        tipe: 'M-Banking' },
+    { nama: 'Bank QNB',         domain: 'qnb.co.id',                tipe: 'M-Banking' },
+    { nama: 'Bank Commonwealth',domain: 'commbank.co.id',           tipe: 'M-Banking' },
+    { nama: 'Citibank',         domain: 'citibank.co.id',           tipe: 'M-Banking' },
+    { nama: 'HSBC Indonesia',   domain: 'hsbc.co.id',               tipe: 'M-Banking' },
+    { nama: 'Bank UOB',         domain: 'uob.co.id',                tipe: 'M-Banking' },
+    { nama: 'Bank ICBC',        domain: 'icbcindonesia.com',        tipe: 'M-Banking' },
+    { nama: 'Bank Woori Saudara',domain: 'woori.co.id',             tipe: 'M-Banking' },
+    { nama: 'Bank Shinhan',     domain: 'shinhan.co.id',            tipe: 'M-Banking' },
+    { nama: 'Bank JTrust',      domain: 'jtrustbank.co.id',         tipe: 'M-Banking' },
+    { nama: 'Bank Capital',     domain: 'bankcapital.co.id',        tipe: 'M-Banking' },
+    { nama: 'Bank Ina',         domain: 'bankina.co.id',            tipe: 'M-Banking' },
+    { nama: 'Bank Victoria',    domain: 'victoriabank.co.id',       tipe: 'M-Banking' },
+    { nama: 'Bank Sahabat Sampoerna', domain: 'banksahabat.com',    tipe: 'M-Banking' },
+
+    // ── Bank Syariah ──
+    { nama: 'BSI',              domain: 'bankbsi.co.id',            tipe: 'M-Banking' },
+    { nama: 'Bank Muamalat',    domain: 'bankmuamalat.co.id',       tipe: 'M-Banking' },
+    { nama: 'Bank Mega Syariah',domain: 'megasyariah.co.id',        tipe: 'M-Banking' },
+    { nama: 'BCA Syariah',      domain: 'bcasyariah.co.id',         tipe: 'M-Banking' },
+    { nama: 'CIMB Niaga Syariah',domain: 'cimbniaga.co.id',         tipe: 'M-Banking' },
+    { nama: 'Danamon Syariah',  domain: 'danamon.co.id',            tipe: 'M-Banking' },
+    { nama: 'Permata Syariah',  domain: 'permatabank.com',          tipe: 'M-Banking' },
+    { nama: 'BTPN Syariah',     domain: 'btpnsyariah.com',          tipe: 'M-Banking' },
+    { nama: 'Bank Bukopin Syariah', domain: 'syariahbukopin.co.id', tipe: 'M-Banking' },
+    { nama: 'Bank Sinarmas Syariah', domain: 'banksinarmas.com',    tipe: 'M-Banking' },
+    { nama: 'Bank Victoria Syariah', domain: 'bankvictoriasyariah.co.id', tipe: 'M-Banking' },
+    { nama: 'Bank Aceh Syariah',domain: 'bankaceh.co.id',           tipe: 'M-Banking' },
+    { nama: 'Bank NTB Syariah', domain: 'bankntbsyariah.co.id',     tipe: 'M-Banking' },
+
+    // ── BPD (Bank Pembangunan Daerah) ──
+    { nama: 'Bank Jabar Banten (BJB)', domain: 'bjb.co.id',         tipe: 'M-Banking' },
+    { nama: 'Bank DKI',         domain: 'bankdki.co.id',            tipe: 'M-Banking' },
+    { nama: 'BPD DIY',          domain: 'bpddiy.co.id',             tipe: 'M-Banking' },
+    { nama: 'Bank Jateng',      domain: 'bankjateng.co.id',         tipe: 'M-Banking' },
+    { nama: 'Bank Jatim',       domain: 'bankjatim.co.id',          tipe: 'M-Banking' },
+    { nama: 'Bank Aceh',        domain: 'bankaceh.co.id',           tipe: 'M-Banking' },
+    { nama: 'Bank Sumut',       domain: 'banksumut.co.id',          tipe: 'M-Banking' },
+    { nama: 'Bank Nagari',      domain: 'banknagari.co.id',         tipe: 'M-Banking' },
+    { nama: 'Bank Riau Kepri',  domain: 'bankrkyukepr.co.id',       tipe: 'M-Banking' },
+    { nama: 'Bank Jambi',       domain: 'bankjambi.co.id',          tipe: 'M-Banking' },
+    { nama: 'Bank Sumsel Babel',domain: 'banksumselbabel.co.id',    tipe: 'M-Banking' },
+    { nama: 'Bank Lampung',     domain: 'banklampung.co.id',        tipe: 'M-Banking' },
+    { nama: 'BPD Bengkulu',     domain: 'bankbengkulu.co.id',       tipe: 'M-Banking' },
+    { nama: 'Bank Kalbar',      domain: 'bankkalbar.co.id',         tipe: 'M-Banking' },
+    { nama: 'Bank Kalsel',      domain: 'bankkalsel.co.id',         tipe: 'M-Banking' },
+    { nama: 'Bank Kalteng',     domain: 'bankalteng.co.id',         tipe: 'M-Banking' },
+    { nama: 'Bank Kaltimtara',  domain: 'bankaltimtara.co.id',      tipe: 'M-Banking' },
+    { nama: 'Bank Sulselbar',   domain: 'banksulselbar.co.id',      tipe: 'M-Banking' },
+    { nama: 'Bank Sulteng',     domain: 'banksulteng.co.id',        tipe: 'M-Banking' },
+    { nama: 'Bank Sulut Go',    domain: 'banksulutgo.co.id',        tipe: 'M-Banking' },
+    { nama: 'Bank Sultra',      domain: 'banksultra.co.id',         tipe: 'M-Banking' },
+    { nama: 'Bank Maluku Malut',domain: 'bankmaluku.co.id',         tipe: 'M-Banking' },
+    { nama: 'Bank NTT',         domain: 'bankntt.co.id',            tipe: 'M-Banking' },
+    { nama: 'Bank Papua',       domain: 'bankpapua.co.id',          tipe: 'M-Banking' },
+    { nama: 'Bank Banten',      domain: 'bankbanten.co.id',         tipe: 'M-Banking' },
+
+    // ── Bank Digital ──
+    { nama: 'Bank Jago',        domain: 'jago.com',                 tipe: 'Bank Digital' },
+    { nama: 'Jenius',           domain: 'jenius.com',               tipe: 'Bank Digital' },
+    { nama: 'Blu by BCA',       domain: 'blubybcadigital.id',       tipe: 'Bank Digital' },
+    { nama: 'Neo Bank',         domain: 'neobank.id',               tipe: 'Bank Digital' },
+    { nama: 'SeaBank',          domain: 'seabank.co.id',            tipe: 'Bank Digital', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/SeaBank.svg/120px-SeaBank.svg.png' },
+    { nama: 'Allo Bank',        domain: 'allobank.com',             tipe: 'Bank Digital' },
+    { nama: 'Motion Bank',      domain: 'motionbank.id',            tipe: 'Bank Digital' },
+    { nama: 'Superbank',        domain: 'superbank.id',             tipe: 'Bank Digital' },
+    { nama: 'Bank Raya',        domain: 'bankraya.co.id',           tipe: 'Bank Digital' },
+    { nama: 'Amar Bank',        domain: 'amarbank.co.id',           tipe: 'Bank Digital' },
+    { nama: 'Digibank',         domain: 'dbs.com',                  tipe: 'Bank Digital' },
+    { nama: 'Bank Saqu',        domain: 'saqu.co.id',               tipe: 'Bank Digital' },
+    { nama: 'Bank Hibank',      domain: 'hibank.co.id',             tipe: 'Bank Digital' },
+    { nama: 'Bank Nobu',        domain: 'nobubank.com',             tipe: 'Bank Digital' },
+    { nama: 'Krom Bank',        domain: 'krom.id',                  tipe: 'Bank Digital' },
+];
+
+function getLogoUrl(domain) {
+    return `https://logo.clearbit.com/${domain}`;
+}
+
+function _buildInitialSvg(nama) {
+    const initial = nama.trim().charAt(0).toUpperCase();
+    const colors  = ['#4e4af2','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'];
+    const color   = colors[initial.charCodeAt(0) % colors.length];
+    return `data:image/svg+xml,${encodeURIComponent(
+        `<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'>` +
+        `<rect width='36' height='36' rx='9' fill='${color}'/>` +
+        `<text x='18' y='25' font-family='Arial,sans-serif' font-size='17' font-weight='bold' ` +
+        `fill='white' text-anchor='middle'>${initial}</text></svg>`
+    )}`;
+}
+
+function getLogoWithFallback(domain, nama, size = 32, logoUrl = '') {
+    const initSvg  = _buildInitialSvg(nama);
+    // Kalau ada logoUrl eksplisit (Wikimedia, dsb), pakai itu dulu
+    if (logoUrl) {
+        return `<img src="${logoUrl}" 
+                     class="acd-bank-logo" 
+                     alt="${nama}" 
+                     onerror="this.src='${initSvg}';this.onerror=null;">`;
+    }
+    const favicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+    return `<img src="${favicon}" 
+                 class="acd-bank-logo" 
+                 alt="${nama}" 
+                 onerror="this.src='${initSvg}';this.onerror=null;">`;
+}
+
+function cariBankEwallet(keyword) {
+    if (!keyword || keyword.trim() === '') return [];
+    const q = keyword.toLowerCase();
+    return BANK_EWALLET_DATA.filter(b => b.nama.toLowerCase().includes(q)).slice(0, 6);
+}
+
 // --- LOGIKA PORTOFOLIO ---
 function tutupModalAset() {
     tutupKategoriFloating();
@@ -4344,6 +4496,7 @@ function handleSimpanAset(event) {
     const catatan = document.getElementById('input-catatan').value;
     const jenisRD = document.getElementById('input-jenis-rd').value;
     const jenisEW = document.getElementById('input-jenis-ewallet').value;
+    const logoDomain = document.getElementById('input-logo-domain')?.value || '';
 
     if (!nama) return;
 
@@ -4365,6 +4518,8 @@ function handleSimpanAset(event) {
         kategori: kategori,
         jenis_rd: kategori === 'Reksadana' ? jenisRD : '',
         jenis_ew: kategori === 'EWallet' ? jenisEW : '',
+        logo_domain: kategori === 'EWallet' ? logoDomain : '',
+        logo_url: kategori === 'EWallet' ? (document.getElementById('input-logo-url')?.value || '') : '',
         catatan: catatan,
         transaksi: []
     });
@@ -4420,8 +4575,21 @@ function renderHalamanPorto() {
             <div class="asset-card-design">
                 <div class="acd-header">
                     <div>
-                        <div class="acd-name">${aset.nama}</div>
-                        <div class="acd-category">${aset.kategori === 'EWallet' ? (aset.jenis_ew || 'E-Wallet/Bank') : aset.kategori}${aset.jenis_rd ? ' ' + aset.jenis_rd : ''}</div>
+                        ${(aset.kategori === 'EWallet') ? (() => {
+                            const bankData = BANK_EWALLET_DATA.find(b => b.nama.toLowerCase() === aset.nama.toLowerCase());
+                            const domain = aset.logo_domain || (bankData || {}).domain || '';
+                            const logoUrl = aset.logo_url || (bankData || {}).logoUrl || '';
+                            return `<div class="acd-name-row">
+                                        ${(domain || logoUrl) ? getLogoWithFallback(domain, aset.nama, 32, logoUrl) : ''}
+                                        <div>
+                                            <div class="acd-name">${aset.nama}</div>
+                                            <div class="acd-category">${aset.jenis_ew || 'E-Wallet/Bank'}</div>
+                                        </div>
+                                    </div>`;
+                        })() : `
+                            <div class="acd-name">${aset.nama}</div>
+                            <div class="acd-category">${aset.kategori}${aset.jenis_rd ? ' ' + aset.jenis_rd : ''}</div>
+                        `}
                     </div>
                 </div>
                 <div class="acd-body">
@@ -4888,6 +5056,12 @@ function bukaModalAset() {
     document.getElementById('input-jenis-ewallet').value = '';
     document.getElementById('section-jenis-ewallet').style.display = 'none';
     document.querySelectorAll('#ewallet-jenis-pills .rd-pill').forEach(p => p.classList.remove('active'));
+    // Reset autocomplete bank
+    nonaktifkanAutocompleteBank();
+    const preview = document.getElementById('bank-logo-preview');
+    if (preview) preview.remove();
+    const hiddenLogo = document.getElementById('input-logo-domain');
+    if (hiddenLogo) hiddenLogo.value = '';
     // Reset counter catatan
     const catatanEl = document.getElementById('input-catatan');
     const counterEl = document.getElementById('catatan-counter');
@@ -4987,12 +5161,16 @@ function initializeAssetCategorySelect() {
                     sectionRD.style.display = 'none';
                     document.getElementById('input-jenis-rd').value = '';
                     document.querySelectorAll('#rd-jenis-pills .rd-pill').forEach(p => p.classList.remove('active'));
+                    // Aktifkan mode autocomplete bank/ewallet
+                    aktifkanAutocompleteBank();
                 } else {
                     sectionRD.style.display = 'none';
                     sectionEW.style.display = 'none';
                     document.getElementById('input-jenis-rd').value = '';
                     document.getElementById('input-jenis-ewallet').value = '';
                     document.querySelectorAll('.rd-pill').forEach(p => p.classList.remove('active'));
+                    // Nonaktifkan autocomplete bank
+                    nonaktifkanAutocompleteBank();
                 }
                 tutupKategoriFloating();
             });
@@ -5056,6 +5234,179 @@ function initializeAssetCategorySelect() {
             document.getElementById('input-jenis-ewallet').value = pill.dataset.jenis;
         };
     });
+}
+
+// ===== AUTOCOMPLETE BANK/EWALLET =====
+let _bankAutocompleteDropdown = null;
+
+function aktifkanAutocompleteBank() {
+    const inputNama = document.getElementById('input-nama');
+    if (!inputNama) return;
+
+    // Tandai input sebagai mode bank
+    inputNama.dataset.bankMode = 'true';
+    inputNama.placeholder = 'Ketik nama bank atau e-wallet...';
+    inputNama.autocomplete = 'off';
+
+    // Preview logo di bawah input
+    let preview = document.getElementById('bank-logo-preview');
+    if (!preview) {
+        preview = document.createElement('div');
+        preview.id = 'bank-logo-preview';
+        preview.style.cssText = 'display:none; align-items:center; gap:8px; margin-top:8px; padding:8px 12px; background:var(--background-secondary,#f5f5f5); border-radius:8px; font-size:13px; color:var(--text-secondary,#666);';
+        inputNama.parentNode.insertBefore(preview, inputNama.nextSibling);
+    }
+
+    inputNama.addEventListener('input', _onBankInput);
+    inputNama.addEventListener('blur', _onBankBlur);
+}
+
+function nonaktifkanAutocompleteBank() {
+    const inputNama = document.getElementById('input-nama');
+    if (!inputNama) return;
+    inputNama.dataset.bankMode = '';
+    inputNama.removeEventListener('input', _onBankInput);
+    inputNama.removeEventListener('blur', _onBankBlur);
+    _tutupBankDropdown();
+    const preview = document.getElementById('bank-logo-preview');
+    if (preview) preview.style.display = 'none';
+    const hiddenLogo = document.getElementById('input-logo-domain');
+    if (hiddenLogo) hiddenLogo.value = '';
+}
+
+function _onBankInput(e) {
+    const keyword = e.target.value;
+    const hasil = cariBankEwallet(keyword);
+    _tutupBankDropdown();
+
+    // Reset logo preview jika user edit manual
+    const preview = document.getElementById('bank-logo-preview');
+    const hiddenLogo = document.getElementById('input-logo-domain');
+    if (preview) preview.style.display = 'none';
+    if (hiddenLogo) hiddenLogo.value = '';
+
+    if (!keyword.trim() || hasil.length === 0) return;
+
+    const input = document.getElementById('input-nama');
+    const rect = input.getBoundingClientRect();
+
+    const dropdown = document.createElement('div');
+    dropdown.id = 'bank-autocomplete-dropdown';
+    dropdown.style.cssText = `
+        position: fixed;
+        top: ${rect.bottom + 4}px;
+        left: ${rect.left}px;
+        width: ${rect.width}px;
+        background: var(--card-bg, #fff);
+        border: 1px solid #e1e4ea;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        z-index: 999999;
+        overflow: hidden;
+    `;
+
+    hasil.forEach(bank => {
+        const item = document.createElement('div');
+        item.style.cssText = 'display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; transition:background 0.15s;';
+        const favicon = `https://www.google.com/s2/favicons?domain=${bank.domain}&sz=64`;
+        const initial = bank.nama.trim().charAt(0).toUpperCase();
+        const colors = ['#4e4af2','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'];
+        const color = colors[initial.charCodeAt(0) % colors.length];
+        const initSvg = `data:image/svg+xml,${encodeURIComponent(
+            `<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'>` +
+            `<rect width='32' height='32' rx='8' fill='${color}'/>` +
+            `<text x='16' y='22' font-family='Arial,sans-serif' font-size='15' font-weight='bold' fill='white' text-anchor='middle'>${initial}</text></svg>`
+        )}`;
+        const imgSrc = bank.logoUrl || favicon;
+        item.innerHTML = `
+            <img src="${imgSrc}" 
+                 style="width:32px;height:32px;object-fit:contain;border-radius:8px;flex-shrink:0;background:#f5f5f5;padding:2px;" 
+                 onerror="this.src='${initSvg}';this.onerror=null;this.style.padding='0';">
+            <div>
+                <div style="font-size:14px;font-weight:600;color:var(--text-primary,#1a1c21);">${bank.nama}</div>
+                <div style="font-size:11px;color:var(--text-muted,#999);">${bank.tipe}</div>
+            </div>
+        `;
+        item.addEventListener('mouseenter', () => item.style.background = 'var(--primary-accent-color-glow, #f0f0ff)');
+        item.addEventListener('mouseleave', () => item.style.background = '');
+        item.addEventListener('mousedown', (e) => {
+            e.preventDefault(); // cegah blur dulu
+            _pilihBank(bank);
+        });
+        dropdown.appendChild(item);
+    });
+
+    document.body.appendChild(dropdown);
+    _bankAutocompleteDropdown = dropdown;
+}
+
+function _onBankBlur() {
+    setTimeout(_tutupBankDropdown, 150);
+}
+
+function _tutupBankDropdown() {
+    if (_bankAutocompleteDropdown) {
+        _bankAutocompleteDropdown.remove();
+        _bankAutocompleteDropdown = null;
+    }
+}
+
+function _pilihBank(bank) {
+    const inputNama = document.getElementById('input-nama');
+    if (inputNama) inputNama.value = bank.nama;
+
+    // Simpan domain ke hidden input
+    let hiddenLogo = document.getElementById('input-logo-domain');
+    if (!hiddenLogo) {
+        hiddenLogo = document.createElement('input');
+        hiddenLogo.type = 'hidden';
+        hiddenLogo.id = 'input-logo-domain';
+        hiddenLogo.name = 'logo_domain';
+        document.getElementById('form-aset').appendChild(hiddenLogo);
+    }
+    hiddenLogo.value = bank.domain;
+
+    // Simpan logoUrl eksplisit kalau ada (misal Wikimedia)
+    let hiddenLogoUrl = document.getElementById('input-logo-url');
+    if (!hiddenLogoUrl) {
+        hiddenLogoUrl = document.createElement('input');
+        hiddenLogoUrl.type = 'hidden';
+        hiddenLogoUrl.id = 'input-logo-url';
+        document.getElementById('form-aset').appendChild(hiddenLogoUrl);
+    }
+    hiddenLogoUrl.value = bank.logoUrl || '';
+
+    // Tampilkan logo preview
+    const preview = document.getElementById('bank-logo-preview');
+    if (preview) {
+        const fav = bank.logoUrl || `https://www.google.com/s2/favicons?domain=${bank.domain}&sz=64`;
+        const ini = bank.nama.trim().charAt(0).toUpperCase();
+        const cols = ['#4e4af2','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'];
+        const col = cols[ini.charCodeAt(0) % cols.length];
+        const svg = `data:image/svg+xml,${encodeURIComponent(
+            `<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'>` +
+            `<rect width='32' height='32' rx='8' fill='${col}'/>` +
+            `<text x='16' y='22' font-family='Arial,sans-serif' font-size='15' font-weight='bold' fill='white' text-anchor='middle'>${ini}</text></svg>`
+        )}`;
+        preview.innerHTML = `
+            <img src="${fav}" 
+                 style="width:28px;height:28px;object-fit:contain;border-radius:6px;background:#f5f5f5;padding:2px;" 
+                 onerror="this.src='${svg}';this.onerror=null;this.style.padding='0';">
+            <span>${bank.nama} <span style="opacity:0.5;">&bull; ${bank.tipe}</span></span>
+        `;
+        preview.style.display = 'flex';
+    }
+
+    // Auto-set jenis ewallet sesuai tipe bank jika pill belum dipilih
+    const jenisEW = document.getElementById('input-jenis-ewallet');
+    if (jenisEW && !jenisEW.value) {
+        jenisEW.value = bank.tipe;
+        document.querySelectorAll('#ewallet-jenis-pills .rd-pill').forEach(p => {
+            p.classList.toggle('active', p.dataset.jenis === bank.tipe);
+        });
+    }
+
+    _tutupBankDropdown();
 }
 function selectTransactionType(type) {
     const inputJenis = document.getElementById('jenis');
