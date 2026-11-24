@@ -3,6 +3,94 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ============================================================
+// STORAGE LAYER — semua baca/tulis data lewat sini
+// Kalau login → Supabase + localStorage (cache)
+// Kalau belum login → localStorage saja (guest mode)
+// ============================================================
+const DB_KEYS = ['transaksi','myBudgetly_assets','myBudgetly_tugas','myBudgetly_todo','myBudgetly_catatan','myBudgetly_jadwal','myBudgetly_rutin'];
+
+function _getKodeAkses() {
+    return localStorage.getItem('myAccessCode') || null;
+}
+
+async function dbSave(key, value) {
+    // Selalu simpan ke localStorage sebagai cache cepat
+    localStorage.setItem(key, JSON.stringify(value));
+
+    const kode = _getKodeAkses();
+    if (!kode) return; // guest mode — hanya localStorage
+
+    try {
+        await supabaseClient.from('user_data').upsert(
+            { kode_akses: kode, key, value, updated_at: new Date().toISOString() },
+            { onConflict: 'kode_akses,key' }
+        );
+    } catch (e) {
+        console.warn('[dbSave] gagal sync ke Supabase:', e);
+    }
+}
+
+async function dbLoad(key, defaultValue = []) {
+    const kode = _getKodeAkses();
+
+    if (kode) {
+        try {
+            const { data, error } = await supabaseClient
+                .from('user_data')
+                .select('value')
+                .eq('kode_akses', kode)
+                .eq('key', key)
+                .maybeSingle();
+
+            if (!error && data) {
+                localStorage.setItem(key, JSON.stringify(data.value));
+                return data.value;
+            }
+        } catch (e) {
+            console.warn('[dbLoad] gagal load dari Supabase, fallback localStorage:', e);
+        }
+    }
+
+    // Fallback: baca dari localStorage
+    const local = localStorage.getItem(key);
+    return local ? JSON.parse(local) : defaultValue;
+}
+
+async function dbSyncAllToSupabase() {
+    // Dipanggil saat login — sinkronisasi localStorage ↔ Supabase
+    const kode = _getKodeAkses();
+    if (!kode) return;
+
+    for (const key of DB_KEYS) {
+        try {
+            const { data: existing } = await supabaseClient
+                .from('user_data')
+                .select('value')
+                .eq('kode_akses', kode)
+                .eq('key', key)
+                .maybeSingle();
+
+            if (!existing) {
+                // Belum ada di Supabase → upload dari localStorage
+                const local = localStorage.getItem(key);
+                if (local) {
+                    await supabaseClient.from('user_data').upsert(
+                        { kode_akses: kode, key, value: JSON.parse(local), updated_at: new Date().toISOString() },
+                        { onConflict: 'kode_akses,key' }
+                    );
+                }
+            } else {
+                // Sudah ada di Supabase → pakai data Supabase (lebih terpercaya)
+                localStorage.setItem(key, JSON.stringify(existing.value));
+            }
+        } catch (e) {
+            console.warn('[dbSyncAll] gagal sync key:', key, e);
+        }
+    }
+}
+// ============================================================
+
 let realtimeChannel = null;
 let realtimeAdminSettingChannel = null;
 
@@ -929,7 +1017,7 @@ function saveScannedTransaction() {
   });
 
   if (transactionsAdded > 0) {
-    localStorage.setItem('transaksi', JSON.stringify(transaksi));
+    dbSave('transaksi', transaksi);
     updateUI();
     closeScanner();
     showNotification(`${transactionsAdded} transaksi dari struk berhasil disimpan!`, 'success');
@@ -1014,7 +1102,7 @@ function handleFormSubmit(e) {
       showNotification('Transaksi berhasil ditambahkan', 'success');
     }
 
-    localStorage.setItem('transaksi', JSON.stringify(transaksi));
+    dbSave('transaksi', transaksi);
 
     form.reset();
     setTodayDate();
@@ -1380,7 +1468,7 @@ function hapusTransaksi(index) {
   const t = transaksi[index];
   openConfirmationModal(`Yakin ingin menghapus transaksi "${t.deskripsi}"?`, () => {
     transaksi.splice(index, 1);
-    localStorage.setItem('transaksi', JSON.stringify(transaksi));
+    dbSave('transaksi', transaksi);
 
     if (editIndex === index) {
       cancelEdit();
@@ -1545,7 +1633,7 @@ function confirmBulkDelete() {
         transaksi = transaksi.filter(t => !t.tanggal.startsWith(deleteFilter));
       }
 
-      localStorage.setItem('transaksi', JSON.stringify(transaksi));
+      dbSave('transaksi', transaksi);
 
       closeDeleteModal();
       editIndex = null;
@@ -2046,7 +2134,7 @@ function confirmImportData() {
       if (importedData.length > 0) {
         openConfirmationModal(`Ditemukan ${importedData.length} transaksi. Ganti data saat ini?`, () => {
           transaksi = importedData;
-          localStorage.setItem('transaksi', JSON.stringify(transaksi));
+          dbSave('transaksi', transaksi);
           updateUI();
           closeImportModal();
           showNotification('Data CSV berhasil diimport!', 'success');
@@ -2268,6 +2356,19 @@ async function handleLogin(event) {
 
         closeLoginModal();
         updateAuthUI();
+
+        // Sync data antara localStorage dan Supabase
+        await dbSyncAllToSupabase();
+
+        // Reload semua data dari Supabase ke variabel aktif
+        transaksi        = await dbLoad('transaksi', []);
+        dataAset         = await dbLoad('myBudgetly_assets', []);
+        dataTugas        = await dbLoad('myBudgetly_tugas', []);
+        dataTodo         = await dbLoad('myBudgetly_todo', []);
+        dataCatatanRuang = await dbLoad('myBudgetly_catatan', []);
+        dataJadwal       = await dbLoad('myBudgetly_jadwal', []);
+        dataRutin        = await dbLoad('myBudgetly_rutin', []);
+
         updateUI();
         showNotification('Berhasil Masuk!', 'success');
         
@@ -2859,9 +2960,9 @@ let dataTodo   = JSON.parse(localStorage.getItem('myBudgetly_todo'))   || [];
 let dataCatatanRuang = JSON.parse(localStorage.getItem('myBudgetly_catatan')) || [];
 let ruangCalDate = new Date();
 
-function saveTugas()  { localStorage.setItem('myBudgetly_tugas',   JSON.stringify(dataTugas)); }
-function saveTodo()   { localStorage.setItem('myBudgetly_todo',    JSON.stringify(dataTodo)); }
-function saveCatatanRuang() { localStorage.setItem('myBudgetly_catatan', JSON.stringify(dataCatatanRuang)); }
+function saveTugas()  { dbSave('myBudgetly_tugas',   dataTugas); }
+function saveTodo()   { dbSave('myBudgetly_todo',    dataTodo); }
+function saveCatatanRuang() { dbSave('myBudgetly_catatan', dataCatatanRuang); }
 
 // ===== SWITCH TAB RUANG =====
 function switchRuangTab(tab, el) {
@@ -3260,7 +3361,7 @@ const hariColor = {
     'Kamis': '#3b82f6', 'Jumat': '#ec4899', 'Sabtu': '#8b5cf6', 'Minggu': '#ef4444'
 };
 
-function saveJadwal() { localStorage.setItem('myBudgetly_jadwal', JSON.stringify(dataJadwal)); }
+function saveJadwal() { dbSave('myBudgetly_jadwal', dataJadwal); }
 
 
 function bukaModalJadwal(id) {
@@ -3805,7 +3906,7 @@ function renderCatatanRuang() {
 
 // ===== JADWAL RUTIN =====
 let dataRutin = JSON.parse(localStorage.getItem('myBudgetly_rutin')) || [];
-function saveRutin() { localStorage.setItem('myBudgetly_rutin', JSON.stringify(dataRutin)); }
+function saveRutin() { dbSave('myBudgetly_rutin', dataRutin); }
 
 let rutinCalDate = new Date();
 
@@ -4524,7 +4625,7 @@ function handleSimpanAset(event) {
         transaksi: []
     });
 
-    localStorage.setItem('myBudgetly_assets', JSON.stringify(dataAset));
+    dbSave('myBudgetly_assets', dataAset);
     renderHalamanPorto();
     tutupModalAset();
     showNotification('Aset berhasil ditambahkan!', 'success');
@@ -4824,7 +4925,7 @@ function handleSimpanTransaksiAset(event) {
             showNotification('Transaksi aset berhasil dicatat!', 'success');
         }
 
-        localStorage.setItem('myBudgetly_assets', JSON.stringify(dataAset));
+        dbSave('myBudgetly_assets', dataAset);
         renderHalamanPorto();
         tutupModalTransaksiAset();
 
@@ -4879,7 +4980,7 @@ function simpanCatatanInline(idAset) {
     const idx = dataAset.findIndex(a => a.id === idAset);
     if (idx !== -1) {
         dataAset[idx].catatan = input.value.trim();
-        localStorage.setItem('myBudgetly_assets', JSON.stringify(dataAset));
+        dbSave('myBudgetly_assets', dataAset);
         renderHalamanPorto();
     }
 }
@@ -4893,7 +4994,7 @@ function hapusTrxAset(idAset, idTrx) {
     const idx = dataAset.findIndex(a => a.id === idAset);
     if (idx === -1) return;
     dataAset[idx].transaksi = dataAset[idx].transaksi.filter(t => String(t.id_transaksi) !== String(idTrx));
-    localStorage.setItem('myBudgetly_assets', JSON.stringify(dataAset));
+    dbSave('myBudgetly_assets', dataAset);
     renderHalamanPorto();
     lihatRiwayat(idAset);
 }
@@ -5025,7 +5126,7 @@ function lihatRiwayat(idAset) {
 function hapusAset(idAset) {
     if(confirm('Yakin ingin menghapus seluruh aset ini beserta riwayat transaksinya?')) {
         dataAset = dataAset.filter(a => a.id !== idAset);
-        localStorage.setItem('myBudgetly_assets', JSON.stringify(dataAset));
+        dbSave('myBudgetly_assets', dataAset);
         renderHalamanPorto();
     }
 }
