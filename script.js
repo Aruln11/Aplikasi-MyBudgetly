@@ -3242,6 +3242,10 @@ function pilihStatusTugas(el, forcedStatus) {
 }
 
 function simpanTugas() {
+    if (!checkLoginStatus()) {
+        tutupModalTugas();
+        return;
+    }
     const judul = document.getElementById('tugas-judul').value.trim();
     if (!judul) { showNotification('Judul tugas wajib diisi', 'error'); return; }
 
@@ -3431,6 +3435,10 @@ function editJadwalDariDetail() {
 }
 
 function simpanJadwal() {
+    if (!checkLoginStatus()) {
+        tutupModalJadwal();
+        return;
+    }
     const nama = document.getElementById('jadwal-nama').value.trim();
     if (!nama) { showNotification('Nama mata kuliah/pelajaran wajib diisi', 'error'); return; }
 
@@ -3694,6 +3702,7 @@ function tutupModalJadwalHari() {
 // ===== TO-DO =====
 let todoFilter = 'semua';
 function tambahTodo() {
+    if (!checkLoginStatus()) return;
     const input = document.getElementById('todo-input');
     const teks = input.value.trim();
     if (!teks) return;
@@ -3830,6 +3839,10 @@ function editDariDetail() {
     bukaModalCatatan(id);
 }
 function simpanCatatanRuang() {
+    if (!checkLoginStatus()) {
+        tutupModalCatatan();
+        return;
+    }
     const judul = document.getElementById('catatan-judul').value.trim();
     const isi   = document.getElementById('catatan-isi').value.trim();
     
@@ -4299,6 +4312,10 @@ function bukaModalRutin(tanggal, idEdit) {
 function tutupModalRutin() { document.getElementById('modal-rutin').style.display = 'none'; }
 
 function simpanRutin() {
+    if (!checkLoginStatus()) {
+        tutupModalRutin();
+        return;
+    }
     const nama = document.getElementById('rutin-nama').value.trim();
     if (!nama) { showNotification('Nama kegiatan wajib diisi', 'error'); return; }
     const tanggal = document.getElementById('rutin-tanggal').value;
@@ -4602,6 +4619,10 @@ function tutupModalTransaksiAset() { document.getElementById('modal-transaksi-as
 // 1. Simpan Wadah Aset (Tanpa Harga)
 function handleSimpanAset(event) {
     event.preventDefault();
+    if (!checkLoginStatus()) {
+        tutupModalAset(); // tutup modal aset agar form login tidak terhalang
+        return;
+    }
     const kategori = document.getElementById('input-kategori').value;
     const nama = document.getElementById('input-nama').value;
     const catatan = document.getElementById('input-catatan').value;
@@ -5689,7 +5710,13 @@ async function _eksekusiHapusAkun() {
 
         if (error) throw error;
 
-        // 4. Bersihkan semua data lokal
+        // 4. Hapus semua data user dari tabel user_data
+        await supabaseClient
+            .from('user_data')
+            .delete()
+            .eq('kode_akses', kode);
+
+        // 5. Bersihkan semua data lokal
         BACKUP_KEYS.forEach(key => localStorage.removeItem(key));
         ['isLoggedIn', 'myAccessCode', 'myUsername', 'myDeviceId', 'activePageId', 'myBudgetlyDeviceId'].forEach(k => localStorage.removeItem(k));
 
@@ -6196,6 +6223,7 @@ function buildForumPoll(poll, myUsername) {
 }
 
 async function kirimPesanForum() {
+    if (!checkLoginStatus()) return;
     const input = document.getElementById('forum-input');
     const teks = input.value.trim();
     const kode = localStorage.getItem('myAccessCode');
