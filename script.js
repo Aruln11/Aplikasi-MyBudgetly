@@ -4,22 +4,18 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ============================================================
-// STORAGE LAYER — semua baca/tulis data lewat sini
-// Kalau login → Supabase + localStorage (cache)
-// Kalau belum login → localStorage saja (guest mode)
+// STORAGE LAYER — semua data langsung ke Supabase
+// localStorage hanya dipakai untuk session (isLoggedIn, kode, dll)
 // ============================================================
-const DB_KEYS = ['transaksi','myBudgetly_assets','myBudgetly_tugas','myBudgetly_todo','myBudgetly_catatan','myBudgetly_jadwal','myBudgetly_rutin'];
+const DB_KEYS = ['transaksi','myBudgetly_assets','myBudgetly_tugas','myBudgetly_todo','myBudgetly_catatan','myBudgetly_jadwal','myBudgetly_rutin','myBudgetly_rutin_status'];
 
 function _getKodeAkses() {
     return localStorage.getItem('myAccessCode') || null;
 }
 
 async function dbSave(key, value) {
-    // Selalu simpan ke localStorage sebagai cache cepat
-    localStorage.setItem(key, JSON.stringify(value));
-
     const kode = _getKodeAkses();
-    if (!kode) return; // guest mode — hanya localStorage
+    if (!kode) return; // tidak login, skip
 
     try {
         await supabaseClient.from('user_data').upsert(
@@ -27,38 +23,33 @@ async function dbSave(key, value) {
             { onConflict: 'kode_akses,key' }
         );
     } catch (e) {
-        console.warn('[dbSave] gagal sync ke Supabase:', e);
+        console.warn('[dbSave] gagal simpan ke Supabase:', e);
     }
 }
 
 async function dbLoad(key, defaultValue = []) {
     const kode = _getKodeAkses();
+    if (!kode) return defaultValue;
 
-    if (kode) {
-        try {
-            const { data, error } = await supabaseClient
-                .from('user_data')
-                .select('value')
-                .eq('kode_akses', kode)
-                .eq('key', key)
-                .maybeSingle();
+    try {
+        const { data, error } = await supabaseClient
+            .from('user_data')
+            .select('value')
+            .eq('kode_akses', kode)
+            .eq('key', key)
+            .maybeSingle();
 
-            if (!error && data) {
-                localStorage.setItem(key, JSON.stringify(data.value));
-                return data.value;
-            }
-        } catch (e) {
-            console.warn('[dbLoad] gagal load dari Supabase, fallback localStorage:', e);
-        }
+        if (!error && data) return data.value;
+    } catch (e) {
+        console.warn('[dbLoad] gagal load dari Supabase:', e);
     }
 
-    // Fallback: baca dari localStorage
-    const local = localStorage.getItem(key);
-    return local ? JSON.parse(local) : defaultValue;
+    return defaultValue;
 }
 
 async function dbSyncAllToSupabase() {
-    // Dipanggil saat login — sinkronisasi localStorage ↔ Supabase
+    // Dipanggil saat login — Supabase adalah sumber kebenaran utama
+    // Hanya upload ke Supabase kalau belum ada data di sana DAN ada data lama di localStorage
     const kode = _getKodeAkses();
     if (!kode) return;
 
@@ -72,23 +63,28 @@ async function dbSyncAllToSupabase() {
                 .maybeSingle();
 
             if (!existing) {
-                // Belum ada di Supabase → upload dari localStorage
-                const local = localStorage.getItem(key);
-                if (local) {
-                    await supabaseClient.from('user_data').upsert(
-                        { kode_akses: kode, key, value: JSON.parse(local), updated_at: new Date().toISOString() },
-                        { onConflict: 'kode_akses,key' }
-                    );
+                // Supabase belum ada → cek localStorage lama, upload kalau ada isi
+                const localRaw = localStorage.getItem(key);
+                if (localRaw) {
+                    const localVal = JSON.parse(localRaw);
+                    const hasData = Array.isArray(localVal) ? localVal.length > 0
+                        : (localVal && typeof localVal === 'object' && Object.keys(localVal).length > 0);
+                    if (hasData) {
+                        await supabaseClient.from('user_data').upsert(
+                            { kode_akses: kode, key, value: localVal, updated_at: new Date().toISOString() },
+                            { onConflict: 'kode_akses,key' }
+                        );
+                    }
                 }
-            } else {
-                // Sudah ada di Supabase → pakai data Supabase (lebih terpercaya)
-                localStorage.setItem(key, JSON.stringify(existing.value));
             }
+            // Kalau Supabase sudah ada data → tidak perlu lakukan apapun di sini
+            // dbLoad akan ambil dari Supabase saat reload variabel setelah login
         } catch (e) {
             console.warn('[dbSyncAll] gagal sync key:', key, e);
         }
     }
 }
+// ============================================================
 // ============================================================
 
 let realtimeChannel = null;
@@ -2368,6 +2364,9 @@ async function handleLogin(event) {
         dataCatatanRuang = await dbLoad('myBudgetly_catatan', []);
         dataJadwal       = await dbLoad('myBudgetly_jadwal', []);
         dataRutin        = await dbLoad('myBudgetly_rutin', []);
+        // Load status rutin ke cache
+        _rutinStatusCache = await dbLoad('myBudgetly_rutin_status', {});
+        _rutinStatusLoaded = true;
 
         updateUI();
         showNotification('Berhasil Masuk!', 'success');
@@ -3942,16 +3941,27 @@ function getRutinUntukTanggal(dateStr) {
     return dataRutin.filter(r => rutinMunculDiTanggal(r, dateStr));
 }
 
+// Cache status rutin di memory selama session, sync ke Supabase saat berubah
+let _rutinStatusCache = {};
+let _rutinStatusLoaded = false;
+
+async function _loadRutinStatus() {
+    if (_rutinStatusLoaded) return;
+    _rutinStatusCache = await dbLoad('myBudgetly_rutin_status', {});
+    _rutinStatusLoaded = true;
+}
+
 // Cek status centang per hari
 function getRutinStatus(rutinId, dateStr) {
-    const key = `rutin_status_${rutinId}_${dateStr}`;
-    return localStorage.getItem(key) === 'selesai';
+    const key = `${rutinId}_${dateStr}`;
+    return _rutinStatusCache[key] === 'selesai';
 }
 
 function setRutinStatus(rutinId, dateStr, selesai) {
-    const key = `rutin_status_${rutinId}_${dateStr}`;
-    if (selesai) localStorage.setItem(key, 'selesai');
-    else localStorage.removeItem(key);
+    const key = `${rutinId}_${dateStr}`;
+    if (selesai) _rutinStatusCache[key] = 'selesai';
+    else delete _rutinStatusCache[key];
+    dbSave('myBudgetly_rutin_status', _rutinStatusCache);
 }
 
 function toggleRutinStatus(rutinId, dateStr) {
@@ -5533,7 +5543,8 @@ function selectTransactionType(type) {
 let kodeAksesVisible = false;
 
 // ===== BACKUP & RESTORE DATA =====
-const BACKUP_KEYS = [
+// Data keys yang masuk ke file backup (non-data tetap pakai nilai lokal)
+const BACKUP_DATA_KEYS = [
     'transaksi',
     'myBudgetly_assets',
     'myBudgetly_tugas',
@@ -5541,6 +5552,10 @@ const BACKUP_KEYS = [
     'myBudgetly_catatan',
     'myBudgetly_jadwal',
     'myBudgetly_rutin',
+    'myBudgetly_rutin_status',
+];
+// Keys preferensi (tetap di localStorage, tidak di Supabase)
+const BACKUP_PREF_KEYS = [
     'myBudgetly_voted_polls',
     'appTitle',
     'profilePhoto',
@@ -5548,15 +5563,22 @@ const BACKUP_KEYS = [
     'customAccentColor',
     'theme',
 ];
+const BACKUP_KEYS = [...BACKUP_DATA_KEYS, ...BACKUP_PREF_KEYS];
 
-function backupSemuaData() {
+async function backupSemuaData() {
     const backup = {
-        _version: 1,
+        _version: 2,
         _tanggal: new Date().toISOString(),
         _app: document.getElementById('app-title')?.textContent || 'MyBudgetly',
     };
 
-    BACKUP_KEYS.forEach(key => {
+    // Ambil data utama dari Supabase
+    for (const key of BACKUP_DATA_KEYS) {
+        const val = await dbLoad(key, []);
+        backup[key] = JSON.stringify(val);
+    }
+    // Ambil preferensi dari localStorage
+    BACKUP_PREF_KEYS.forEach(key => {
         const val = localStorage.getItem(key);
         if (val !== null) backup[key] = val;
     });
@@ -5583,7 +5605,7 @@ function restoreSemuaData(event) {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
         try {
             const data = JSON.parse(e.target.result);
 
@@ -5594,11 +5616,17 @@ function restoreSemuaData(event) {
 
             openConfirmationModal(
                 `Restore akan menimpa semua data saat ini dengan data dari backup tanggal ${(data._tanggal || '').slice(0, 10)}. Lanjutkan?`,
-                () => {
-                    BACKUP_KEYS.forEach(key => {
+                async () => {
+                    // Restore data utama ke Supabase
+                    for (const key of BACKUP_DATA_KEYS) {
                         if (data[key] !== undefined) {
-                            localStorage.setItem(key, data[key]);
+                            const val = typeof data[key] === 'string' ? JSON.parse(data[key]) : data[key];
+                            await dbSave(key, val);
                         }
+                    }
+                    // Restore preferensi ke localStorage
+                    BACKUP_PREF_KEYS.forEach(key => {
+                        if (data[key] !== undefined) localStorage.setItem(key, data[key]);
                     });
 
                     showNotification('Data berhasil direstore! Halaman akan dimuat ulang...', 'success');
@@ -5610,7 +5638,6 @@ function restoreSemuaData(event) {
         }
     };
     reader.readAsText(file);
-    // Reset input agar bisa pilih file yang sama lagi
     event.target.value = '';
 }
 // ==================================
